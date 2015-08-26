@@ -12,6 +12,7 @@ setup(
     packages=['species_separator'],
     install_requires=[
         'docopt==0.6.2',
+        'schema==0.3.1',
     ],
     scripts=[
         'bin/filter_mapped_hits',

@@ -3,25 +3,48 @@
 """Usage:
     filter_mapped_hits.py [--log-level=<log-level>] <species-one> <species-one-input-bam> <species-one-output-bam> <species-two> <species-two-input-bam> <species-two-output-bam>
 
--h --help                   Show this message.
--v --version                Show version.
---log-level=<log-level>     Set logging level (one of {log_level_vals}) [default: info].
+Options:
+{help_option_spec}
+    {help_option_description}
+{ver_option_spec}
+    {ver_option_description}
+{log_option_spec}
+    {log_option_description}
 <species-one>               Name of first species.
 <species-one-input-bam>     BAM file containing read hits against first species' genome.
 <species-one-output-bam>    BAM file to which reads assigned to first species after filtering will be written.
 <species-two>               Name of first species.
 <species-two-input-bam>     BAM file containing read hits against first species' genome.
 <species-two-output-bam>    BAM file to which reads assigned to first species after filtering will be written.
+
+TODO: what does this script do...
 """
 
 import docopt
-import log
 
-LOG_LEVEL = "--log-level"
-LOG_LEVEL_VALS = str(log.LEVELS.keys())
+from . import options as opt
+from .__init__ import __version__
+
+
+def _validate_command_line_options(options):
+    # TODO: check both input BAM files exist
+    pass
+
+
+def _filter_mapped_hits(logger, options):
+    logger.info(str(options))
 
 
 def filter_mapped_hits(args):
-    docstring = __doc__.format(log_level_vals=LOG_LEVEL_VALS)
-    options = docopt.docopt(docstring, version="filter_mapped_hits v0.1")
-    print(options)
+    # Read in command-line options
+    docstring = opt.substitute_common_options_into_usage(__doc__)
+    options = docopt.docopt(docstring, argv=args,
+                            version="filter_mapped_hits v" + __version__)
+
+    # Validate command-line options
+    _validate_command_line_options(options)
+
+    # Set up logger
+    logger = opt.get_logger_for_options(options)
+
+    _filter_mapped_hits(logger, options)
