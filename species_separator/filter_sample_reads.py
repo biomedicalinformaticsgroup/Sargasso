@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """Usage:
-    filter_mapped_hits.py [--log-level=<log-level>] <species-one> <species-one-input-bam> <species-one-output-bam> <species-two> <species-two-input-bam> <species-two-output-bam>
+    filter_mapped_hits [--log-level=<log-level>] <species-one> <species-one-input-bam> <species-one-output-bam> <species-two> <species-two-input-bam> <species-two-output-bam>
 
 Options:
 {help_option_spec}
