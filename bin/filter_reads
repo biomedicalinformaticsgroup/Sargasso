@@ -12,5 +12,5 @@ for sample in ${SAMPLES}; do
 
     mapped_reads_prefix=${MAPPED_READS_DIR}/${sample}
 
-    filter_mapped_reads ${SPECIES_ONE} ${mapped_reads_prefix}.${SPECIES_ONE}/aligned_reads.bam ${sample_dir}/${SPECIES_ONE}.filtered.bam ${SPECIES_TWO} ${mapped_reads_prefix}.${SPECIES_TWO}/aligned_reads.bam ${sample_dir}/${SPECIES_TWO}.filtered.bam
+    filter_sample_reads ${SPECIES_ONE} ${mapped_reads_prefix}.${SPECIES_ONE}/aligned_reads.bam ${sample_dir}/${SPECIES_ONE}.filtered.bam ${SPECIES_TWO} ${mapped_reads_prefix}.${SPECIES_TWO}/aligned_reads.bam ${sample_dir}/${SPECIES_TWO}.filtered.bam
 done

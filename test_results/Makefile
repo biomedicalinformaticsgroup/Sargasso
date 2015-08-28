@@ -1,7 +1,7 @@
 # TODO: At each stage log output to an overall log file
 
 SAMPLES=1A1 2A1 3A1 1C1 2C1 3C1 1N1 2N1 3N1
-SPECIES=rat mouse
+SPECIES=mouse rat
 
 STAR_INDEX_MOUSE_GENOME=star_index_mouse_genome
 STAR_INDEX_RAT_GENOME=star_index_rat_genome
@@ -19,7 +19,7 @@ $(FILTERED_READS): $(MAPPED_READS)
 	# TODO: For each sample, take the reads mapping to each genome and filter
 	# them to their correct species of origin
 	mkdir -p $(FILTERED_READS)
-	filter_reads "$(SPECIES)" "$(SAMPLES)" $(MAPPED_READS) $(FILTERED_READS)
+	filter_reads mouse rat "$(SAMPLES)" $(MAPPED_READS) $(FILTERED_READS)
 
 $(MAPPED_READS): $(MASKED_READS) $(STAR_INDEX_MOUSE_GENOME) $(STAR_INDEX_RAT_GENOME)
 	# TODO: Map 'masked reads' for each sample to each species' genome; mapped
