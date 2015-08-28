@@ -32,7 +32,7 @@ def _validate_command_line_options(options):
     pass
 
 
-def _filter_mapped_hits(logger, options):
+def _filter_sample_reads(logger, options):
     # 1. Attempt to read all hits for the first/next read in each species'
     # input BAM file. Go to (2).
     # 2. If no more reads can be read for species 1:
@@ -76,11 +76,11 @@ def _filter_mapped_hits(logger, options):
     pass
 
 
-def filter_mapped_hits(args):
+def filter_sample_reads(args):
     # Read in command-line options
     docstring = opt.substitute_common_options_into_usage(__doc__)
     options = docopt.docopt(docstring, argv=args,
-                            version="filter_mapped_hits v" + __version__)
+                            version="filter_sample_reads v" + __version__)
 
     # Validate command-line options
     _validate_command_line_options(options)
@@ -88,4 +88,4 @@ def filter_mapped_hits(args):
     # Set up logger
     logger = opt.get_logger_for_options(options)
 
-    _filter_mapped_hits(logger, options)
+    _filter_sample_reads(logger, options)
