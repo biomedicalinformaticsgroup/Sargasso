@@ -16,5 +16,6 @@ setup(
     ],
     scripts=[
         'bin/filter_mapped_hits',
+        'bin/map_reads',
     ]
 )

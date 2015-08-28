@@ -1,2 +1,6 @@
 *.pyc
 species_separator.egg-info/*
+test_results/mapped_reads/*
+test_results/filtered_reads/*
+test_results/star_index_mouse_genome
+test_results/star_index_rat_genome
