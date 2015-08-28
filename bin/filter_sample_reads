@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+
+import species_separator.filter_sample_reads as entry_point
+import sys
+
+entry_point.filter_sample_reads(sys.argv[1:])

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+SPECIES_ONE=$1
+SPECIES_TWO=$2
+SAMPLES=$3
+MAPPED_READS_DIR=$4
+OUTPUT_DIR=$5
+
+for sample in ${SAMPLES}; do
+    sample_dir=${OUTPUT_DIR}/${sample}
+    mkdir -p ${sample_dir}
+
+    mapped_reads_prefix=${MAPPED_READS_DIR}/${sample}
+
+    filter_mapped_reads ${SPECIES_ONE} ${mapped_reads_prefix}.${SPECIES_ONE}/aligned_reads.bam ${sample_dir}/${SPECIES_ONE}.filtered.bam ${SPECIES_TWO} ${mapped_reads_prefix}.${SPECIES_TWO}/aligned_reads.bam ${sample_dir}/${SPECIES_TWO}.filtered.bam
+done

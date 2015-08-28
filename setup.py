@@ -15,7 +15,8 @@ setup(
         'schema==0.3.1',
     ],
     scripts=[
-        'bin/filter_mapped_hits',
+        'bin/filter_sample_reads',
+        'bin/filter_reads',
         'bin/map_reads',
     ]
 )

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+SPECIES=$1
+SAMPLES=$2
+OUTPUT_DIR=$3
+
+for species in ${SPECIES}; do
+    for sample in ${SAMPLES}; do
+        ln -s ~/projects/species_separation/results/${sample}.${species} ${OUTPUT_DIR}/
+    done
+done
