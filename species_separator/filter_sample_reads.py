@@ -24,6 +24,7 @@ import docopt
 import schema
 
 from . import options as opt
+from . import samutils
 from .__init__ import __version__
 
 SPECIES_ONE = "<species-one>"
@@ -48,7 +49,39 @@ def _validate_command_line_options(options):
         exit(exc.code)
 
 
+def _sanity_check_hits(hits):
+    # TODO: check all hits have the same alignment score
+    # TODO: check all hits have the same multimap value
+    return hits
+
+
+def _hits_generator(bam_file):
+    all_hits = samutils.open_samfile_for_read(bam_file)
+    last_hit_name = None
+    current_hits = []
+
+    for hit in samutils.all_reads(all_hits):
+        if last_hit_name is None:
+            last_hit_name = hit.query_name
+
+        if hit.query_name < last_hit_name:
+            # TODO: throw an exception if hits are out of read name order, and
+            # handle this gracefully
+            pass
+        elif hit.query_name == last_hit_name:
+            current_hits.append(hit)
+        else:
+            yield _sanity_check_hits(current_hits)
+            last_hit_name = hit.query_name
+            current_hits = [hit]
+
+    yield current_hits
+
+
 def _filter_sample_reads(logger, options):
+    species_one_hits = _hits_generator(options[SPECIES_ONE_INPUT_BAM])
+    species_two_hits = _hits_generator(options[SPECIES_TWO_INPUT_BAM])
+
     # 1. Attempt to read all hits for the first/next read in each species'
     # input BAM file. Go to (2).
     # 2. If no more reads can be read for species 1:
