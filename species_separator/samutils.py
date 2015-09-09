@@ -9,13 +9,17 @@ def open_samfile_for_write(filename, template):
     return pysam.Samfile(filename, "wb", template=template)
 
 
-def all_reads(samfile):
+def all_hits(samfile):
     return samfile.fetch(until_eof=True)
 
 
-def get_edit_distance(read):
-    return read.opt("NM")
+def get_multimaps(hit):
+    return hit.get_tag("NH")
 
 
-def get_alignment_score(read):
-    return read.opt("AS")
+def get_mismatches(hit):
+    return hit.get_tag("nM")
+
+
+def get_cigar(hit):
+    return hit.cigarstring
