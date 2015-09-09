@@ -79,23 +79,45 @@ def _hits_generator(bam_file):
 
 
 def _filter_sample_reads(logger, options):
-    species_one_hits = _hits_generator(options[SPECIES_ONE_INPUT_BAM])
-    species_two_hits = _hits_generator(options[SPECIES_TWO_INPUT_BAM])
+    s1_hits = samutils.open_samfile_for_read(options[SPECIES_ONE_INPUT_BAM])
+    s2_hits = samutils.open_samfile_for_read(options[SPECIES_TWO_INPUT_BAM])
+
+    s1_hits_for_reads = _hits_generator(s1_hits)
+    s2_hits_for_reads = _hits_generator(s2_hits)
+
+    s1_output_bam = samutils.open_samfile_for_write(
+        options[SPECIES_ONE_OUTPUT_BAM], s1_hits)
+    s2_output_bam = samutils.open_samfile_for_write(
+        options[SPECIES_ONE_OUTPUT_BAM], s2_hits)
+
+    while True:
+        s1_hits_for_read = None
+        s2_hits_for_read = None
 
     # 1. Attempt to read all hits for the first/next read in each species'
     # input BAM file. Go to (2).
+        try:
+            s1_hits_for_read = s1_hits_for_reads.next()
+        except StopIteration:
     # 2. If no more reads can be read for species 1:
     #       - all remaining reads in the input file for species 2 can be written
     #       to the output file for species 2, or discarded as inherently
     #       potentially ambiguous.
     #       - END.
     #    Else go to (3).
+            pass
+
+        try:
+            s2_hits_for_read = s2_hits_for_reads.next()
+        except StopIteration:
     # 3. If no more reads can be read for species 2:
     #       - all remaining reads in the input file for species 1 can be
     #       written to the output file for species 1, or discarded as
     #       inherently potentially ambiguous.
     #       - END.
     #   Else go to (4).
+            pass
+
     # 4. We have the hits for a read for each species. Examine the names of the
     # reads in species 1 and species 2. Go to (5).
     # 5. If the read names are the same:
