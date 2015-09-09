@@ -21,15 +21,31 @@ TODO: what does this script do...
 """
 
 import docopt
+import schema
 
 from . import options as opt
 from .__init__ import __version__
 
+SPECIES_ONE = "<species-one>"
+SPECIES_ONE_INPUT_BAM = "<species-one-input-bam>"
+SPECIES_ONE_OUTPUT_BAM = "<species-one-output-bam>"
+SPECIES_TWO = "<species-two>"
+SPECIES_TWO_INPUT_BAM = "<species-two-input-bam>"
+SPECIES_TWO_OUTPUT_BAM = "<species-two-output-bam>"
+
 
 def _validate_command_line_options(options):
-    # TODO: validate log level
-    # TODO: check both input BAM files exist
-    pass
+    try:
+        opt.validate_log_level(options)
+
+        opt.validate_file_option(
+            options[SPECIES_ONE_INPUT_BAM],
+            "Could not find input BAM file for species 1")
+        opt.validate_file_option(
+            options[SPECIES_TWO_INPUT_BAM],
+            "Could not find input BAM file for species 2")
+    except schema.SchemaError as exc:
+        exit(exc.code)
 
 
 def _filter_sample_reads(logger, options):
