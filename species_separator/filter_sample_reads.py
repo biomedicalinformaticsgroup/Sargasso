@@ -36,6 +36,12 @@ SPECIES_TWO_INPUT_BAM = "<species-two-input-bam>"
 SPECIES_TWO_OUTPUT_BAM = "<species-two-output-bam>"
 
 
+ASSIGNED_TO_SPECIES_ONE = 1
+ASSIGNED_TO_SPECIES_TWO = 2
+ASSIGNED_TO_NEITHER_REJECTED = 3
+ASSIGNED_TO_NEITHER_AMBIGUOUS = 4
+
+
 class _SeparationStats:
     def __init__(self, name):
         self.name = name
@@ -138,33 +144,31 @@ class _HitsChecker:
         return True
 
     def assign_hits(self, s1_hits_info, s2_hits_info):
-        # Return True if these are s1 hits, False if s2, and None if hits are
-        # ambiguous
         # TODO: currently making the assumption that min = max mismatches
         # TODO: initially try to get this to behave in the same way as the original code
         s1_multimaps = s1_hits_info.get_multimaps()
         s2_multimaps = s2_hits_info.get_multimaps()
 
         if s1_multimaps > 1 or s2_multimaps > 1:
-            return None
+            return ASSIGNED_TO_NEITHER_REJECTED
 
         s1_mismatches = s1_hits_info.get_max_mismatches()
         s2_mismatches = s2_hits_info.get_max_mismatches()
 
         if s1_mismatches < s2_mismatches:
-            return True
+            return ASSIGNED_TO_SPECIES_ONE
         elif s2_mismatches < s1_mismatches:
-            return False
+            return ASSIGNED_TO_SPECIES_TWO
         else:
             s1_cigar_check = self.check_cigar(s1_hits_info)
             s2_cigar_check = self.check_cigar(s2_hits_info)
 
             if s1_cigar_check and not s2_cigar_check:
-                return True
+                return ASSIGNED_TO_SPECIES_ONE
             elif not s1_cigar_check and s2_cigar_check:
-                return False
+                return ASSIGNED_TO_SPECIES_TWO
 
-        return None
+        return ASSIGNED_TO_NEITHER_AMBIGUOUS
 
     def check_cigar(self, hits_info):
         for cigar in hits_info.get_cigars():
@@ -202,16 +206,19 @@ def _hits_generator(all_hits):
 
 def _write_hits(hits_for_read, output_bam):
     for hit in hits_for_read:
-        #output_bam.write(hit)
+        output_bam.write(hit)
         pass
 
 
-def _write_remaining_hits(hits_for_reads, hits_checker, output_bam):
+def _write_remaining_hits(hits_for_reads, stats, hits_checker, output_bam):
     try:
         while True:
             hits_for_read = hits_for_reads.next()
             if hits_checker.check_hits(_HitsInfo(hits_for_read)):
+                stats.filtered_hits(hits_for_read)
                 _write_hits(hits_for_read, output_bam)
+            else:
+                stats.rejected_hits(hits_for_read)
     except StopIteration:
         pass
 
@@ -227,26 +234,31 @@ def _compare_and_write_hits(s1_hits_for_read, s2_hits_for_read,
 
     assignment = hits_checker.assign_hits(s1_hits_info, s2_hits_info)
 
-    if assignment is True:
+    if assignment == ASSIGNED_TO_SPECIES_ONE:
         s2_stats.rejected_hits(s2_hits_for_read)
         if hits_checker.check_hits(s1_hits_info):
             s1_stats.filtered_hits(s1_hits_for_read)
             _write_hits(s1_hits_for_read, s1_output_bam)
         else:
             s1_stats.rejected_hits(s1_hits_for_read)
-    elif assignment is False:
+    elif assignment == ASSIGNED_TO_SPECIES_TWO:
         s1_stats.rejected_hits(s1_hits_for_read)
         if hits_checker.check_hits(s2_hits_info):
             s2_stats.filtered_hits(s2_hits_for_read)
             _write_hits(s2_hits_for_read, s2_output_bam)
         else:
             s2_stats.rejected_hits(s2_hits_for_read)
+    elif assignment == ASSIGNED_TO_NEITHER_REJECTED:
+        s1_stats.rejected_hits(s1_hits_for_read)
+        s2_stats.rejected_hits(s2_hits_for_read)
     else:
         s1_stats.ambiguous_hits(s1_hits_for_read)
         s2_stats.ambiguous_hits(s2_hits_for_read)
 
 
 def _filter_sample_reads(logger, options):
+    logger.info("Starting species separation.")
+
     s1_stats = _SeparationStats("Species 1")
     s2_stats = _SeparationStats("Species 2")
 
@@ -259,7 +271,7 @@ def _filter_sample_reads(logger, options):
     s1_output_bam = samutils.open_samfile_for_write(
         options[SPECIES_ONE_OUTPUT_BAM], s1_hits)
     s2_output_bam = samutils.open_samfile_for_write(
-        options[SPECIES_ONE_OUTPUT_BAM], s2_hits)
+        options[SPECIES_TWO_OUTPUT_BAM], s2_hits)
 
     s1_hits_for_read = None
     s2_hits_for_read = None
@@ -285,8 +297,7 @@ def _filter_sample_reads(logger, options):
     #       potentially ambiguous.
     #       - END.
     #    Else go to (3).
-                _write_remaining_hits(s2_hits_for_read, hits_checker,
-                                      s2_output_bam)
+                _write_remaining_hits(s2_hits_for_reads, s2_stats, hits_checker, s2_output_bam)
                 break
 
         if s2_hits_for_read is None:
@@ -302,8 +313,7 @@ def _filter_sample_reads(logger, options):
     #       inherently potentially ambiguous.
     #       - END.
     #   Else go to (4).
-                _write_remaining_hits(s1_hits_for_read, hits_checker,
-                                      s1_output_bam)
+                _write_remaining_hits(s1_hits_for_reads, s1_stats, hits_checker, s1_output_bam)
                 break
 
     # 4. We have the hits for a read for each species. Examine the names of the
