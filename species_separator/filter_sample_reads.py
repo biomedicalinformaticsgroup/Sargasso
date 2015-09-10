@@ -36,6 +36,38 @@ SPECIES_TWO_INPUT_BAM = "<species-two-input-bam>"
 SPECIES_TWO_OUTPUT_BAM = "<species-two-output-bam>"
 
 
+class _SeparationStats:
+    def __init__(self, name):
+        self.name = name
+        self.hits_written = 0
+        self.reads_written = 0
+        self.hits_rejected = 0
+        self.reads_rejected = 0
+        self.hits_ambiguous = 0
+        self.reads_ambiguous = 0
+
+    def filtered_hits(self, hits):
+        self.hits_written += len(hits)
+        self.reads_written += 1
+
+    def rejected_hits(self, hits):
+        self.hits_rejected += len(hits)
+        self.reads_rejected += 1
+
+    def ambiguous_hits(self, hits):
+        self.hits_ambiguous += len(hits)
+        self.reads_ambiguous += 1
+
+    def __str__(self):
+        return ("{n}: wrote {f} filtered hits for {fr} reads; {r} hits for " +
+                "{rr} reads were rejected outright, and {a} hits for " +
+                "{ar} reads were rejected as ambiguous.").format(
+            n=self.name,
+            f=self.hits_written, fr=self.reads_written,
+            r=self.hits_rejected, rr=self.reads_rejected,
+            a=self.hits_ambiguous, ar=self.reads_ambiguous)
+
+
 def _validate_command_line_options(options):
     try:
         opt.validate_log_level(options)
@@ -186,7 +218,7 @@ def _write_remaining_hits(hits_for_reads, hits_checker, output_bam):
 
 def _compare_and_write_hits(s1_hits_for_read, s2_hits_for_read,
                             s1_output_bam, s2_output_bam,
-                            hits_checker):
+                            s1_stats, s2_stats, hits_checker):
     # Compare the hits for a particular read in each species and decide whether
     # the read can be assigned to one species or another, or if it must be
     # rejected as ambiguous
@@ -196,17 +228,28 @@ def _compare_and_write_hits(s1_hits_for_read, s2_hits_for_read,
     assignment = hits_checker.assign_hits(s1_hits_info, s2_hits_info)
 
     if assignment is True:
+        s2_stats.rejected_hits(s2_hits_for_read)
         if hits_checker.check_hits(s1_hits_info):
+            s1_stats.filtered_hits(s1_hits_for_read)
             _write_hits(s1_hits_for_read, s1_output_bam)
+        else:
+            s1_stats.rejected_hits(s1_hits_for_read)
     elif assignment is False:
+        s1_stats.rejected_hits(s1_hits_for_read)
         if hits_checker.check_hits(s2_hits_info):
+            s2_stats.filtered_hits(s2_hits_for_read)
             _write_hits(s2_hits_for_read, s2_output_bam)
+        else:
+            s2_stats.rejected_hits(s2_hits_for_read)
     else:
-        # TODO: record that assignment was ambiguous
-        pass
+        s1_stats.ambiguous_hits(s1_hits_for_read)
+        s2_stats.ambiguous_hits(s2_hits_for_read)
 
 
 def _filter_sample_reads(logger, options):
+    s1_stats = _SeparationStats("Species 1")
+    s2_stats = _SeparationStats("Species 2")
+
     s1_hits = samutils.open_samfile_for_read(options[SPECIES_ONE_INPUT_BAM])
     s2_hits = samutils.open_samfile_for_read(options[SPECIES_TWO_INPUT_BAM])
 
@@ -233,8 +276,8 @@ def _filter_sample_reads(logger, options):
             try:
                 s1_hits_for_read = s1_hits_for_reads.next()
                 s1_count += 1
-                if s1_count % 100000 == 0:
-                    logger.info(str(s1_count) + " from species 1")
+                if s1_count % 1000000 == 0:
+                    logger.debug("Read " + str(s1_count) + " reads from species 1")
             except StopIteration:
     # 2. If no more reads can be read for species 1:
     #       - all remaining reads in the input file for species 2 can be written
@@ -250,8 +293,8 @@ def _filter_sample_reads(logger, options):
             try:
                 s2_hits_for_read = s2_hits_for_reads.next()
                 s2_count += 1
-                if s2_count % 100000 == 0:
-                    logger.info(str(s2_count) + " from species 2")
+                if s2_count % 1000000 == 0:
+                    logger.debug("Read " + str(s2_count) + " reads from species 2")
             except StopIteration:
     # 3. If no more reads can be read for species 2:
     #       - all remaining reads in the input file for species 1 can be
@@ -278,7 +321,7 @@ def _filter_sample_reads(logger, options):
     #   Else go to (6).
             _compare_and_write_hits(s1_hits_for_read, s2_hits_for_read,
                                     s1_output_bam, s2_output_bam,
-                                    hits_checker)
+                                    s1_stats, s2_stats, hits_checker)
             s1_hits_for_read = None
             s2_hits_for_read = None
     # 6. If species 1 read name < species 2 read name, there are no hits for
@@ -290,7 +333,10 @@ def _filter_sample_reads(logger, options):
     #       reads can be read for species 1, go to (2). Else go to (4).
     #   Else go to (7)
             if hits_checker.check_hits(_HitsInfo(s1_hits_for_read)):
+                s1_stats.filtered_hits(s1_hits_for_read)
                 _write_hits(s1_hits_for_read, s1_output_bam)
+            else:
+                s1_stats.rejected_hits(s1_hits_for_read)
             s1_hits_for_read = None
     # 7. If species 2 read name < species 1 read name, there are no hits for
     # the species 2 read in species 1:
@@ -300,12 +346,18 @@ def _filter_sample_reads(logger, options):
     #       - attempt to read hits for the next read for species 2. If no more
     #       reads can be read for species 2, go to (3). Else go to (4).
             if hits_checker.check_hits(_HitsInfo(s2_hits_for_read)):
+                s2_stats.filtered_hits(s2_hits_for_read)
                 _write_hits(s2_hits_for_read, s2_output_bam)
+            else:
+                s2_stats.rejected_hits(s2_hits_for_read)
             s2_hits_for_read = None
     # n.b. throughout, we should always keep a record of the last read name
     # read for a species; when hits for the next read are read for that
     # species, we should check the reads are in name order, and exit with a
     # failure code if not.
+
+    logger.info(s1_stats)
+    logger.info(s2_stats)
 
 
 def filter_sample_reads(args):
