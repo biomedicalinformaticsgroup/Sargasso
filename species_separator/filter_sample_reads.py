@@ -106,12 +106,19 @@ class _HitsChecker:
         return True
 
     def assign_hits(self, s1_hits_info, s2_hits_info):
+        # Return True if these are s1 hits, False if s2, and None if hits are
+        # ambiguous
         # TODO: currently making the assumption that min = max mismatches
+        # TODO: initially try to get this to behave in the same way as the original code
+        s1_multimaps = s1_hits_info.get_multimaps()
+        s2_multimaps = s2_hits_info.get_multimaps()
+
+        if s1_multimaps > 1 or s2_multimaps > 1:
+            return None
+
         s1_mismatches = s1_hits_info.get_max_mismatches()
         s2_mismatches = s2_hits_info.get_max_mismatches()
 
-        # Return True if these are s1 hits, False if s2, and None if hits are
-        # ambiguous
         if s1_mismatches < s2_mismatches:
             return True
         elif s2_mismatches < s1_mismatches:
