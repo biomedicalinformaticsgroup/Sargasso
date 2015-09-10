@@ -210,7 +210,7 @@ def _write_hits(hits_for_read, output_bam):
         pass
 
 
-def _write_remaining_hits(hits_for_reads, stats, hits_checker, output_bam):
+def _write_remaining_hits(hits_checker, hits_for_reads, stats, output_bam):
     try:
         while True:
             hits_for_read = hits_for_reads.next()
@@ -297,7 +297,7 @@ def _filter_sample_reads(logger, options):
     #       potentially ambiguous.
     #       - END.
     #    Else go to (3).
-                _write_remaining_hits(s2_hits_for_reads, s2_stats, hits_checker, s2_output_bam)
+                _write_remaining_hits(hits_checker, s2_hits_for_reads, s2_stats, s2_output_bam)
                 break
 
         if s2_hits_for_read is None:
@@ -313,7 +313,7 @@ def _filter_sample_reads(logger, options):
     #       inherently potentially ambiguous.
     #       - END.
     #   Else go to (4).
-                _write_remaining_hits(s1_hits_for_reads, s1_stats, hits_checker, s1_output_bam)
+                _write_remaining_hits(hits_checker, s1_hits_for_reads, s1_stats, s1_output_bam)
                 break
 
     # 4. We have the hits for a read for each species. Examine the names of the
