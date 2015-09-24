@@ -16,8 +16,10 @@ setup(
         'schema==0.3.1',
     ],
     scripts=[
+        'bin/build_genome_index',
         'bin/filter_sample_reads',
         'bin/filter_reads',
         'bin/map_reads',
+        'bin/sort_reads',
     ]
 )

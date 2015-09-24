@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -o nounset
+set -o errexit
+
+GENOME_FASTA_FILES=$1
+GTF_FILE=$2
+NUM_THREADS=$3
+GENOME_DIR=$4
+
+STAR --runThreadN ${NUM_THREADS} --runMode genomeGenerate --genomeDir ${GENOME_DIR} --genomeFastaFiles ${GENOME_FASTA_FILES} --sjdbGTFfile ${GTF_FILE} --sjdbOverhang 100

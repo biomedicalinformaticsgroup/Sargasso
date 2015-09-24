@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+set -o nounset
+set -o errexit
+
 SPECIES=$1
 SAMPLES=$2
 OUTPUT_DIR=$3

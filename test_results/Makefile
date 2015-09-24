@@ -1,10 +1,28 @@
 # TODO: At each stage log output to an overall log file
 
-SAMPLES=1A1 2A1 3A1 1C1 2C1 3C1 1N1 2N1 3N1
-SPECIES_ONE=mouse
-SPECIES_TWO=rat
 NUM_THREADS=1
 
+SAMPLES=1A1 2A1 3A1 1C1 2C1 3C1 1N1 2N1 3N1
+
+SPECIES_ONE=mouse
+
+# These definitions will only be present if we're building STAR indices from scratch
+SPECIES_ONE_GENOME_FASTA=/srv/data/genome/mouse/ensembl-80/primary_assembly/10.fa
+SPECIES_ONE_GTF=/srv/data/genome/mouse/ensembl-80/Mus_musculus.GRCm38.80.gtf
+
+# This definition will only be present if we're using a pre-built STAR index
+SPECIES_ONE_GENOME_DIR=/srv/data/genome/mouse/ensembl-80/STAR_Indices/primary_assembly
+
+SPECIES_TWO=rat
+
+# These definitions will only be present if we're building STAR indices from scratch
+SPECIES_TWO_GENOME_FASTA=/srv/data/genome/rat/ensembl-80/top_level/10.fa
+SPECIES_TWO_GTF=/srv/data/genome/rat/ensembl-80/Rattus_norvegicus.Rnor_6.0.80.gtf
+
+# This definition will only be present if we're using a pre-built STAR index
+SPECIES_TWO_GENOME_DIR=/srv/data/genome/rat/ensembl-80/STAR_Indices/top_level
+
+STAR_INDICES=star_indices
 STAR_INDEX_MOUSE_GENOME=star_index_mouse_genome
 STAR_INDEX_RAT_GENOME=star_index_rat_genome
 STAR_INDEX_MOUSE_MASK=star_index_mouse_mask
@@ -58,17 +76,27 @@ $(STAR_INDEX_RAT_MASK):
 	# be discarded
 	mkdir -p $(STAR_INDEX_RAT_MASK)
 
-$(STAR_INDEX_MOUSE_GENOME):
-	# TODO: Build STAR index for species 1
-	ln -s /srv/data/genome/mouse/ensembl-80/STAR_Indices/primary_assembly $(STAR_INDEX_MOUSE_GENOME)
+# This task will only be present if we're building STAR indices from scratch
+#$(STAR_INDICES)/$(SPECIES_ONE):
+	#mkdir -p $(STAR_INDICES)/$(SPECIES_ONE)
+	#build_genome_index $(SPECIES_ONE_GENOME_FASTA) $(SPECIES_ONE_GTF) $(NUM_THREADS) $(STAR_INDICES)/$(SPECIES_ONE)
 
-$(STAR_INDEX_RAT_GENOME):
-	# TODO: Build STAR index for species 2
-	ln -s /srv/data/genome/rat/ensembl-80/STAR_Indices/top_level $(STAR_INDEX_RAT_GENOME)
+# This task will only be present if we're using a pre-built STAR index
+$(STAR_INDICES)/$(SPECIES_ONE):
+	ln -s $(SPECIES_ONE_GENOME_DIR) $(STAR_INDICES)/$(SPECIES_ONE)
+
+# This task will only be present if we're building STAR indices from scratch
+#$(STAR_INDICES)/$(SPECIES_TWO):
+	#mkdir -p $(STAR_INDICES)/$(SPECIES_TWO)
+	#build_genome_index $(SPECIES_TWO_GENOME_FASTA) $(SPECIES_TWO_GTF) $(NUM_THREADS) $(STAR_INDICES)/$(SPECIES_TWO)
+
+# This task will only be present if we're using a pre-built STAR index
+$(STAR_INDICES)/$(SPECIES_TWO):
+	ln -s $(SPECIES_TWO_GENOME_DIR) $(STAR_INDICES)/$(SPECIES_TWO)
 
 clean:
-	rm -rf $(STAR_INDEX_MOUSE_GENOME)
-	rm -rf $(STAR_INDEX_RAT_GENOME)
+	rm -rf $(STAR_INDICES)/$(SPECIES_ONE)
+	rm -rf $(STAR_INDICES)/$(SPECIES_TWO)
 	rm -rf $(STAR_INDEX_MOUSE_MASK)
 	rm -rf $(STAR_INDEX_RAT_MASK)
 	rm -rf $(COLLATE_RAW_READS)
