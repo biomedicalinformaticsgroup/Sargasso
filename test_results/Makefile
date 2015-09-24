@@ -1,7 +1,9 @@
 # TODO: At each stage log output to an overall log file
 
 SAMPLES=1A1 2A1 3A1 1C1 2C1 3C1 1N1 2N1 3N1
-SPECIES=mouse rat
+SPECIES_ONE=mouse
+SPECIES_TWO=rat
+NUM_THREADS=1
 
 STAR_INDEX_MOUSE_GENOME=star_index_mouse_genome
 STAR_INDEX_RAT_GENOME=star_index_rat_genome
@@ -10,23 +12,29 @@ STAR_INDEX_RAT_MASK=star_index_rat_mask
 COLLATE_RAW_READS=raw_reads
 MASKED_READS=masked_reads
 MAPPED_READS=mapped_reads
+SORTED_READS=sorted_reads
 FILTERED_READS=filtered_reads
 
 .PHONY : all clean
 
 all: $(FILTERED_READS)
 
-$(FILTERED_READS): $(MAPPED_READS)
-	# TODO: For each sample, take the reads mapping to each genome and filter
-	# them to their correct species of origin
+$(FILTERED_READS): $(SORTED_READS)
+	# For each sample, take the reads mapping to each genome and filter them to
+	# their correct species of origin
 	mkdir -p $(FILTERED_READS)
-	filter_reads mouse rat "$(SAMPLES)" $(MAPPED_READS) $(FILTERED_READS)
+	filter_reads $(SPECIES_ONE) $(SPECIES_TWO) "$(SAMPLES)" $(SORTED_READS) $(FILTERED_READS)
+
+$(SORTED_READS): $(MAPPED_READS)
+	# For each sample, sort the mapped reads into read name order
+	mkdir -p $(SORTED_READS)
+	sort_reads "$(SPECIES_ONE) $(SPECIES_TWO)" "$(SAMPLES)" $(NUM_THREADS) $(MAPPED_READS) $(SORTED_READS)
 
 $(MAPPED_READS): $(MASKED_READS) $(STAR_INDEX_MOUSE_GENOME) $(STAR_INDEX_RAT_GENOME)
 	# TODO: Map 'masked reads' for each sample to each species' genome; mapped
 	# reads need to be output sorted by read name
 	mkdir -p $(MAPPED_READS)
-	map_reads "$(SPECIES)" "$(SAMPLES)" $(MAPPED_READS)
+	map_reads "$(SPECIES_ONE) $(SPECIES_TWO)" "$(SAMPLES)" $(MAPPED_READS)
 
 $(MASKED_READS): $(STAR_INDEX_MOUSE_MASK) $(STAR_INDEX_RAT_MASK) $(COLLATE_RAW_READS)
 	# TODO: Map reads in each sample to sequences for each species for which
@@ -66,4 +74,5 @@ clean:
 	rm -rf $(COLLATE_RAW_READS)
 	rm -rf $(MASKED_READS)
 	rm -rf $(MAPPED_READS)
+	rm -rf $(SORTED_READS)
 	rm -rf $(FILTERED_READS)
