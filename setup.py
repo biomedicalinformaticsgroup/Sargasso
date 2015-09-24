@@ -16,7 +16,8 @@ setup(
         'schema==0.3.1',
     ],
     scripts=[
-        'bin/build_genome_index',
+        'bin/build_star_index',
+        'bin/collate_raw_reads',
         'bin/filter_sample_reads',
         'bin/filter_reads',
         'bin/map_reads',

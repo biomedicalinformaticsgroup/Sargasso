@@ -5,7 +5,8 @@ set -o errexit
 
 SPECIES=$1
 SAMPLES=$2
-OUTPUT_DIR=$3
+INPUT_DIR=$3
+OUTPUT_DIR=$4
 
 for species in ${SPECIES}; do
     for sample in ${SAMPLES}; do

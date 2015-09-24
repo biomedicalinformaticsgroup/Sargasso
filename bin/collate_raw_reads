@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -o nounset
+set -o errexit
+
+SAMPLES=( $1 )
+RAW_READ_FILES=( $2 )
+READS_DIR=$3
+
+for ((i = 0; i < ${#SAMPLES[@]}; i++)); do
+    sample_dir=${READS_DIR}/${SAMPLES[i]}
+    mkdir -p ${sample_dir}
+    echo "${RAW_READ_FILES[i]}" | tr ',' '\n' | xargs -i ln -s {} ${sample_dir}
+done
