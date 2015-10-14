@@ -1,9 +1,10 @@
 # TODO: At each stage log output to an overall log file
 
-NUM_THREADS=1
+NUM_THREADS=8
 
 SAMPLES=1A1 2A1 3A1 1C1 2C1 3C1 1N1 2N1 3N1
-RAW_READ_FILES=/srv/data/ghardingham/neuron_astrocyte/rnaseq/1A1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-001_TP-D5-007_1.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/2A1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-004_TP-D5-003_1.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/3A1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-003_TP-D5-002_1.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/1C1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-001_TP-D5-001_1.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/2C1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-003_TP-D5-005_1.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/3C1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-002_TP-D5-002_1.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/1N1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-001_TP-D5-004_1.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/2N1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-003_TP-D5-008_1.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/3N1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-002_TP-D5-005_1.sanfastq.gz
+RAW_READ_FILES_1=/srv/data/ghardingham/neuron_astrocyte/rnaseq/1A1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-001_TP-D5-007_1.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/2A1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-004_TP-D5-003_1.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/3A1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-003_TP-D5-002_1.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/1C1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-001_TP-D5-001_1.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/2C1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-003_TP-D5-005_1.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/3C1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-002_TP-D5-002_1.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/1N1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-001_TP-D5-004_1.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/2N1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-003_TP-D5-008_1.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/3N1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-002_TP-D5-005_1.sanfastq.gz
+RAW_READ_FILES_2=/srv/data/ghardingham/neuron_astrocyte/rnaseq/1A1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-001_TP-D5-007_2.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/2A1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-004_TP-D5-003_2.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/3A1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-003_TP-D5-002_2.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/1C1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-001_TP-D5-001_2.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/2C1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-003_TP-D5-005_2.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/3C1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-002_TP-D5-002_2.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/1N1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-001_TP-D5-004_2.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/2N1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-003_TP-D5-008_2.sanfastq.gz /srv/data/ghardingham/neuron_astrocyte/rnaseq/3N1/150129_M00689_0185_000000000-ABAEY_1_TP-D7-002_TP-D5-005_2.sanfastq.gz
 
 SPECIES_ONE=mouse
 
@@ -48,10 +49,10 @@ $(SORTED_READS): $(MAPPED_READS)
 	sort_reads "$(SPECIES_ONE) $(SPECIES_TWO)" "$(SAMPLES)" $(NUM_THREADS) $(MAPPED_READS) $(SORTED_READS)
 
 $(MAPPED_READS): $(MASKED_READS) $(STAR_INDICES)/$(SPECIES_ONE) $(STAR_INDICES)/$(SPECIES_TWO)
-	# TODO: Map 'masked reads' for each sample to each species' genome; mapped
-	# reads need to be output sorted by read name
+	# Map 'masked reads' for each sample to each species' genome; mapped reads
+	# need to be output sorted by read name
 	mkdir -p $(MAPPED_READS)
-	map_reads "$(SPECIES_ONE) $(SPECIES_TWO)" "$(SAMPLES)" $(RAW_READS) $(MAPPED_READS)
+	map_reads "$(SPECIES_ONE) $(SPECIES_TWO)" "$(SAMPLES)" $(STAR_INDICES) $(NUM_THREADS) $(COLLATE_RAW_READS) $(MAPPED_READS)
 
 $(MASKED_READS): $(STAR_INDEX_MOUSE_MASK) $(STAR_INDEX_RAT_MASK) $(COLLATE_RAW_READS)
 	# TODO: Map reads in each sample to sequences for each species for which
@@ -64,7 +65,7 @@ $(COLLATE_RAW_READS):
 	# Create a directory with sub-directories for each sample, each of which
 	# contains links to the input raw reads files for that sample
 	mkdir -p $(COLLATE_RAW_READS)
-	collate_raw_reads "$(SAMPLES)" "$(RAW_READ_FILES)" $(COLLATE_RAW_READS)
+	collate_raw_reads "$(SAMPLES)" "$(RAW_READ_FILES_1)" "$(RAW_READ_FILES_2)" $(COLLATE_RAW_READS)
 
 $(STAR_INDEX_MOUSE_MASK):
 	# TODO: Build STAR index for mouse sequences for which mapping reads should

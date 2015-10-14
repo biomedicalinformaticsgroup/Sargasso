@@ -3,13 +3,52 @@
 set -o nounset
 set -o errexit
 
+function get_random_id {
+    cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1
+}
+
+function listFiles {
+    FILES=$@
+    
+    DELIMITER=","
+    OUTPUT=$(ls -1 $FILES | tr '\n' "${DELIMITER}")
+    echo ${OUTPUT%$DELIMITER}   
+}
+
+function star_pe_reads {
+    SAMPLE=$1
+    SPECIES=$2
+    INDEX_DIR=$3
+    NUM_THREADS=$4
+    READ_1_FILES=$5
+    READ_2_FILES=$6
+    OUTPUT_DIR=$7
+
+    ID=${SAMPLE}.${SPECIES}
+    STAR_TMP=$(get_random_id).${ID}.tmp
+    mkdir $STAR_TMP
+
+    STAR --runThreadN ${NUM_THREADS} --genomeDir ${INDEX_DIR} --readFilesIn ${READ_1_FILES} ${READ_2_FILES} --outFileNamePrefix ${STAR_TMP}/star --outSAMstrandField intronMotif --outSAMtype BAM Unsorted --readFilesCommand zcat --outFilterMultimapScoreRange 0 --outFilterMultimapNmax 10000
+
+    mv $STAR_TMP/starAligned.sortedByCoord.out.bam ${OUTPUT_DIR}/${ID}.bam
+    mv $STAR_TMP/starLog.final.out ${OUTPUT_DIR}/${ID}.log.out
+    
+    rm -rf $STAR_TMP
+}
+
 SPECIES=$1
 SAMPLES=$2
-INPUT_DIR=$3
-OUTPUT_DIR=$4
+STAR_INDICES_DIR=$3
+NUM_THREADS=$4
+INPUT_DIR=$5
+OUTPUT_DIR=$6
 
 for species in ${SPECIES}; do
     for sample in ${SAMPLES}; do
-        ln -s ~/projects/species_separation/results/${sample}.${species} ${OUTPUT_DIR}/
+        sample_dir=${INPUT_DIR}/${sample}
+        sample_reads_1_dir=${sample_dir}/reads_1
+        sample_reads_2_dir=${sample_dir}/reads_2
+
+        star_pe_reads ${sample} ${species} ${STAR_INDICES_DIR}/${species} ${NUM_THREADS} $(listFiles ${sample_reads_1_dir}/*) $(listFiles ${sample_reads_2_dir}/*) ${OUTPUT_DIR}
     done
 done

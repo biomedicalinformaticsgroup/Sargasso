@@ -4,11 +4,18 @@ set -o nounset
 set -o errexit
 
 SAMPLES=( $1 )
-RAW_READ_FILES=( $2 )
-READS_DIR=$3
+RAW_READ_FILES_1=( $2 )
+RAW_READ_FILES_2=( $3 )
+READS_DIR=$4
 
 for ((i = 0; i < ${#SAMPLES[@]}; i++)); do
     sample_dir=${READS_DIR}/${SAMPLES[i]}
-    mkdir -p ${sample_dir}
-    echo "${RAW_READ_FILES[i]}" | tr ',' '\n' | xargs -i ln -s {} ${sample_dir}
+
+    sample_reads_1_dir=${sample_dir}/reads_1
+    mkdir -p ${sample_reads_1_dir}
+    echo "${RAW_READ_FILES_1[i]}" | tr ',' '\n' | xargs -i ln -s {} ${sample_reads_1_dir}
+
+    sample_reads_2_dir=${sample_dir}/reads_2
+    mkdir -p ${sample_reads_2_dir}
+    echo "${RAW_READ_FILES_2[i]}" | tr ',' '\n' | xargs -i ln -s {} ${sample_reads_2_dir}
 done
