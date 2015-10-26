@@ -8,10 +8,72 @@ SPECIES_TWO=$2
 SAMPLES=$3
 INPUT_DIR=$4
 OUTPUT_DIR=$5
+READ_SUMMARY_FILE=$6
+THREADS=$7 #How many chunks to split the read files into
+
+#mkdir $OUTPUT_DIR
 
 for sample in ${SAMPLES}; do
-    sorted_reads_prefix=${INPUT_DIR}/${sample}
-    filtered_reads_prefix=${OUTPUT_DIR}/${sample}
+    sorted_reads_prefix="${INPUT_DIR}/${sample}"
+    filtered_reads_prefix="${OUTPUT_DIR}/${sample}"
 
-    filter_sample_reads ${SPECIES_ONE} ${sorted_reads_prefix}.${SPECIES_ONE}.bam ${filtered_reads_prefix}.${SPECIES_ONE}.bam ${SPECIES_TWO} ${sorted_reads_prefix}.${SPECIES_TWO}.bam ${filtered_reads_prefix}.${SPECIES_TWO}.bam
+    # extract the no. reads for this sample for species 1 & 2 from the read summary file
+    READ_NUMBER_1=$(grep "${sample}" ${READ_SUMMARY_FILE} | awk '{print $2}')
+    READ_NUMBER_2=$(grep "${sample}" ${READ_SUMMARY_FILE} | awk '{print $3}')
+
+    # calculate block sizes for larger species
+    LARGEST=0
+    if [ $READ_NUMBER_1 -gt $READ_NUMBER_2 ]
+    then
+        LARGEST=${READ_NUMBER_1}
+    else
+        LARGEST=${READ_NUMBER_2}
+    fi
+    BLOCKSIZE=$(( $LARGEST + 1 )) # Plus one as we want to round up
+    BLOCKSIZE=$(( $BLOCKSIZE / $THREADS ))
+
+    # partition sample read file into threads for parallelisation
+    LOWER=1
+    UPPER=${BLOCKSIZE}
+    BLOCK_DIR=${OUTPUT_DIR}/Blocks
+    #mkdir $BLOCK_DIR
+    for i in $(seq ${THREADS})
+    do
+        # Extract block from species 1 BAM
+        echo ${LOWER} ${UPPER} ${i}
+        sambamba view ${sorted_reads_prefix}.${SPECIES_ONE}.sorted.bam | sed -n ${LOWER},${UPPER}p > ${BLOCK_DIR}/${sample}_${SPECIES_ONE}_BLOCK_${i}
+
+        # Get read id bounds from start & end of block in order to extract compatible block from species 2
+        #echo awk -v l=$LOWER '{if(NR==l){print $1; exit 1}}' ${BLOCK_DIR}/${sample}_${SPECIES_ONE}_BLOCK_${i}
+        START_ID=$(awk '{if(NR==1){print $1}}' ${BLOCK_DIR}/${sample}_${SPECIES_ONE}_BLOCK_${i})
+        END_ID=$(awk 'END{print $1}' ${BLOCK_DIR}/${sample}_${SPECIES_ONE}_BLOCK_${i})
+	echo "START: " ${START_ID}
+	echo "END: " ${END_ID}
+        sambamba view ${sorted_reads_prefix}.${SPECIES_TWO}.sorted.bam | sed -n "/$START_ID/,/$END_ID/p" > ${BLOCK_DIR}/${sample}_${SPECIES_TWO}_BLOCK_${i}     
+        #echo "KILL"
+
+        echo "ONE"
+        # Increment the indexes for extracting the next block
+        if [ $i -eq $(( $THREADS - 1 )) ]
+        then
+            echo LOWER=$(( $LOWER + $BLOCKSIZE ))
+            echo UPPER=${READ_NUMBER_1}
+            LOWER=$(( $LOWER + $BLOCKSIZE ))
+            UPPER=${READ_NUMBER_1} # Ensuring all reads are read
+            echo "LOW: " ${LOWER} " HIGH: " ${UPPER}
+        else
+            echo LOWER=$(( $LOWER + $BLOCKSIZE ))
+            echo UPPER=$(( $UPPER + $BLOCKSIZE ))
+            LOWER=$(( $LOWER + $BLOCKSIZE ))
+            UPPER=$(( $UPPER + $BLOCKSIZE ))
+            echo "LOW: " ${LOWER} " HIGH: " ${UPPER}
+        fi
+	echo "ITERATION COMPLETE"
+    done
+
+    # execute python process control script passing over file location info
+    #filter_species ${SPECIES_ONE} ${sorted_reads_prefix}.${SPECIES_ONE}.bam ${filtered_reads_prefix}.${SPECIES_ONE}.bam ${SPECIES_TWO} ${sorted_reads_prefix}.${SPECIES_TWO}.bam ${filtered_reads_prefix}.${SPECIES_TWO}.bam
 done
+
+# execute python process control script passing over file location info
+#python filter_control.py ${BLOCK_DIR} ${OUTPUT_DIR} ${THREADS} ${SPECIES_ONE} ${SPECIES_TWO}
