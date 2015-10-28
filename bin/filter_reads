@@ -53,7 +53,7 @@ for sample in ${SAMPLES}; do
     for i in $(seq $(( THREADS + 1)) )
     do
         j=$(( i - 1))
-        START_IDS["${j}"]=$( sambamba view -t "${THREADS}" "${sorted_reads_prefix}"."${LARGER_SPECIES}".sorted.bam | sed -n "${ID_INDICES[${j}]}p; $(( ${ID_INDICES[${j}]} + 1 ))q" | awk '{print $1}' )
+        START_IDS["${j}"]=$( sambamba view -t "${THREADS}" "${sorted_reads_prefix}"."${LARGER_SPECIES}".bam | sed -n "${ID_INDICES[${j}]}p; $(( ${ID_INDICES[${j}]} + 1 ))q" | awk '{print $1}' )
         #echo ${START_IDS["${j}"]} "${ID_INDICES[${j}]}p; $(( ${ID_INDICES[${j}]} + 1 ))q"
     done
 
@@ -62,11 +62,11 @@ for sample in ${SAMPLES}; do
     do
         if [ "$i" -ne 4 ]
         then
-            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name < '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_ONE}".sorted.bam > "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}"
-            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name < '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_TWO}".sorted.bam > "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}"
+            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name < '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_ONE}".bam > "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}"
+            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name < '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_TWO}".bam > "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}"
         else
-            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name <= '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_ONE}".sorted.bam > "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}"
-            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name <= '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_TWO}".sorted.bam > "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}"
+            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name <= '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_ONE}".bam > "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}"
+            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name <= '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_TWO}".bam > "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}"
         fi
     done
 done
