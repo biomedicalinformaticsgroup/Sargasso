@@ -30,7 +30,7 @@ function star_pe_reads {
 
     STAR --runThreadN ${NUM_THREADS} --genomeDir ${INDEX_DIR} --readFilesIn ${READ_1_FILES} ${READ_2_FILES} --outFileNamePrefix ${STAR_TMP}/star --outSAMstrandField intronMotif --outSAMtype BAM Unsorted --readFilesCommand zcat --outFilterMultimapScoreRange 0 --outFilterMultimapNmax 10000
 
-    mv $STAR_TMP/starAligned.sortedByCoord.out.bam ${OUTPUT_DIR}/${ID}.bam
+    mv $STAR_TMP/starAligned.out.bam ${OUTPUT_DIR}/${ID}.bam
     mv $STAR_TMP/starLog.final.out ${OUTPUT_DIR}/${ID}.log.out
     
     rm -rf $STAR_TMP

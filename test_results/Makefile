@@ -65,7 +65,7 @@ $(COLLATE_RAW_READS):
 	# Create a directory with sub-directories for each sample, each of which
 	# contains links to the input raw reads files for that sample
 	mkdir -p $(COLLATE_RAW_READS)
-	collate_raw_reads "$(SAMPLES)" "$(RAW_READ_FILES_1)" "$(RAW_READ_FILES_2)" $(COLLATE_RAW_READS)
+	collate_raw_reads "$(SAMPLES)" $(RAW_READS_DIRECTORY) "$(RAW_READ_FILES_1)" "$(RAW_READ_FILES_2)" $(COLLATE_RAW_READS)
 
 $(STAR_INDEX_MOUSE_MASK):
 	# TODO: Build STAR index for mouse sequences for which mapping reads should

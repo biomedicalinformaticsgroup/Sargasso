@@ -13,5 +13,5 @@ for sample in ${SAMPLES}; do
     sorted_reads_prefix=${INPUT_DIR}/${sample}
     filtered_reads_prefix=${OUTPUT_DIR}/${sample}
 
-    filter_sample_reads ${SPECIES_ONE} ${sorted_reads_prefix}.${SPECIES_ONE}.bam ${filtered_reads_prefix}.${SPECIES_ONE}.bam ${SPECIES_TWO} ${sorted_reads_prefix}.${SPECIES_TWO}.bam ${filtered_reads_prefix}.${SPECIES_TWO}.bam
+    filter_sample_reads ${SPECIES_ONE} ${sorted_reads_prefix}.${SPECIES_ONE}.bam ${filtered_reads_prefix}.${SPECIES_ONE}.bam ${SPECIES_TWO} ${sorted_reads_prefix}.${SPECIES_TWO}.bam ${filtered_reads_prefix}.${SPECIES_TWO}.bam > ${filtered_reads_prefix}.log.out 2>&1
 done
