@@ -24,25 +24,115 @@ TODO: what does this script do...
 """
 
 import docopt
+import os
 
+from . import file_writer as fw
 from . import options as opt
 from .__init__ import __version__
 
+OUTPUT_DIR = "<output-dir>"
+RUN_SEPARATION = "--run-separation"
+
 
 def _validate_command_line_options(options):
-    # validate log level
-    # Check samples TSV file exists
-    # Check output directory does not already exist
-    # Check GTF files for each species exist if specified
-    # Check STAR index directories for each species exist if specified
+    # TODO: validate log level
+    # TODO: Check samples TSV file exists
+    # TODO: Check output directory does not already exist
+    # TODO: Check GTF files for each species exist if specified
+    # TODO: Check STAR index directories for each species exist if specified
+    pass
+
+
+def _write_variable_definitions(logger, writer, options):
+    # TODO: Write variable definitions
+    writer.add_line("NUM_THREADS=8")
+
+
+def _write_target_variable_definitions(logger, writer, options):
+    # TODO: Write target variable definitions
+    pass
+
+
+def _write_phony_targets(logger, writer, options):
+    # TODO: Write .PHONY targets
+    pass
+
+
+def _write_all_target(logger, writer, options):
+    # TODO: Write "all" target
+    pass
+
+
+def _write_filtered_reads_target(logger, writer, options):
+    # TODO: Write "filtered_reads" target
+    pass
+
+
+def _write_sorted_reads_target(logger, writer, options):
+    # TODO: Write "sorted_reads" target
+    pass
+
+
+def _write_mapped_reads_target(logger, writer, options):
+    # TODO: Write "mapped_reads" target
+    pass
+
+
+def _write_masked_reads_target(logger, writer, options):
+    # TODO: Write "masked_reads" target
+    pass
+
+
+def _write_collate_raw_reads_target(logger, writer, options):
+    # TODO: Write "collate_raw_reads" target
+    pass
+
+
+def _write_mask_star_index_targets(logger, writer, options):
+    # TODO: Write targets for STAR indices for mask sequences
+    pass
+
+
+def _write_main_star_index_targets(logger, writer, options):
+    # TODO: Write targets to link to main STAR indices (if we're using
+    # pre-built indices) or build main STAR indices (if not)
+    pass
+
+
+def _write_clean_target(logger, writer, options):
+    # TODO: Write "clean" target
+    pass
+
+
+def _write_makefile(logger, options):
+    # TODO: Write Makefile to output directory, which, when executed, will perform species separation
+    with fw.writing_to_file(fw.MakefileWriter, options[OUTPUT_DIR], "Makefile") as writer:
+        _write_variable_definitions(logger, writer, options)
+        _write_target_variable_definitions(logger, writer, options)
+        _write_phony_targets(logger, writer, options)
+        _write_all_target(logger, writer, options)
+        _write_filtered_reads_target(logger, writer, options)
+        _write_sorted_reads_target(logger, writer, options)
+        _write_mapped_reads_target(logger, writer, options)
+        _write_masked_reads_target(logger, writer, options)
+        _write_collate_raw_reads_target(logger, writer, options)
+        _write_mask_star_index_targets(logger, writer, options)
+        _write_main_star_index_targets(logger, writer, options)
+        _write_clean_target(logger, writer, options)
+
+
+def _run_species_separation(logger, options):
+    # TODO: Execute Makefile with nohup
     pass
 
 
 def _separate_species(logger, options):
-    # Create output directory
-    # Write Makefile to output directory, which, when executed, will perform species separation
-    # If --run-separation has been specified, execute this Makefile (with nohup)
-    pass
+    os.mkdir(options[OUTPUT_DIR])
+
+    _write_makefile(logger, options)
+
+    if options[RUN_SEPARATION]:
+        _run_species_separation(logger, options)
 
 
 def separate_species(args):
