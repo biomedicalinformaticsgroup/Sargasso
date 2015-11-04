@@ -12,14 +12,12 @@
 import sys
 import subprocess
 import os
-#import pysam
 import math
 from os import listdir
 from os.path import isfile, join
 
 # Check whether output dir exists
 def checkDir(dir):
-	#print "yeah?"
         if not os.path.isdir(dir):
                 print "Filepath Parameter does not exist"
 		quit()
@@ -58,81 +56,47 @@ def dictionary_files(files,sp1,sp2):
 # Cycles through previously indexed chunks of read data & assigns it to the filter subprocess script
 # Chunks; for the time being I'm considering each chunk to be 10 read pairs organised as a list of dictionaries
 def run_processes(params):
-	#print "1"
 	chunkDir = params[1]
         outDir = params[2]
 	noThreads = params[3]
 	species1 = params[4]
 	species2 = params[5]
-	#bam1 = pysam.AlignmentFile(params[2],"rb")
-	#bam2 = pysam.AlignmentFile(params[3],"rb")
 	# keep track of all processes
         allProcesses = []
         processNo = -1
 	maxProcessNo = int(noThreads)
 	medianProcess = math.floor(maxProcessNo/2)
 	chunkdex = 0
-	#chinkSize = 20 #in lines
 	# get block files
 	blockFiles = [ f for f in listdir(chunkDir) if isfile(join(chunkDir,f)) ]
 	# remove species 2 block files
 	filePairs = dictionary_files(blockFiles,species1,species2)
-	#print str(filePairs)
         # cycle through chunks
         for file1 in filePairs.keys():
                 processNo = processNo + 1
+		# create input paths
+		sp1in = chunkDir + "/"+file1
+                sp2in = chunkDir + "/"+filePairs[file1]
 		# create output paths
 		sp1out = outDir + "/"+species1+"-block_"+str(processNo)+"-filtered"
 		sp2out = outDir + "/"+species2+"-block_"+str(processNo)+"-filtered"
-                commands = ["filter_reads_parallel",species1,file1,os.path.abspath(sp1out),species2,filePairs[file1],os.path.abspath(sp2out)]
-		#commands = ["python",os.path.abspath("species_separator/filter_reads_parallel.py"),species1,file1,os.path.abspath(sp1out),species2,filePairs[file1],os.path.abspath(sp2out)]
+                commands = ["filter_reads_parallel",species1,sp1in,os.path.abspath(sp1out),species2,sp2in,os.path.abspath(sp2out)]
                 proc = subprocess.Popen(commands)
                 allProcesses.append(proc)
-		# The control statement below shouldn't actually be necessary as we've already controlled fro the amount of parallel script executions when creating the blocks
-                #free = checkProcesses(allProcesses,maxProcessNo)
-                #while free == False:
-                #       allProcesses[medianProcess].wait()
-                #        free = checkProcesses(allProcesses,maxProcessNo)
-	
-
-	#for thread in range(noThreads):
-	#	chunkdex += 1
-         #       #checkDir(outDir)
-          #      #outName = outDir+"filter_out_"+str(chunkdex)
-	#	sp1ChunkFile = outDir+"/Blocks/"+sample+"_"+species1+"_BLOCK_"+str(thread)
-	#	sp2ChunkFile = outDir+"/Blocks/"+sample+"_"+species2+"_BLOCK_"+str(thread)
-         #       processNo = processNo + 1
-          #      commands = ["python",os.path.abspath("./filter_sample_reads"),sp1ChunkFile,sp2ChunkFile,sample,os.path.abspath(outDir)]
-           #     proc = subprocess.Popen(commands)
-            #    allProcesses.append(proc)
-                #free = checkProcesses(allProcesses,maxProcessNo)
-                #while free == False:
-                #	allProcesses[9].wait()
-                #        free = checkProcesses(allProcesses,maxProcessNo)
         # check all processes finished
-        print "Finishin Up"
         free = checkProcesses(allProcesses,1)
         while free == False:
+		print "Waiting for Threads"
                 allProcesses[0].wait()
                 free = checkProcesses(allProcesses,1)
+	print "Filtering Complete"
 	# NEED TO CONCATENATE THE OUTPUT FILES
         # DONE
 
-# read raw data 
-#def read_n_index(path):
-	
-
-#def main(params):
-	# read data in from BAM files & index into subprocessable chunks
-	#chunks = read_n_index(params[1])
-	# call the filter script with each chunk
-	#run_processes(chunks,params[1])
-	#DONE
-
 def validate_params(params):
 	# check output dir exists & create if not
-	checkDir(params[1])
-	checkDir(params[2])
+	#checkDir(params[1])
+	#checkDir(params[2])
 	#if not params[3].isnumeric():
 	#	print "Number of threads specified is not a number"
 	#	quit()
@@ -146,7 +110,6 @@ def validate_params(params):
 
 def filter_control():
 	if validate_params(sys.argv):
-		#main(sys.argv)
 		run_processes(sys.argv)
 
 filter_control()
