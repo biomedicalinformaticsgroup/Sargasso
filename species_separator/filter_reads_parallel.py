@@ -176,7 +176,9 @@ class _HitsChecker:
     def check_cigar(self, hits_info):
         for cigar in hits_info.get_cigars():
             for c in ["I", "D", "S", "H", "P", "X"]:
-                if c in cigar:
+                if cigar is None: #Filters out the unmapped reads
+		    return False
+		elif c in cigar:
                     return False
             if "N" in cigar:
                 segments = cigar.split("M")
