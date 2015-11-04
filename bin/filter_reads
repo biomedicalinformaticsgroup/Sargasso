@@ -13,6 +13,10 @@ THREADS=$7 #How many chunks to split the read files into
 
 #mkdir $OUTPUT_DIR
 
+DEBUG=1
+
+if [ ${DEBUG} -eq 0 ]
+then
 for sample in ${SAMPLES}; do
     sorted_reads_prefix="${INPUT_DIR}/${sample}"
     filtered_reads_prefix="${OUTPUT_DIR}/${sample}"
@@ -62,11 +66,11 @@ for sample in ${SAMPLES}; do
     do
         if [ "$i" -ne 4 ]
         then
-            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name < '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_ONE}".bam > "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}"
-            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name < '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_TWO}".bam > "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}"
+            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name < '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_ONE}".bam -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}".bam -l 1 -h
+            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name < '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_TWO}".bam -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}".bam -l 1 -h
         else
-            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name <= '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_ONE}".bam > "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}"
-            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name <= '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_TWO}".bam > "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}"
+            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name <= '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_ONE}".bam -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}".bam -l 1 -h
+            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name <= '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_TWO}".bam -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}".bam -l 1 -h
         fi
     done
 done
@@ -75,5 +79,9 @@ done
     #filter_species ${SPECIES_ONE} ${sorted_reads_prefix}.${SPECIES_ONE}.bam ${filtered_reads_prefix}.${SPECIES_ONE}.bam ${SPECIES_TWO} ${sorted_reads_prefix}.${SPECIES_TWO}.bam ${filtered_reads_prefix}.${SPECIES_TWO}.bam
 #done
 
+else
+BLOCK_DIR=${OUTPUT_DIR}/Blocks
 # execute python process control script passing over file location info
-#python filter_control.py ${BLOCK_DIR} ${OUTPUT_DIR} ${THREADS} ${SPECIES_ONE} ${SPECIES_TWO}
+filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${THREADS} ${SPECIES_ONE} ${SPECIES_TWO}
+#python species_separator/filter_control.py ${BLOCK_DIR} ${OUTPUT_DIR} ${THREADS} ${SPECIES_ONE} ${SPECIES_TWO}
+fi
