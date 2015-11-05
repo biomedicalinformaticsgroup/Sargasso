@@ -11,12 +11,8 @@ OUTPUT_DIR=$5
 READ_SUMMARY_FILE=$6
 THREADS=$7 #How many chunks to split the read files into
 
-#mkdir $OUTPUT_DIR
+mkdir $OUTPUT_DIR
 
-DEBUG=1
-
-if [ ${DEBUG} -eq 0 ]
-then
 for sample in ${SAMPLES}; do
     sorted_reads_prefix="${INPUT_DIR}/${sample}"
     filtered_reads_prefix="${OUTPUT_DIR}/${sample}"
@@ -75,13 +71,8 @@ for sample in ${SAMPLES}; do
     done
 done
 
-    # execute python process control script passing over file location info
-    #filter_species ${SPECIES_ONE} ${sorted_reads_prefix}.${SPECIES_ONE}.bam ${filtered_reads_prefix}.${SPECIES_ONE}.bam ${SPECIES_TWO} ${sorted_reads_prefix}.${SPECIES_TWO}.bam ${filtered_reads_prefix}.${SPECIES_TWO}.bam
-#done
-
-else
 BLOCK_DIR=${OUTPUT_DIR}/Blocks
 # execute python process control script passing over file location info
 filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${THREADS} ${SPECIES_ONE} ${SPECIES_TWO}
-#python species_separator/filter_control.py ${BLOCK_DIR} ${OUTPUT_DIR} ${THREADS} ${SPECIES_ONE} ${SPECIES_TWO}
-fi
+
+
