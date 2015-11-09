@@ -1,5 +1,6 @@
 *.pyc
 species_separator.egg-info/*
+results/*
 test_results/star_indices/*
 test_results/raw_reads/*
 test_results/mapped_reads/*
@@ -7,3 +8,4 @@ test_results/filtered_reads/*
 test_results/star_index_mouse_genome
 test_results/star_index_rat_genome
 neuron_astrocyte_activity_results/*
+Mouseonly_results/*
