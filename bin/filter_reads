@@ -2,6 +2,7 @@
 
 set -o nounset
 set -o errexit
+#set -o xtrace
 
 SPECIES_ONE=$1
 SPECIES_TWO=$2
@@ -11,7 +12,8 @@ OUTPUT_DIR=$5
 READ_SUMMARY_FILE=$6
 THREADS=$7 #How many chunks to split the read files into
 
-mkdir $OUTPUT_DIR
+BLOCK_DIR=${OUTPUT_DIR}/Blocks
+mkdir -p $BLOCK_DIR
 
 for sample in ${SAMPLES}; do
     sorted_reads_prefix="${INPUT_DIR}/${sample}"
@@ -32,47 +34,48 @@ for sample in ${SAMPLES}; do
         LARGEST=${READ_NUMBER_2}
         LARGER_SPECIES="${SPECIES_TWO}"
     fi
-    BLOCKSIZE=$(( LARGEST + 1 )) # Plus one as we want to round up
-    BLOCKSIZE=$(( BLOCKSIZE / THREADS ))
+
+    BLOCKSIZE=$(( LARGEST / THREADS ))
 
     # Calculate the line indexes to extract the start/end ids of the blocks
     ID_INDICES=()
-    INDEX=0
-    for element in $( seq 1 ${BLOCKSIZE} ${LARGEST} )
+    POS=1
+
+    ID_INDICES["0"]="${POS}"
+
+    for index in $( seq 1 $(( THREADS - 1 )) )
     do
-        ID_INDICES["${INDEX}"]="${element}"
-        INDEX=$(( INDEX + 1 ))
+        POS=$(( POS + BLOCKSIZE ))
+        ID_INDICES["${index}"]="${POS}"
     done
 
-    # initiate output dir for blocks and instantiate array
-    BLOCK_DIR=${OUTPUT_DIR}/Blocks
-    #mkdir $BLOCK_DIR
-    START_IDS=()
-
+    ID_INDICES["${THREADS}"]="${LARGEST}"
+       
     # fetch the ids from the largest file & store in array
+    SED_COMMAND=""
+
     for i in $(seq $(( THREADS + 1)) )
     do
         j=$(( i - 1))
-        START_IDS["${j}"]=$( sambamba view -t "${THREADS}" "${sorted_reads_prefix}"."${LARGER_SPECIES}".bam | sed -n "${ID_INDICES[${j}]}p; $(( ${ID_INDICES[${j}]} + 1 ))q" | awk '{print $1}' )
-        #echo ${START_IDS["${j}"]} "${ID_INDICES[${j}]}p; $(( ${ID_INDICES[${j}]} + 1 ))q"
+        SED_COMMAND="${SED_COMMAND} ${ID_INDICES[${j}]}p;"
     done
+
+    START_IDS=($( sambamba view -t "${THREADS}" "${sorted_reads_prefix}"."${LARGER_SPECIES}".bam | sed -n "${SED_COMMAND}" | awk '{print $1}' ))
 
     # extract blocks for both species
     for i in $(seq "${THREADS}" )
     do
-        if [ "$i" -ne 4 ]
+        if [ "$i" -ne "${THREADS}" ]
         then
-            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name < '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_ONE}".bam -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}".bam -l 1 -h
-            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name < '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_TWO}".bam -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}".bam -l 1 -h
+            OPERATOR="<"
         else
-            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name <= '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_ONE}".bam -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}".bam -l 1 -h
-            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name <= '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_TWO}".bam -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}".bam -l 1 -h
+            OPERATOR="<="
         fi
+
+        sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name ${OPERATOR} '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_ONE}".bam -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}".bam -l 1 -h
+        sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name ${OPERATOR} '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_TWO}".bam -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}".bam -l 1 -h
     done
 done
 
-BLOCK_DIR=${OUTPUT_DIR}/Blocks
 # execute python process control script passing over file location info
 filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${THREADS} ${SPECIES_ONE} ${SPECIES_TWO}
-
-
