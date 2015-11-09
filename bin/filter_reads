@@ -8,10 +8,71 @@ SPECIES_TWO=$2
 SAMPLES=$3
 INPUT_DIR=$4
 OUTPUT_DIR=$5
+READ_SUMMARY_FILE=$6
+THREADS=$7 #How many chunks to split the read files into
+
+mkdir $OUTPUT_DIR
 
 for sample in ${SAMPLES}; do
-    sorted_reads_prefix=${INPUT_DIR}/${sample}
-    filtered_reads_prefix=${OUTPUT_DIR}/${sample}
+    sorted_reads_prefix="${INPUT_DIR}/${sample}"
+    filtered_reads_prefix="${OUTPUT_DIR}/${sample}"
 
-    filter_sample_reads ${SPECIES_ONE} ${sorted_reads_prefix}.${SPECIES_ONE}.bam ${filtered_reads_prefix}.${SPECIES_ONE}.bam ${SPECIES_TWO} ${sorted_reads_prefix}.${SPECIES_TWO}.bam ${filtered_reads_prefix}.${SPECIES_TWO}.bam > ${filtered_reads_prefix}.log.out 2>&1
+    # extract the no. reads for this sample for species 1 & 2 from the read summary file
+    READ_NUMBER_1=$(grep "${sample}" "${READ_SUMMARY_FILE}" | awk '{print $2}')
+    READ_NUMBER_2=$(grep "${sample}" "${READ_SUMMARY_FILE}" | awk '{print $3}')
+
+    # calculate block sizes for larger species
+    LARGEST=0
+    LARGER_SPECIES=""
+    if [ "$READ_NUMBER_1" -gt "$READ_NUMBER_2" ]
+    then
+        LARGEST=${READ_NUMBER_1}
+        LARGER_SPECIES="${SPECIES_ONE}"
+    else
+        LARGEST=${READ_NUMBER_2}
+        LARGER_SPECIES="${SPECIES_TWO}"
+    fi
+    BLOCKSIZE=$(( LARGEST + 1 )) # Plus one as we want to round up
+    BLOCKSIZE=$(( BLOCKSIZE / THREADS ))
+
+    # Calculate the line indexes to extract the start/end ids of the blocks
+    ID_INDICES=()
+    INDEX=0
+    for element in $( seq 1 ${BLOCKSIZE} ${LARGEST} )
+    do
+        ID_INDICES["${INDEX}"]="${element}"
+        INDEX=$(( INDEX + 1 ))
+    done
+
+    # initiate output dir for blocks and instantiate array
+    BLOCK_DIR=${OUTPUT_DIR}/Blocks
+    #mkdir $BLOCK_DIR
+    START_IDS=()
+
+    # fetch the ids from the largest file & store in array
+    for i in $(seq $(( THREADS + 1)) )
+    do
+        j=$(( i - 1))
+        START_IDS["${j}"]=$( sambamba view -t "${THREADS}" "${sorted_reads_prefix}"."${LARGER_SPECIES}".bam | sed -n "${ID_INDICES[${j}]}p; $(( ${ID_INDICES[${j}]} + 1 ))q" | awk '{print $1}' )
+        #echo ${START_IDS["${j}"]} "${ID_INDICES[${j}]}p; $(( ${ID_INDICES[${j}]} + 1 ))q"
+    done
+
+    # extract blocks for both species
+    for i in $(seq "${THREADS}" )
+    do
+        if [ "$i" -ne 4 ]
+        then
+            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name < '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_ONE}".bam -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}".bam -l 1 -h
+            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name < '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_TWO}".bam -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}".bam -l 1 -h
+        else
+            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name <= '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_ONE}".bam -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}".bam -l 1 -h
+            sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name <= '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_TWO}".bam -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}".bam -l 1 -h
+        fi
+    done
 done
+
+BLOCK_DIR=${OUTPUT_DIR}/Blocks
+# execute python process control script passing over file location info
+filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${THREADS} ${SPECIES_ONE} ${SPECIES_TWO}
+
+
