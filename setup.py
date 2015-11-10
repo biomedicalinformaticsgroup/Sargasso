@@ -21,7 +21,6 @@ setup(
         'bin/filter_control',
         'bin/filter_reads',
         'bin/filter_sample_reads',
-        'bin/filter_reads_parallel',
         'bin/map_reads',
         'bin/sort_reads',
     ]

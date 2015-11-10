@@ -3,4 +3,4 @@
 import species_separator.filter_control as entry_point
 import sys
 
-entry_point.validate_params(sys.argv[1:])
+entry_point.filter_control(sys.argv[1:])

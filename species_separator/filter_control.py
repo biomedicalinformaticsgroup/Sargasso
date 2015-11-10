@@ -60,10 +60,10 @@ def dictionary_files(files, sp1, sp2):
 # filter subprocess script Chunks; for the time being I'm considering each
 # chunk to be 10 read pairs organised as a list of dictionaries
 def run_processes(params):
-    chunk_dir = params[1]
-    out_dir = params[2]
-    species1 = params[4]
-    species2 = params[5]
+    chunk_dir = params[0]
+    out_dir = params[1]
+    species1 = params[3]
+    species2 = params[4]
 
     # keep track of all processes
     all_processes = []
@@ -86,7 +86,7 @@ def run_processes(params):
             str(process_no) + "-filtered"
         sp2out = out_dir + "/" + species2 + "-block_" + \
             str(process_no) + "-filtered"
-        commands = ["filter_reads_parallel",
+        commands = ["filter_sample_reads",
                     species1, sp1in, os.path.abspath(sp1out),
                     species2, sp2in, os.path.abspath(sp2out)]
         proc = subprocess.Popen(commands)
@@ -120,6 +120,6 @@ def validate_params(params):
     return True
 
 
-def filter_control():
-    if validate_params(sys.argv):
-        run_processes(sys.argv)
+def filter_control(args):
+    if validate_params(args):
+        run_processes(args)
