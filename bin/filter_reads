@@ -9,8 +9,7 @@ SPECIES_TWO=$2
 SAMPLES=$3
 INPUT_DIR=$4
 OUTPUT_DIR=$5
-READ_SUMMARY_FILE=$6
-THREADS=$7 #How many chunks to split the read files into
+THREADS=$6 #How many chunks to split the read files into
 
 BLOCK_DIR=${OUTPUT_DIR}/Blocks
 mkdir -p $BLOCK_DIR
@@ -19,9 +18,20 @@ for sample in ${SAMPLES}; do
     sorted_reads_prefix="${INPUT_DIR}/${sample}"
     filtered_reads_prefix="${OUTPUT_DIR}/${sample}"
 
-    # extract the no. reads for this sample for species 1 & 2 from the read summary file
-    READ_NUMBER_1=$(grep "${sample}" "${READ_SUMMARY_FILE}" | awk '{print $2}')
-    READ_NUMBER_2=$(grep "${sample}" "${READ_SUMMARY_FILE}" | awk '{print $3}')
+    SPECIES_ONE_BAM="${sorted_reads_prefix}"."${SPECIES_ONE}".bam
+    SPECIES_TWO_BAM="${sorted_reads_prefix}"."${SPECIES_TWO}".bam
+
+    if [ "${THREADS}" -eq "1" ]
+    then
+        ln -rs ${SPECIES_ONE_BAM} ${BLOCK_DIR}/"${sample}"_"${SPECIES_ONE}"_BLOCK_1.bam
+        ln -rs ${SPECIES_TWO_BAM} ${BLOCK_DIR}/"${sample}"_"${SPECIES_TWO}"_BLOCK_1.bam
+        continue
+    fi
+
+    # extract the no. reads for this sample for species 1 & 2 from the read
+    # summary file
+    READ_NUMBER_1=$(sambamba view -c -t ${THREADS} ${SPECIES_ONE_BAM})
+    READ_NUMBER_2=$(sambamba view -c -t ${THREADS} ${SPECIES_TWO_BAM})
 
     # calculate block sizes for larger species
     LARGEST=0
@@ -72,8 +82,8 @@ for sample in ${SAMPLES}; do
             OPERATOR="<="
         fi
 
-        sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name ${OPERATOR} '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_ONE}".bam -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}".bam -l 1 -h
-        sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name ${OPERATOR} '${START_IDS[${i}]}'" "${sorted_reads_prefix}"."${SPECIES_TWO}".bam -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}".bam -l 1 -h
+        sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name ${OPERATOR} '${START_IDS[${i}]}'" ${SPECIES_ONE_BAM} -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}".bam -l 1 -h
+        sambamba view -t "${THREADS}" --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name ${OPERATOR} '${START_IDS[${i}]}'" ${SPECIES_TWO_BAM} -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}".bam -l 1 -h
     done
 done
 

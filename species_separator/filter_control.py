@@ -9,11 +9,10 @@
 # 4 - Species 1
 # 5 - Species 2
 
-import sys
 import subprocess
 import os
 from os import listdir
-from os.path import isfile, join
+from os.path import isdir, join
 
 
 # Check whether output dir exists
@@ -70,7 +69,7 @@ def run_processes(params):
     process_no = -1
 
     # get block files
-    block_files = [f for f in listdir(chunk_dir) if isfile(join(chunk_dir, f))]
+    block_files = [f for f in listdir(chunk_dir) if not isdir(join(chunk_dir, f))]
 
     # remove species 2 block files
     file_pairs = dictionary_files(block_files, species1, species2)
