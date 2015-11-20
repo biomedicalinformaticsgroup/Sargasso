@@ -85,9 +85,16 @@ for sample in ${SAMPLES}; do
         (sambamba view --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name ${OPERATOR} '${START_IDS[${i}]}'" ${SPECIES_ONE_BAM} -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}".bam -l 1 -h
         sambamba view --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name ${OPERATOR} '${START_IDS[${i}]}'" ${SPECIES_TWO_BAM} -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}".bam -l 1 -h) &
     done
+
+    wait
+
+    # execute python process control script passing over file location info
+    filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${SPECIES_ONE} ${SPECIES_TWO}
+
+    for i in $(seq "${THREADS}" )
+    do
+        rm "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}".bam
+        rm "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}".bam
+    done
 done
 
-wait
-
-# execute python process control script passing over file location info
-filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${THREADS} ${SPECIES_ONE} ${SPECIES_TWO}

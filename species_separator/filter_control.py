@@ -61,6 +61,7 @@ def dictionary_files(files, sp1, sp2):
 def run_processes(params):
     chunk_dir = params[0]
     out_dir = params[1]
+    sample = params[2]
     species1 = params[3]
     species2 = params[4]
 
@@ -81,10 +82,10 @@ def run_processes(params):
         sp1in = chunk_dir + "/" + file1
         sp2in = chunk_dir + "/" + file_pairs[file1]
         # create output paths
-        sp1out = out_dir + "/" + species1 + "-block_" + \
-            str(process_no) + "-filtered"
-        sp2out = out_dir + "/" + species2 + "-block_" + \
-            str(process_no) + "-filtered"
+        sp1out = out_dir + "/" + sample + "_" + species1 + "_" + \
+            str(process_no) + "-filtered.bam"
+        sp2out = out_dir + "/" + sample + "_" + species2 + "_" + \
+            str(process_no) + "-filtered.bam"
         commands = ["filter_sample_reads",
                     species1, sp1in, os.path.abspath(sp1out),
                     species2, sp2in, os.path.abspath(sp2out)]
