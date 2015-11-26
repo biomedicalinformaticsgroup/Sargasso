@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """Usage:
-    species_separator [--log-level=<log-level>] [--reads-base-dir=<reads-base-dir>] [--s1-gtf=<species-one-gtf-file>] [--s2-gtf=<species-two-gtf-file>] [--s1-genome-fasta=<species-one-genome-fasta>] [--s2-genome-fasta=<species-two-genome-fasta>] [--s1-index=<species-one-star-index>] [--s2-index=<species-two-star-index>] [--run-separation] <species-one> <species-two> <samples-file> <output-dir>
+    species_separator [--log-level=<log-level>] [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>] [--s1-gtf=<species-one-gtf-file>] [--s2-gtf=<species-two-gtf-file>] [--s1-genome-fasta=<species-one-genome-fasta>] [--s2-genome-fasta=<species-two-genome-fasta>] [--s1-index=<species-one-star-index>] [--s2-index=<species-two-star-index>] [--run-separation] <species-one> <species-two> <samples-file> <output-dir>
 
 Options:
 {help_option_spec}
@@ -15,6 +15,7 @@ Options:
 <samples-file>                                  TSV file giving paths of raw RNA-seq read data files for each sample.
 <output-dir>                                    Output directory in which species separation will be performed.
 --reads-base-dir=<reads-base-dir>               Base directory for raw RNA-seq read data files.
+-t <num-threads> --num-threads=<num-threads>    Number of threads to use for parallel processing. [default: 1]
 --s1-gtf=<species-one-gtf-file>                 GTF annotation file for first species.
 --s2-gtf=<species-two-gtf-file>                 GTF annotation file for second species.
 --s1-genome-fasta=<species-one-genome-fasta>    Directory containing genome FASTA files for first species.
@@ -39,6 +40,7 @@ SPECIES_TWO = "<species-two>"
 SAMPLES_FILE = "<samples-file>"
 OUTPUT_DIR = "<output-dir>"
 READS_BASE_DIR = "--reads-base-dir"
+NUM_THREADS = "--num-threads"
 SPECIES_ONE_GTF = "--s1-gtf"
 SPECIES_TWO_GTF = "--s2-gtf"
 SPECIES_ONE_GENOME_FASTA = "--s1-genome-fasta"
@@ -121,6 +123,10 @@ def _validate_command_line_options(options):
         opt.validate_dir_option(
             options[READS_BASE_DIR], "Reads base directory does not exist",
             nullable=True)
+        options[NUM_THREADS] = opt.validate_int_option(
+            options[NUM_THREADS],
+            "Number of threads must be a positive integer",
+            min_val=1, nullable=True)
         opt.validate_file_option(
             options[SAMPLES_FILE], "Could not open samples definition file")
         opt.validate_dir_option(
@@ -143,7 +149,8 @@ def _validate_command_line_options(options):
 
 def _write_variable_definitions(logger, writer, options):
     # TODO: Write variable definitions
-    writer.add_line("NUM_THREADS=8")
+    writer.add_line("NUM_THREADS={num_threads}".format(
+        num_threads=options[NUM_THREADS]))
 
 
 def _write_target_variable_definitions(logger, writer, options):
