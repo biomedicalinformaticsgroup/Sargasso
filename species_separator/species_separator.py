@@ -353,9 +353,16 @@ def _write_phony_targets(logger, writer):
         pass
 
 
-def _write_all_target(logger, writer, options):
-    # TODO: Write "all" target
-    pass
+def _write_all_target(logger, writer):
+    """
+    Write main target definition to Makefile.
+
+    logger: logging object
+    writer: Makefile writer object
+    """
+    with writer.target_definition(
+            ALL_TARGET, [FILTERED_READS_TARGET], raw_target=True):
+        pass
 
 
 def _write_filtered_reads_target(logger, writer, options):
@@ -405,7 +412,7 @@ def _write_makefile(logger, options, sample_info):
         _write_variable_definitions(logger, writer, options, sample_info)
         _write_target_variable_definitions(logger, writer)
         _write_phony_targets(logger, writer)
-        _write_all_target(logger, writer, options)
+        _write_all_target(logger, writer)
         _write_filtered_reads_target(logger, writer, options)
         _write_sorted_reads_target(logger, writer, options)
         _write_mapped_reads_target(logger, writer, options)
