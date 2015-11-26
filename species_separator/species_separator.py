@@ -25,6 +25,8 @@ Options:
 --run-separation                                If specified, species separation will be run; otherwise scripts to perform separation will be created but not run.
 
 TODO: what does this script do...
+
+e.g. bin/species_separator --reads-base-dir=/srv/data/ghardingham/neuron_astrocyte_activity/rnaseq --s1-index=/srv/data/genome/mouse/ensembl-80/STAR_Indices/primary_assembly --s2-index=/srv/data/genome/rat/ensembl-80/STAR_Indices/top_level -t 4 mouse rat samples.tsv my_results
 """
 
 import docopt
@@ -69,6 +71,24 @@ class SampleInfo(object):
         self.base_reads_dir = base_reads_dir
         self.left_reads = {}
         self.right_reads = {}
+
+    def get_sample_names(self):
+        """
+        Return a list of sample names.
+        """
+        return self.left_reads.keys()
+
+    def get_left_reads(self, sample_name):
+        """
+        Return list of first in pair reads files for sample.
+        """
+        return self.left_reads[sample_name]
+
+    def get_right_reads(self, sample_name):
+        """
+        Return list of second in pair reads files for sample.
+        """
+        return self.right_reads[sample_name]
 
     def add_sample_data(self, sample_data):
         """
@@ -225,10 +245,24 @@ def _validate_command_line_options(options):
         exit("Exiting: " + exc.code)
 
 
-def _write_variable_definitions(logger, writer, options):
+def _write_variable_definitions(logger, writer, options, sample_info):
     # TODO: Write variable definitions
-    writer.add_line("NUM_THREADS={num_threads}".format(
-        num_threads=options[NUM_THREADS]))
+    writer.set_variable("NUM_THREADS", options[NUM_THREADS])
+    writer.add_blank_line()
+
+    sample_names = sample_info.get_sample_names()
+    writer.set_variable("SAMPLES", " ".join(sample_names))
+    writer.set_variable(
+        "RAW_READS_DIRECTORY",
+        options[READS_BASE_DIR] if options[READS_BASE_DIR] else "/")
+    writer.set_variable(
+        "RAW_READ_FILES_1",
+        " ".join([",".join(sample_info.get_left_reads(name))
+                  for name in sample_names]))
+    writer.set_variable(
+        "RAW_READ_FILES_2",
+        " ".join([",".join(sample_info.get_right_reads(name))
+                  for name in sample_names]))
 
 
 def _write_target_variable_definitions(logger, writer, options):
@@ -287,10 +321,10 @@ def _write_clean_target(logger, writer, options):
     pass
 
 
-def _write_makefile(logger, options):
+def _write_makefile(logger, options, sample_info):
     # TODO: Write Makefile to output directory, which, when executed, will perform species separation
     with fw.writing_to_file(fw.MakefileWriter, options[OUTPUT_DIR], "Makefile") as writer:
-        _write_variable_definitions(logger, writer, options)
+        _write_variable_definitions(logger, writer, options, sample_info)
         _write_target_variable_definitions(logger, writer, options)
         _write_phony_targets(logger, writer, options)
         _write_all_target(logger, writer, options)
@@ -309,10 +343,10 @@ def _run_species_separation(logger, options):
     pass
 
 
-def _separate_species(logger, options):
+def _separate_species(logger, options, sample_info):
     os.mkdir(options[OUTPUT_DIR])
 
-    _write_makefile(logger, options)
+    _write_makefile(logger, options, sample_info)
 
     if options[RUN_SEPARATION]:
         _run_species_separation(logger, options)
@@ -325,9 +359,9 @@ def separate_species(args):
                             version="species_separator v" + __version__)
 
     # Validate command-line options
-    _validate_command_line_options(options)
+    sample_info = _validate_command_line_options(options)
 
     # Set up logger
     logger = opt.get_logger_for_options(options)
 
-    _separate_species(logger, options)
+    _separate_species(logger, options, sample_info)

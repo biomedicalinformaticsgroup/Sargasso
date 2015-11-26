@@ -43,6 +43,9 @@ class MakefileWriter(_Writer):
         line_string = MakefileWriter.INDENT * self.indent_level + line_string
         _Writer._add_line(self, line_string)
 
+    def add_blank_line(self):
+        self.add_line("")
+
     @contextlib.contextmanager
     def target_definition(self, target, dependencies, raw_target=False, raw_dependencies=False):
         self.add_line("{tar}: {deps}".format(
@@ -54,7 +57,7 @@ class MakefileWriter(_Writer):
             yield
         finally:
             self.deindent()
-            self.add_line("")
+            self.add_blank_line()
 
     def add_comment(self, comment):
         lines = textwrap.wrap(
