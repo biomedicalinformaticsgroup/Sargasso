@@ -52,6 +52,7 @@ SPECIES_ONE_INDEX = "--s1-index"
 SPECIES_TWO_INDEX = "--s2-index"
 RUN_SEPARATION = "--run-separation"
 
+SPECIES_NAME = "species-name"
 GTF_FILE = "gtf-file"
 GENOME_FASTA = "genome-fasta"
 STAR_INDEX = "star-index"
@@ -124,12 +125,13 @@ class SampleInfo(object):
             reads_file, "Could not open reads file")
 
 
-def _get_species_options(options, gtf_file_option,
+def _get_species_options(options, name_option, gtf_file_option,
                          genome_fasta_option, star_index_option):
     """
     Return a dictionary containing command-line options for a species.
 
     options: dictionary containing all command-line options.
+    name_option: name of option specifying species name.
     gtf_file_option: name of option specifying GTF annotation file for the
     species.
     genome_fasta_option: name of option specifying directory containing genome
@@ -138,6 +140,7 @@ def _get_species_options(options, gtf_file_option,
     species.
     """
     species_options = {}
+    species_options[SPECIES_NAME] = options[name_option]
     species_options[GTF_FILE] = options[gtf_file_option]
     species_options[GENOME_FASTA] = options[genome_fasta_option]
     species_options[STAR_INDEX] = options[star_index_option]
@@ -227,11 +230,11 @@ def _validate_command_line_options(options):
             should_exist=False)
 
         species_one_options = _get_species_options(
-            options, SPECIES_ONE_GTF, SPECIES_ONE_GENOME_FASTA,
-            SPECIES_ONE_INDEX)
+            options, SPECIES_ONE, SPECIES_ONE_GTF,
+            SPECIES_ONE_GENOME_FASTA, SPECIES_ONE_INDEX)
         species_two_options = _get_species_options(
-            options, SPECIES_TWO_GTF, SPECIES_TWO_GENOME_FASTA,
-            SPECIES_TWO_INDEX)
+            options, SPECIES_TWO, SPECIES_TWO_GTF,
+            SPECIES_TWO_GENOME_FASTA, SPECIES_TWO_INDEX)
 
         _validate_species_options("one", species_one_options)
         _validate_species_options("two", species_two_options)
@@ -245,8 +248,44 @@ def _validate_command_line_options(options):
         exit("Exiting: " + exc.code)
 
 
+def _write_species_variable_definitions(
+        logger, writer, species, species_options):
+    """
+    Write variable definitions for a particular species.
+
+    logger: logging object
+    writer: Makefile writer object
+    species: species number string
+    species_options: dictionary of options specific to a particular species.
+    """
+    writer.set_variable(
+        "SPECIES_{species}".format(species=species),
+        species_options[SPECIES_NAME])
+
+    if species_options[GTF_FILE] is None:
+        writer.set_variable(
+            "SPECIES_{species}_GENOME_DIR".format(species=species),
+            species_options[STAR_INDEX])
+    else:
+        writer.set_variable(
+            "SPECIES_{species}_GTF".format(species=species),
+            species_options[GTF_FILE])
+        writer.set_variable(
+            "SPECIES_{species}_GENOME_FASTA".format(species=species),
+            species_options[GENOME_FASTA])
+
+    writer.add_blank_line()
+
+
 def _write_variable_definitions(logger, writer, options, sample_info):
-    # TODO: Write variable definitions
+    """
+    Write variable definitions to Makefile.
+
+    logger: logging object
+    writer: Makefile writer object
+    options: dictionary of command-line options
+    sample_info: object encapsulating samples and their accompanying read files
+    """
     writer.set_variable("NUM_THREADS", options[NUM_THREADS])
     writer.add_blank_line()
 
@@ -263,6 +302,19 @@ def _write_variable_definitions(logger, writer, options, sample_info):
         "RAW_READ_FILES_2",
         " ".join([",".join(sample_info.get_right_reads(name))
                   for name in sample_names]))
+    writer.add_blank_line()
+
+    species_one_options = _get_species_options(
+        options, SPECIES_ONE, SPECIES_ONE_GTF,
+        SPECIES_ONE_GENOME_FASTA, SPECIES_ONE_INDEX)
+    species_two_options = _get_species_options(
+        options, SPECIES_TWO, SPECIES_TWO_GTF,
+        SPECIES_TWO_GENOME_FASTA, SPECIES_TWO_INDEX)
+
+    _write_species_variable_definitions(
+        logger, writer, "ONE", species_one_options)
+    _write_species_variable_definitions(
+        logger, writer, "TWO", species_two_options)
 
 
 def _write_target_variable_definitions(logger, writer, options):
