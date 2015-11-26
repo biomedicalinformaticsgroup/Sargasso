@@ -365,9 +365,23 @@ def _write_all_target(logger, writer):
         pass
 
 
-def _write_filtered_reads_target(logger, writer, options):
-    # TODO: Write "filtered_reads" target
-    pass
+def _write_filtered_reads_target(logger, writer):
+    """
+    Write target to separate reads by species to Makefile.
+
+    logger: logging object
+    writer: Makefile writer object
+    """
+    with writer.target_definition(
+            FILTERED_READS_TARGET, [SORTED_READS_TARGET]):
+        writer.add_comment(
+            "For each sample, take the reads mapping to each genome and " +
+            "filter them to their correct species of origin")
+        writer.make_target_directory(FILTERED_READS_TARGET)
+        writer.add_command(
+            "filter_reads",
+            ["SPECIES_ONE", "SPECIES_TWO", "SAMPLES", SORTED_READS_TARGET,
+             FILTERED_READS_TARGET, "NUM_THREADS"])
 
 
 def _write_sorted_reads_target(logger, writer, options):
@@ -413,7 +427,7 @@ def _write_makefile(logger, options, sample_info):
         _write_target_variable_definitions(logger, writer)
         _write_phony_targets(logger, writer)
         _write_all_target(logger, writer)
-        _write_filtered_reads_target(logger, writer, options)
+        _write_filtered_reads_target(logger, writer)
         _write_sorted_reads_target(logger, writer, options)
         _write_mapped_reads_target(logger, writer, options)
         _write_masked_reads_target(logger, writer, options)

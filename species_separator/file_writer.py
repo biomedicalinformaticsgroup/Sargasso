@@ -71,3 +71,12 @@ class MakefileWriter(_Writer):
 
     def variable_val(self, variable, raw=False):
         return variable if raw else "$({var})".format(var=variable)
+
+    def make_target_directory(self, target):
+        self.add_line("mkdir -p " + self.variable_val(target))
+
+    def add_command(self, command_name, options, raw_options=False):
+        line_elements = [command_name] + \
+            ["\"{var}\"".format(var=self.variable_val(opt, raw_options))
+             for opt in options]
+        self.add_line(" ".join(line_elements))
