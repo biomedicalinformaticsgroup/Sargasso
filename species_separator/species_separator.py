@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """Usage:
-    species_separator [--log-level=<log-level>] [--s1-gtf=<species-one-gtf-file>] [--s2-gtf=<species-two-gtf-file>] [--s1-index=<species-one-star-index>] [--s2-index=<species-two-star-index>] [--run-separation] <species-one> <species-two> <samples-file> <output-dir>
+    species_separator [--log-level=<log-level>] [--reads-base-dir=<reads-base-dir>] [--s1-gtf=<species-one-gtf-file>] [--s2-gtf=<species-two-gtf-file>] [--s1-genome-fasta=<species-one-genome-fasta>] [--s2-genome-fasta=<species-two-genome-fasta>] [--s1-index=<species-one-star-index>] [--s2-index=<species-two-star-index>] [--run-separation] <species-one> <species-two> <samples-file> <output-dir>
 
 Options:
 {help_option_spec}
@@ -10,37 +10,135 @@ Options:
     {ver_option_description}
 {log_option_spec}
     {log_option_description}
-<species-one>                           Name of first species.
-<species-two>                           Name of second species.
-<samples-file>                          TSV file giving raw RNA-seq data files for each sample.
-<output-dir>                            Output directory in which species separation will be performed.
---s1-gtf=<species-one-gtf-file>         GTF annotation file for first species.
---s2-gtf=<species-two-gtf-file>         GTF annotation file for second species.
---s1-index=<species-one-star-index>     STAR index directory for first species.
---s2-index=<species-two-star-index>     STAR index directory for first species.
---run-separation                        If specified, species separation will be run; otherwise scripts to perform separation will be created but not run.
+<species-one>                                   Name of first species.
+<species-two>                                   Name of second species.
+<samples-file>                                  TSV file giving paths of raw RNA-seq read data files for each sample.
+<output-dir>                                    Output directory in which species separation will be performed.
+--reads-base-dir=<reads-base-dir>               Base directory for raw RNA-seq read data files.
+--s1-gtf=<species-one-gtf-file>                 GTF annotation file for first species.
+--s2-gtf=<species-two-gtf-file>                 GTF annotation file for second species.
+--s1-genome-fasta=<species-one-genome-fasta>    Directory containing genome FASTA files for first species.
+--s2-genome-fasta=<species-two-genome-fasta>    Directory containing genome FASTA files for second species.
+--s1-index=<species-one-star-index>             STAR index directory for first species.
+--s2-index=<species-two-star-index>             STAR index directory for second species.
+--run-separation                                If specified, species separation will be run; otherwise scripts to perform separation will be created but not run.
 
 TODO: what does this script do...
 """
 
 import docopt
 import os
+import schema
 
 from . import file_writer as fw
 from . import options as opt
 from .__init__ import __version__
 
+SPECIES_ONE = "<species-one>"
+SPECIES_TWO = "<species-two>"
+SAMPLES_FILE = "<samples-file>"
 OUTPUT_DIR = "<output-dir>"
+READS_BASE_DIR = "--reads-base-dir"
+SPECIES_ONE_GTF = "--s1-gtf"
+SPECIES_TWO_GTF = "--s2-gtf"
+SPECIES_ONE_GENOME_FASTA = "--s1-genome-fasta"
+SPECIES_TWO_GENOME_FASTA = "--s2-genome-fasta"
+SPECIES_ONE_INDEX = "--s1-index"
+SPECIES_TWO_INDEX = "--s2-index"
 RUN_SEPARATION = "--run-separation"
+
+GTF_FILE = "gtf-file"
+GENOME_FASTA = "genome-fasta"
+STAR_INDEX = "star-index"
+
+
+def _get_species_options(options, gtf_file_option,
+                         genome_fasta_option, star_index_option):
+    """
+    Return a dictionary containing command-line options for a particular
+    species.
+
+    options: dictionary containing all command-line options.
+    gtf_file_option: name of option specifying GTF annotation file for the
+    species.
+    genome_fasta_option: name of option specifying directory containing genome
+    FASTA files for the species.
+    star_index_option: name of option specifying STAR index directory for the
+    species.
+    """
+    species_options = {}
+    species_options[GTF_FILE] = options[gtf_file_option]
+    species_options[GENOME_FASTA] = options[genome_fasta_option]
+    species_options[STAR_INDEX] = options[star_index_option]
+    return species_options
+
+
+def _validate_species_options(species, species_options):
+    """
+    Validate command-line options for a particular species are correctly
+    specified.
+
+    species: species identification string
+    species_options: dictionary of options specific to a particular species.
+    """
+    opt.validate_file_option(
+        species_options[GTF_FILE],
+        "Could not open species {species} GTF file".format(species=species),
+        nullable=True)
+    opt.validate_dir_option(
+        species_options[GENOME_FASTA],
+        "Genome FASTA directory for species {species} should exist".
+        format(species=species),
+        nullable=True)
+    opt.validate_dir_option(
+        species_options[STAR_INDEX],
+        "STAR index directory for species {species} should exist".
+        format(species=species),
+        nullable=True)
+
+    if (species_options[GTF_FILE] is None) != \
+            (species_options[GENOME_FASTA] is None):
+        raise schema.SchemaError(None, "Should specify both GTF file and " +
+                                 "genome FASTA directory for species " +
+                                 "{species}.".format(species=species))
+
+    if (species_options[GTF_FILE] is None) == \
+            (species_options[STAR_INDEX] is None):
+        raise schema.SchemaError(None, "Should specify either GTF file " +
+                                 "or STAR index directory for species " +
+                                 "{species} (but not both).".
+                                 format(species=species))
 
 
 def _validate_command_line_options(options):
-    # TODO: validate log level
-    # TODO: Check samples TSV file exists
-    # TODO: Check output directory does not already exist
-    # TODO: Check GTF files for each species exist if specified
-    # TODO: Check STAR index directories for each species exist if specified
-    pass
+    """
+    Validate command line options are correctly specified.
+
+    options: dictionary of command-line options.
+    """
+    try:
+        opt.validate_log_level(options)
+        opt.validate_dir_option(
+            options[READS_BASE_DIR], "Reads base directory does not exist",
+            nullable=True)
+        opt.validate_file_option(
+            options[SAMPLES_FILE], "Could not open samples definition file")
+        opt.validate_dir_option(
+            options[OUTPUT_DIR], "Output directory should not exist",
+            should_exist=False)
+
+        species_one_options = _get_species_options(
+            options, SPECIES_ONE_GTF, SPECIES_ONE_GENOME_FASTA,
+            SPECIES_ONE_INDEX)
+        species_two_options = _get_species_options(
+            options, SPECIES_TWO_GTF, SPECIES_TWO_GENOME_FASTA,
+            SPECIES_TWO_INDEX)
+
+        _validate_species_options("one", species_one_options)
+        _validate_species_options("two", species_two_options)
+
+    except schema.SchemaError as exc:
+        exit(exc.code)
 
 
 def _write_variable_definitions(logger, writer, options):
