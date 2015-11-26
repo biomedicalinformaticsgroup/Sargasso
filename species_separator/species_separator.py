@@ -57,6 +57,12 @@ GTF_FILE = "gtf-file"
 GENOME_FASTA = "genome-fasta"
 STAR_INDEX = "star-index"
 
+STAR_INDICES_TARGET = "STAR_INDICES"
+COLLATE_RAW_READS_TARGET = "COLLATE_RAW_READS"
+MAPPED_READS_TARGET = "MAPPED_READS"
+SORTED_READS_TARGET = "SORTED_READS"
+FILTERED_READS_TARGET = "FILTERED_READS"
+
 
 # TODO: deal with single-end reads
 class SampleInfo(object):
@@ -317,9 +323,19 @@ def _write_variable_definitions(logger, writer, options, sample_info):
         logger, writer, "TWO", species_two_options)
 
 
-def _write_target_variable_definitions(logger, writer, options):
-    # TODO: Write target variable definitions
-    pass
+def _write_target_variable_definitions(logger, writer):
+    """
+    Write target directory variable definitions to Makefile.
+
+    logger: logging object
+    writer: Makefile writer object
+    """
+    writer.set_variable(STAR_INDICES_TARGET, "star_indices")
+    writer.set_variable(COLLATE_RAW_READS_TARGET, "raw_reads")
+    writer.set_variable(MAPPED_READS_TARGET, "mapped_reads")
+    writer.set_variable(SORTED_READS_TARGET, "sorted_reads")
+    writer.set_variable(FILTERED_READS_TARGET, "filtered_reads")
+    writer.add_blank_line()
 
 
 def _write_phony_targets(logger, writer, options):
@@ -377,7 +393,7 @@ def _write_makefile(logger, options, sample_info):
     # TODO: Write Makefile to output directory, which, when executed, will perform species separation
     with fw.writing_to_file(fw.MakefileWriter, options[OUTPUT_DIR], "Makefile") as writer:
         _write_variable_definitions(logger, writer, options, sample_info)
-        _write_target_variable_definitions(logger, writer, options)
+        _write_target_variable_definitions(logger, writer)
         _write_phony_targets(logger, writer, options)
         _write_all_target(logger, writer, options)
         _write_filtered_reads_target(logger, writer, options)
