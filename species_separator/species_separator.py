@@ -29,6 +29,7 @@ TODO: what does this script do...
 
 import docopt
 import os
+import os.path
 import schema
 
 from . import file_writer as fw
@@ -54,11 +55,59 @@ GENOME_FASTA = "genome-fasta"
 STAR_INDEX = "star-index"
 
 
+# TODO: deal with single-end reads
+class SampleInfo(object):
+    """
+    Encapsulates sample names and their accompanying reads files.
+    """
+    def __init__(self, base_reads_dir):
+        """
+        Create object.
+
+        base_reads_dir: Common base path to all raw reads files.
+        """
+        self.base_reads_dir = base_reads_dir
+        self.left_reads = {}
+        self.right_reads = {}
+
+    def add_sample_data(self, sample_data):
+        """
+        Add information for a single sample.
+
+        sample_data: list of strings - sample name, comma-separated list of
+        first in pair reads files, comma-separated list of second in pair reads
+        files.
+        """
+        sample_name = sample_data[0]
+        self.left_reads[sample_name] = sample_data[1].split(',')
+        self.right_reads[sample_name] = sample_data[2].split(',')
+
+    def validate(self):
+        """
+        Validate all raw reads files exist.
+        """
+        for reads_set in [self.left_reads, self.right_reads]:
+            for reads_file_list in reads_set.values():
+                for reads_file in reads_file_list:
+                    self.validate_read_file(reads_file)
+
+    def validate_read_file(self, reads_file):
+        """
+        Validate a particular raw reads file exists.
+
+        reads_file: Path to a particular raw reads file (possibly truncated,
+        and needing to be joined with 'base_reads_dir').
+        """
+        if self.base_reads_dir:
+            reads_file = os.path.join(self.base_reads_dir, reads_file)
+        opt.validate_file_option(
+            reads_file, "Could not open reads file")
+
+
 def _get_species_options(options, gtf_file_option,
                          genome_fasta_option, star_index_option):
     """
-    Return a dictionary containing command-line options for a particular
-    species.
+    Return a dictionary containing command-line options for a species.
 
     options: dictionary containing all command-line options.
     gtf_file_option: name of option specifying GTF annotation file for the
@@ -77,8 +126,7 @@ def _get_species_options(options, gtf_file_option,
 
 def _validate_species_options(species, species_options):
     """
-    Validate command-line options for a particular species are correctly
-    specified.
+    Validate command-line options for a species are correctly specified.
 
     species: species identification string
     species_options: dictionary of options specific to a particular species.
@@ -112,6 +160,31 @@ def _validate_species_options(species, species_options):
                                  format(species=species))
 
 
+def _read_sample_info(options):
+    """
+    Return an object encapsulating samples and their accompanying read files.
+
+    options: dictionary of command-line options
+    """
+    sample_info = SampleInfo(options[READS_BASE_DIR])
+
+    for line in open(options[SAMPLES_FILE], 'r'):
+        sample_data = line.split()
+
+        if len(sample_data) != 3:
+            line = line.rstrip('\n')
+            if len(line) > 80:
+                line = line[0:77] + "..."
+            raise schema.SchemaError(
+                None, "Sample file line should contain sample name and " +
+                "lists of first and second pairs of read files, separated " +
+                "by whitespace: \n{info}".format(info=line))
+
+        sample_info.add_sample_data(sample_data)
+
+    return sample_info
+
+
 def _validate_command_line_options(options):
     """
     Validate command line options are correctly specified.
@@ -143,8 +216,13 @@ def _validate_command_line_options(options):
         _validate_species_options("one", species_one_options)
         _validate_species_options("two", species_two_options)
 
+        sample_info = _read_sample_info(options)
+        sample_info.validate()
+
+        return sample_info
     except schema.SchemaError as exc:
-        exit(exc.code)
+        # TODO: format exit message for 80 columns
+        exit("Exiting: " + exc.code)
 
 
 def _write_variable_definitions(logger, writer, options):
