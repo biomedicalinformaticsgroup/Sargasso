@@ -57,6 +57,8 @@ GTF_FILE = "gtf-file"
 GENOME_FASTA = "genome-fasta"
 STAR_INDEX = "star-index"
 
+ALL_TARGET = "all"
+CLEAN_TARGET = "clean"
 STAR_INDICES_TARGET = "STAR_INDICES"
 COLLATE_RAW_READS_TARGET = "COLLATE_RAW_READS"
 MAPPED_READS_TARGET = "MAPPED_READS"
@@ -338,9 +340,17 @@ def _write_target_variable_definitions(logger, writer):
     writer.add_blank_line()
 
 
-def _write_phony_targets(logger, writer, options):
-    # TODO: Write .PHONY targets
-    pass
+def _write_phony_targets(logger, writer):
+    """
+    Write phony target definitions to Makefile.
+
+    logger: logging object
+    writer: Makefile writer object
+    """
+    with writer.target_definition(
+            ".PHONY", [ALL_TARGET, CLEAN_TARGET],
+            raw_target=True, raw_dependencies=True):
+        pass
 
 
 def _write_all_target(logger, writer, options):
@@ -394,7 +404,7 @@ def _write_makefile(logger, options, sample_info):
     with fw.writing_to_file(fw.MakefileWriter, options[OUTPUT_DIR], "Makefile") as writer:
         _write_variable_definitions(logger, writer, options, sample_info)
         _write_target_variable_definitions(logger, writer)
-        _write_phony_targets(logger, writer, options)
+        _write_phony_targets(logger, writer)
         _write_all_target(logger, writer, options)
         _write_filtered_reads_target(logger, writer, options)
         _write_sorted_reads_target(logger, writer, options)
