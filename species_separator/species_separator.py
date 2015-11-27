@@ -69,6 +69,9 @@ NUM_THREADS_VARIABLE = "NUM_THREADS"
 SPECIES_ONE_VARIABLE = "SPECIES_ONE"
 SPECIES_TWO_VARIABLE = "SPECIES_TWO"
 SAMPLES_VARIABLE = "SAMPLES"
+RAW_READS_DIRECTORY_VARIABLE = "RAW_READS_DIRECTORY"
+RAW_READS_SPECIES_ONE_VARIABLE = "RAW_READS_FILES_1"
+RAW_READS_SPECIES_TWO_VARIABLE = "RAW_READS_FILES_2"
 
 
 # TODO: deal with single-end reads
@@ -305,14 +308,14 @@ def _write_variable_definitions(logger, writer, options, sample_info):
     sample_names = sample_info.get_sample_names()
     writer.set_variable(SAMPLES_VARIABLE, " ".join(sample_names))
     writer.set_variable(
-        "RAW_READS_DIRECTORY",
+        RAW_READS_DIRECTORY_VARIABLE,
         options[READS_BASE_DIR] if options[READS_BASE_DIR] else "/")
     writer.set_variable(
-        "RAW_READ_FILES_1",
+        RAW_READS_SPECIES_ONE_VARIABLE,
         " ".join([",".join(sample_info.get_left_reads(name))
                   for name in sample_names]))
     writer.set_variable(
-        "RAW_READ_FILES_2",
+        RAW_READS_SPECIES_TWO_VARIABLE,
         " ".join([",".join(sample_info.get_right_reads(name))
                   for name in sample_names]))
     writer.add_blank_line()
@@ -445,14 +448,33 @@ def _write_mapped_reads_target(logger, writer):
              writer.variable_val(MAPPED_READS_TARGET)])
 
 
-def _write_masked_reads_target(logger, writer, options):
+#def _write_masked_reads_target(logger, writer, options):
     # TODO: Write "masked_reads" target
-    pass
+    #pass
 
 
-def _write_collate_raw_reads_target(logger, writer, options):
-    # TODO: Write "collate_raw_reads" target
-    pass
+def _write_collate_raw_reads_target(logger, writer):
+    """
+    Write target to collect raw reads files to Makefile.
+
+    logger: logging object
+    writer: Makefile writer object
+    """
+    with writer.target_definition(COLLATE_RAW_READS_TARGET, []):
+        writer.add_comment(
+            "Create a directory with sub-directories for each sample, " +
+            "each of which contains links to the input raw reads files " +
+            "for that sample")
+        writer.make_target_directory(COLLATE_RAW_READS_TARGET)
+        writer.add_command(
+            "collate_raw_reads",
+            ["\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
+             writer.variable_val(RAW_READS_DIRECTORY_VARIABLE),
+             "\"{var}\"".format(
+                 var=writer.variable_val(RAW_READS_SPECIES_ONE_VARIABLE)),
+             "\"{var}\"".format(
+                 var=writer.variable_val(RAW_READS_SPECIES_TWO_VARIABLE)),
+             writer.variable_val(COLLATE_RAW_READS_TARGET)])
 
 
 def _write_mask_star_index_targets(logger, writer, options):
@@ -481,8 +503,8 @@ def _write_makefile(logger, options, sample_info):
         _write_filtered_reads_target(logger, writer)
         _write_sorted_reads_target(logger, writer)
         _write_mapped_reads_target(logger, writer)
-        _write_masked_reads_target(logger, writer, options)
-        _write_collate_raw_reads_target(logger, writer, options)
+        #_write_masked_reads_target(logger, writer)
+        _write_collate_raw_reads_target(logger, writer)
         _write_mask_star_index_targets(logger, writer, options)
         _write_main_star_index_targets(logger, writer, options)
         _write_clean_target(logger, writer, options)
