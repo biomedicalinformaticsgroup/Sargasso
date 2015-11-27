@@ -36,6 +36,7 @@ import schema
 
 from . import file_writer as fw
 from . import options as opt
+from . import process
 from .__init__ import __version__
 
 SPECIES_ONE = "<species-one>"
@@ -278,7 +279,7 @@ def _write_species_variable_definitions(
     species_options: dictionary of options specific to a particular species.
     """
     writer.set_variable(
-        "SPECIES_{species}".format(species=species),
+        "{species}".format(species=species),
         species_options[SPECIES_NAME])
 
     if species_options[GTF_FILE] is None:
@@ -435,7 +436,8 @@ def _write_mapped_reads_target(logger, writer):
         ["{index}/{s1}".format(index=writer.variable_val(STAR_INDICES_TARGET),
                                s1=writer.variable_val(SPECIES_ONE_VARIABLE)),
          "{index}/{s2}".format(index=writer.variable_val(STAR_INDICES_TARGET),
-                               s2=writer.variable_val(SPECIES_TWO_VARIABLE))],
+                               s2=writer.variable_val(SPECIES_TWO_VARIABLE)),
+         writer.variable_val(COLLATE_RAW_READS_TARGET)],
             raw_dependencies=True):
         writer.add_comment(
             "Map reads for each sample to each species' genome")
@@ -549,15 +551,8 @@ def _write_clean_target(logger, writer):
     logger: logging object
     writer: Makefile writer object
     """
-    with writer.target_definition(CLEAN_TARGET, []):
-        writer.remove_target_directory("{index}/{spec}".format(
-            index=writer.variable_val(STAR_INDICES_TARGET),
-            spec=writer.variable_val(SPECIES_ONE_VARIABLE)),
-            raw_target=True)
-        writer.remove_target_directory("{index}/{spec}".format(
-            index=writer.variable_val(STAR_INDICES_TARGET),
-            spec=writer.variable_val(SPECIES_TWO_VARIABLE)),
-            raw_target=True)
+    with writer.target_definition(CLEAN_TARGET, [], raw_target=True):
+        writer.remove_target_directory(STAR_INDICES_TARGET)
         writer.remove_target_directory(COLLATE_RAW_READS_TARGET)
         writer.remove_target_directory(MAPPED_READS_TARGET)
         writer.remove_target_directory(SORTED_READS_TARGET)
@@ -589,20 +584,21 @@ def _write_makefile(logger, options, sample_info):
 
 
 def _run_species_separation(logger, options):
-    # TODO: Execute Makefile with nohup
-    pass
+    """
+    Executes the written Makefile with nohup.
 
-
-def _separate_species(logger, options, sample_info):
-    os.mkdir(options[OUTPUT_DIR])
-
-    _write_makefile(logger, options, sample_info)
-
-    if options[RUN_SEPARATION]:
-        _run_species_separation(logger, options)
+    logger: logging object
+    options: dictionary of command-line options
+    """
+    process.run_in_directory(options[OUTPUT_DIR], "make")
 
 
 def separate_species(args):
+    """
+    Write a Makefile to perform species separation and optionally execute it.
+
+    args: list of command-line arguments
+    """
     # Read in command-line options
     docstring = opt.substitute_common_options_into_usage(__doc__)
     options = docopt.docopt(docstring, argv=args,
@@ -614,4 +610,12 @@ def separate_species(args):
     # Set up logger
     logger = opt.get_logger_for_options(options)
 
-    _separate_species(logger, options, sample_info)
+    # Create output directory
+    os.mkdir(options[OUTPUT_DIR])
+
+    # Write Makefile to output directory
+    _write_makefile(logger, options, sample_info)
+
+    # If specified, execute the Makefile with nohup
+    if options[RUN_SEPARATION]:
+        _run_species_separation(logger, options)

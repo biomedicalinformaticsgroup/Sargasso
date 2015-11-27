@@ -26,7 +26,7 @@ class _Writer(object):
 
 
 class MakefileWriter(_Writer):
-    INDENT = '    '
+    INDENT = '\t'
 
     def __init__(self):
         _Writer.__init__(self)

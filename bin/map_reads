@@ -2,10 +2,7 @@
 
 set -o nounset
 set -o errexit
-
-function get_random_id {
-    cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1
-}
+set -o xtrace
 
 function listFiles {
     FILES=$@
@@ -25,7 +22,7 @@ function star_pe_reads {
     OUTPUT_DIR=$7
 
     ID=${SAMPLE}.${SPECIES}
-    STAR_TMP=$(get_random_id).${ID}.tmp
+    STAR_TMP=${ID}.tmp
     mkdir $STAR_TMP
 
     STAR --runThreadN ${NUM_THREADS} --genomeDir ${INDEX_DIR} --readFilesIn ${READ_1_FILES} ${READ_2_FILES} --outFileNamePrefix ${STAR_TMP}/star --outSAMstrandField intronMotif --outSAMtype BAM Unsorted --readFilesCommand zcat --outFilterMultimapScoreRange 0 --outFilterMultimapNmax 10000
