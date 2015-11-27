@@ -73,7 +73,10 @@ class MakefileWriter(_Writer):
         return variable if raw else "$({var})".format(var=variable)
 
     def make_target_directory(self, target):
-        self.add_line("mkdir -p " + self.variable_val(target))
+        self.add_command("mkdir", ["-p", self.variable_val(target)])
+
+    def remove_target_directory(self, target, raw_target=False):
+        self.add_command("rm", ["-rf", self.variable_val(target, raw_target)])
 
     def add_command(self, command_name, options):
         line_elements = [command_name] + options

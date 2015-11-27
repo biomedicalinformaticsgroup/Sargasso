@@ -542,14 +542,38 @@ def _write_main_star_index_targets(logger, writer, options):
         logger, writer, SPECIES_TWO_VARIABLE, species_two_options)
 
 
-def _write_clean_target(logger, writer, options):
-    # TODO: Write "clean" target
-    pass
+def _write_clean_target(logger, writer):
+    """
+    Write target to clean results directory to Makefile.
+
+    logger: logging object
+    writer: Makefile writer object
+    """
+    with writer.target_definition(CLEAN_TARGET, []):
+        writer.remove_target_directory("{index}/{spec}".format(
+            index=writer.variable_val(STAR_INDICES_TARGET),
+            spec=writer.variable_val(SPECIES_ONE_VARIABLE)),
+            raw_target=True)
+        writer.remove_target_directory("{index}/{spec}".format(
+            index=writer.variable_val(STAR_INDICES_TARGET),
+            spec=writer.variable_val(SPECIES_TWO_VARIABLE)),
+            raw_target=True)
+        writer.remove_target_directory(COLLATE_RAW_READS_TARGET)
+        writer.remove_target_directory(MAPPED_READS_TARGET)
+        writer.remove_target_directory(SORTED_READS_TARGET)
+        writer.remove_target_directory(FILTERED_READS_TARGET)
 
 
 def _write_makefile(logger, options, sample_info):
-    # TODO: Write Makefile to output directory, which, when executed, will perform species separation
-    with fw.writing_to_file(fw.MakefileWriter, options[OUTPUT_DIR], "Makefile") as writer:
+    """
+    Write Makefile to results directory to perform species separation.
+
+    logger: logging object
+    options: dictionary of command-line options
+    sample_info: object encapsulating samples and their accompanying read files
+    """
+    with fw.writing_to_file(
+            fw.MakefileWriter, options[OUTPUT_DIR], "Makefile") as writer:
         _write_variable_definitions(logger, writer, options, sample_info)
         _write_target_variable_definitions(logger, writer)
         _write_phony_targets(logger, writer)
@@ -561,7 +585,7 @@ def _write_makefile(logger, options, sample_info):
         _write_collate_raw_reads_target(logger, writer)
         #_write_mask_star_index_targets(logger, writer, options)
         _write_main_star_index_targets(logger, writer, options)
-        _write_clean_target(logger, writer, options)
+        _write_clean_target(logger, writer)
 
 
 def _run_species_separation(logger, options):
