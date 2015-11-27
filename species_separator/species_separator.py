@@ -65,6 +65,11 @@ MAPPED_READS_TARGET = "MAPPED_READS"
 SORTED_READS_TARGET = "SORTED_READS"
 FILTERED_READS_TARGET = "FILTERED_READS"
 
+NUM_THREADS_VARIABLE = "NUM_THREADS"
+SPECIES_ONE_VARIABLE = "SPECIES_ONE"
+SPECIES_TWO_VARIABLE = "SPECIES_TWO"
+SAMPLES_VARIABLE = "SAMPLES"
+
 
 # TODO: deal with single-end reads
 class SampleInfo(object):
@@ -294,11 +299,11 @@ def _write_variable_definitions(logger, writer, options, sample_info):
     options: dictionary of command-line options
     sample_info: object encapsulating samples and their accompanying read files
     """
-    writer.set_variable("NUM_THREADS", options[NUM_THREADS])
+    writer.set_variable(NUM_THREADS_VARIABLE, options[NUM_THREADS])
     writer.add_blank_line()
 
     sample_names = sample_info.get_sample_names()
-    writer.set_variable("SAMPLES", " ".join(sample_names))
+    writer.set_variable(SAMPLES_VARIABLE, " ".join(sample_names))
     writer.set_variable(
         "RAW_READS_DIRECTORY",
         options[READS_BASE_DIR] if options[READS_BASE_DIR] else "/")
@@ -380,18 +385,64 @@ def _write_filtered_reads_target(logger, writer):
         writer.make_target_directory(FILTERED_READS_TARGET)
         writer.add_command(
             "filter_reads",
-            ["SPECIES_ONE", "SPECIES_TWO", "SAMPLES", SORTED_READS_TARGET,
-             FILTERED_READS_TARGET, "NUM_THREADS"])
+            [writer.variable_val(SPECIES_ONE_VARIABLE),
+             writer.variable_val(SPECIES_TWO_VARIABLE),
+             "\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
+             writer.variable_val(SORTED_READS_TARGET),
+             writer.variable_val(FILTERED_READS_TARGET),
+             writer.variable_val(NUM_THREADS_VARIABLE)])
 
 
-def _write_sorted_reads_target(logger, writer, options):
-    # TODO: Write "sorted_reads" target
-    pass
+def _write_sorted_reads_target(logger, writer):
+    """
+    Write target to sort reads by name to Makefile.
+
+    logger: logging object
+    writer: Makefile writer object
+    """
+    with writer.target_definition(
+            SORTED_READS_TARGET, [MAPPED_READS_TARGET]):
+        writer.add_comment(
+            "For each sample, sort the mapped reads into read name order")
+        writer.make_target_directory(SORTED_READS_TARGET)
+        writer.add_command(
+            "sort_reads",
+            ["\"{s1} {s2}\"".format(
+                s1=writer.variable_val(SPECIES_ONE_VARIABLE),
+                s2=writer.variable_val(SPECIES_TWO_VARIABLE)),
+             "\"{var}\"".format(
+                 var=writer.variable_val(SAMPLES_VARIABLE)),
+             writer.variable_val(NUM_THREADS_VARIABLE),
+             writer.variable_val(MAPPED_READS_TARGET),
+             writer.variable_val(SORTED_READS_TARGET)])
 
 
-def _write_mapped_reads_target(logger, writer, options):
-    # TODO: Write "mapped_reads" target
-    pass
+def _write_mapped_reads_target(logger, writer):
+    """
+    Write target to map reads to each species to Makefile.
+
+    logger: logging object
+    writer: Makefile writer object
+    """
+    with writer.target_definition(
+        MAPPED_READS_TARGET,
+        ["{index}/{s1}".format(index=writer.variable_val(STAR_INDICES_TARGET),
+                               s1=writer.variable_val(SPECIES_ONE_VARIABLE)),
+         "{index}/{s2}".format(index=writer.variable_val(STAR_INDICES_TARGET),
+                               s2=writer.variable_val(SPECIES_TWO_VARIABLE))],
+            raw_dependencies=True):
+        writer.add_comment(
+            "Map reads for each sample to each species' genome")
+        writer.make_target_directory(MAPPED_READS_TARGET)
+        writer.add_command(
+            "map_reads",
+            ["\"{s1} {s2}\"".format(s1=writer.variable_val(SPECIES_ONE_VARIABLE),
+                                    s2=writer.variable_val(SPECIES_TWO_VARIABLE)),
+             "\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
+             writer.variable_val(STAR_INDICES_TARGET),
+             writer.variable_val(NUM_THREADS_VARIABLE),
+             writer.variable_val(COLLATE_RAW_READS_TARGET),
+             writer.variable_val(MAPPED_READS_TARGET)])
 
 
 def _write_masked_reads_target(logger, writer, options):
@@ -428,8 +479,8 @@ def _write_makefile(logger, options, sample_info):
         _write_phony_targets(logger, writer)
         _write_all_target(logger, writer)
         _write_filtered_reads_target(logger, writer)
-        _write_sorted_reads_target(logger, writer, options)
-        _write_mapped_reads_target(logger, writer, options)
+        _write_sorted_reads_target(logger, writer)
+        _write_mapped_reads_target(logger, writer)
         _write_masked_reads_target(logger, writer, options)
         _write_collate_raw_reads_target(logger, writer, options)
         _write_mask_star_index_targets(logger, writer, options)
