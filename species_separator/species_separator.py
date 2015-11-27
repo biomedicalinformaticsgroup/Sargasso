@@ -68,6 +68,9 @@ FILTERED_READS_TARGET = "FILTERED_READS"
 NUM_THREADS_VARIABLE = "NUM_THREADS"
 SPECIES_ONE_VARIABLE = "SPECIES_ONE"
 SPECIES_TWO_VARIABLE = "SPECIES_TWO"
+SPECIES_GTF_FILE_VARIABLE = "{species}_GTF"
+SPECIES_GENOME_FASTA_VARIABLE = "{species}_GENOME_FASTA"
+SPECIES_STAR_INDEX_VARIABLE = "{species}_GENOME_DIR"
 SAMPLES_VARIABLE = "SAMPLES"
 RAW_READS_DIRECTORY_VARIABLE = "RAW_READS_DIRECTORY"
 RAW_READS_SPECIES_ONE_VARIABLE = "RAW_READS_FILES_1"
@@ -280,14 +283,14 @@ def _write_species_variable_definitions(
 
     if species_options[GTF_FILE] is None:
         writer.set_variable(
-            "SPECIES_{species}_GENOME_DIR".format(species=species),
+            "{species}_GENOME_DIR".format(species=species),
             species_options[STAR_INDEX])
     else:
         writer.set_variable(
-            "SPECIES_{species}_GTF".format(species=species),
+            "{species}_GTF".format(species=species),
             species_options[GTF_FILE])
         writer.set_variable(
-            "SPECIES_{species}_GENOME_FASTA".format(species=species),
+            "{species}_GENOME_FASTA".format(species=species),
             species_options[GENOME_FASTA])
 
     writer.add_blank_line()
@@ -328,9 +331,9 @@ def _write_variable_definitions(logger, writer, options, sample_info):
         SPECIES_TWO_GENOME_FASTA, SPECIES_TWO_INDEX)
 
     _write_species_variable_definitions(
-        logger, writer, "ONE", species_one_options)
+        logger, writer, SPECIES_ONE_VARIABLE, species_one_options)
     _write_species_variable_definitions(
-        logger, writer, "TWO", species_two_options)
+        logger, writer, SPECIES_TWO_VARIABLE, species_two_options)
 
 
 def _write_target_variable_definitions(logger, writer):
@@ -477,15 +480,66 @@ def _write_collate_raw_reads_target(logger, writer):
              writer.variable_val(COLLATE_RAW_READS_TARGET)])
 
 
-def _write_mask_star_index_targets(logger, writer, options):
+#def _write_mask_star_index_targets(logger, writer, options):
     # TODO: Write targets for STAR indices for mask sequences
-    pass
+    #pass
+
+
+def _write_species_main_star_index_target(
+        logger, writer, species_var, species_options):
+    """
+    Write target to create or link to STAR index for a species to Makefile.
+
+    logger: logging object
+    writer: Makefile writer object
+    species_var: Makefile variable for species
+    species_options: dictionary of command-line options for the particular
+    species
+    """
+    target = "{index}/{spec}".format(
+        index=writer.variable_val(STAR_INDICES_TARGET),
+        spec=writer.variable_val(species_var))
+
+    with writer.target_definition(target, [], raw_target=True):
+        writer.make_target_directory(STAR_INDICES_TARGET)
+
+        if species_options[GTF_FILE] is None:
+            writer.add_command(
+                "ln",
+                ["-s",
+                 writer.variable_val(
+                     SPECIES_STAR_INDEX_VARIABLE.format(species=species_var)),
+                 target])
+        else:
+            writer.add_command(
+                "build_star_index",
+                [writer.variable_val(
+                    SPECIES_GENOME_FASTA_VARIABLE.format(species=species_var)),
+                 writer.variable_val(
+                     SPECIES_GTF_FILE_VARIABLE.format(species=species_var)),
+                 writer.variable_val(NUM_THREADS_VARIABLE),
+                 target])
 
 
 def _write_main_star_index_targets(logger, writer, options):
-    # TODO: Write targets to link to main STAR indices (if we're using
-    # pre-built indices) or build main STAR indices (if not)
-    pass
+    """
+    Write targets to create or link to STAR indices to Makefile.
+
+    logger: logging object
+    writer: Makefile writer object
+    options: dictionary of command-line options
+    """
+    species_one_options = _get_species_options(
+        options, SPECIES_ONE, SPECIES_ONE_GTF,
+        SPECIES_ONE_GENOME_FASTA, SPECIES_ONE_INDEX)
+    species_two_options = _get_species_options(
+        options, SPECIES_TWO, SPECIES_TWO_GTF,
+        SPECIES_TWO_GENOME_FASTA, SPECIES_TWO_INDEX)
+
+    _write_species_main_star_index_target(
+        logger, writer, SPECIES_ONE_VARIABLE, species_one_options)
+    _write_species_main_star_index_target(
+        logger, writer, SPECIES_TWO_VARIABLE, species_two_options)
 
 
 def _write_clean_target(logger, writer, options):
@@ -505,7 +559,7 @@ def _write_makefile(logger, options, sample_info):
         _write_mapped_reads_target(logger, writer)
         #_write_masked_reads_target(logger, writer)
         _write_collate_raw_reads_target(logger, writer)
-        _write_mask_star_index_targets(logger, writer, options)
+        #_write_mask_star_index_targets(logger, writer, options)
         _write_main_star_index_targets(logger, writer, options)
         _write_clean_target(logger, writer, options)
 
