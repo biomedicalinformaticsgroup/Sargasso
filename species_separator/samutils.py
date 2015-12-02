@@ -20,6 +20,8 @@ def get_multimaps(hit):
 def get_mismatches(hit):
     return hit.get_tag("nM")
 
+def get_alignment_scores(hit):
+    return hit.get_tag("AS")
 
 def get_cigar(hit):
     return hit.cigarstring
