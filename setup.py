@@ -17,11 +17,13 @@ setup(
     ],
     scripts=[
         'bin/build_star_index',
-        'bin/collate_raw_reads',
+        'bin/collate_raw_reads_pe',
+        'bin/collate_raw_reads_se',
         'bin/filter_control',
         'bin/filter_reads',
         'bin/filter_sample_reads',
-        'bin/map_reads',
+        'bin/map_reads_pe',
+        'bin/map_reads_se',
         'bin/sort_reads',
         'bin/species_separator',
     ]

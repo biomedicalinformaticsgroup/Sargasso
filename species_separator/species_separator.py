@@ -74,8 +74,8 @@ SPECIES_GENOME_FASTA_VARIABLE = "{species}_GENOME_FASTA"
 SPECIES_STAR_INDEX_VARIABLE = "{species}_GENOME_DIR"
 SAMPLES_VARIABLE = "SAMPLES"
 RAW_READS_DIRECTORY_VARIABLE = "RAW_READS_DIRECTORY"
-RAW_READS_SPECIES_ONE_VARIABLE = "RAW_READS_FILES_1"
-RAW_READS_SPECIES_TWO_VARIABLE = "RAW_READS_FILES_2"
+RAW_READS_LEFT_VARIABLE = "RAW_READS_FILES_1"
+RAW_READS_RIGHT_VARIABLE = "RAW_READS_FILES_2"
 
 
 # TODO: deal with single-end reads
@@ -92,6 +92,7 @@ class SampleInfo(object):
         self.base_reads_dir = base_reads_dir
         self.left_reads = {}
         self.right_reads = {}
+        self.paired_end = None
 
     def get_sample_names(self):
         """
@@ -111,17 +112,29 @@ class SampleInfo(object):
         """
         return self.right_reads[sample_name]
 
+    def paired_end_reads(self):
+        """
+        Returns True iff sample read files are paired-end data.
+        """
+        return self.paired_end
+
     def add_sample_data(self, sample_data):
         """
         Add information for a single sample.
 
         sample_data: list of strings - sample name, comma-separated list of
-        first in pair reads files, comma-separated list of second in pair reads
-        files.
+        read files (or comma-separated list of first in pair reads files,
+        comma-separated list of second in pair reads files).
         """
         sample_name = sample_data[0]
         self.left_reads[sample_name] = sample_data[1].split(',')
-        self.right_reads[sample_name] = sample_data[2].split(',')
+
+        if len(sample_data) == 3:
+            self.right_reads[sample_name] = sample_data[2].split(',')
+            self.paired_end = True
+            exit(1)
+        else:
+            self.paired_end = False
 
     def validate(self):
         """
@@ -214,14 +227,14 @@ def _read_sample_info(options):
     for line in open(options[SAMPLES_FILE], 'r'):
         sample_data = line.split()
 
-        if len(sample_data) != 3:
+        if len(sample_data) < 2 or len(sample_data) > 3:
             line = line.rstrip('\n')
             if len(line) > 80:
                 line = line[0:77] + "..."
             raise schema.SchemaError(
                 None, "Sample file line should contain sample name and " +
-                "lists of first and second pairs of read files, separated " +
-                "by whitespace: \n{info}".format(info=line))
+                "lists of read files (or first and second pairs of read " +
+                "files), separated by whitespace: \n{info}".format(info=line))
 
         sample_info.add_sample_data(sample_data)
 
@@ -260,6 +273,8 @@ def _validate_command_line_options(options):
         _validate_species_options("two", species_two_options)
 
         sample_info = _read_sample_info(options)
+        # TODO: validate that all samples consistently have either single- or
+        # paired-end reads
         sample_info.validate()
 
         return sample_info
@@ -315,13 +330,16 @@ def _write_variable_definitions(logger, writer, options, sample_info):
         RAW_READS_DIRECTORY_VARIABLE,
         options[READS_BASE_DIR] if options[READS_BASE_DIR] else "/")
     writer.set_variable(
-        RAW_READS_SPECIES_ONE_VARIABLE,
+        RAW_READS_LEFT_VARIABLE,
         " ".join([",".join(sample_info.get_left_reads(name))
                   for name in sample_names]))
-    writer.set_variable(
-        RAW_READS_SPECIES_TWO_VARIABLE,
-        " ".join([",".join(sample_info.get_right_reads(name))
-                  for name in sample_names]))
+
+    if sample_info.paired_end_reads():
+        writer.set_variable(
+            RAW_READS_RIGHT_VARIABLE,
+            " ".join([",".join(sample_info.get_right_reads(name))
+                      for name in sample_names]))
+
     writer.add_blank_line()
 
     species_one_options = _get_species_options(
@@ -424,7 +442,7 @@ def _write_sorted_reads_target(logger, writer):
              writer.variable_val(SORTED_READS_TARGET)])
 
 
-def _write_mapped_reads_target(logger, writer):
+def _write_mapped_reads_target(logger, writer, sample_info):
     """
     Write target to map reads to each species to Makefile.
 
@@ -442,10 +460,15 @@ def _write_mapped_reads_target(logger, writer):
         writer.add_comment(
             "Map reads for each sample to each species' genome")
         writer.make_target_directory(MAPPED_READS_TARGET)
+
+        map_reads_command = "map_reads_pe" if sample_info.paired_end_reads() \
+            else "map_reads_se"
+
         writer.add_command(
-            "map_reads",
-            ["\"{s1} {s2}\"".format(s1=writer.variable_val(SPECIES_ONE_VARIABLE),
-                                    s2=writer.variable_val(SPECIES_TWO_VARIABLE)),
+            map_reads_command,
+            ["\"{s1} {s2}\"".format(
+                s1=writer.variable_val(SPECIES_ONE_VARIABLE),
+                s2=writer.variable_val(SPECIES_TWO_VARIABLE)),
              "\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
              writer.variable_val(STAR_INDICES_TARGET),
              writer.variable_val(NUM_THREADS_VARIABLE),
@@ -458,12 +481,13 @@ def _write_mapped_reads_target(logger, writer):
     #pass
 
 
-def _write_collate_raw_reads_target(logger, writer):
+def _write_collate_raw_reads_target(logger, writer, sample_info):
     """
     Write target to collect raw reads files to Makefile.
 
     logger: logging object
     writer: Makefile writer object
+    sample_info: object encapsulating samples and their accompanying read files
     """
     with writer.target_definition(COLLATE_RAW_READS_TARGET, []):
         writer.add_comment(
@@ -471,15 +495,25 @@ def _write_collate_raw_reads_target(logger, writer):
             "each of which contains links to the input raw reads files " +
             "for that sample")
         writer.make_target_directory(COLLATE_RAW_READS_TARGET)
-        writer.add_command(
-            "collate_raw_reads",
-            ["\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
-             writer.variable_val(RAW_READS_DIRECTORY_VARIABLE),
-             "\"{var}\"".format(
-                 var=writer.variable_val(RAW_READS_SPECIES_ONE_VARIABLE)),
-             "\"{var}\"".format(
-                 var=writer.variable_val(RAW_READS_SPECIES_TWO_VARIABLE)),
-             writer.variable_val(COLLATE_RAW_READS_TARGET)])
+
+        if sample_info.paired_end_reads():
+            writer.add_command(
+                "collate_raw_reads_pe",
+                ["\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
+                 writer.variable_val(RAW_READS_DIRECTORY_VARIABLE),
+                 "\"{var}\"".format(
+                     var=writer.variable_val(RAW_READS_LEFT_VARIABLE)),
+                 "\"{var}\"".format(
+                     var=writer.variable_val(RAW_READS_RIGHT_VARIABLE)),
+                 writer.variable_val(COLLATE_RAW_READS_TARGET)])
+        else:
+            writer.add_command(
+                "collate_raw_reads_se",
+                ["\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
+                 writer.variable_val(RAW_READS_DIRECTORY_VARIABLE),
+                 "\"{var}\"".format(
+                     var=writer.variable_val(RAW_READS_LEFT_VARIABLE)),
+                 writer.variable_val(COLLATE_RAW_READS_TARGET)])
 
 
 #def _write_mask_star_index_targets(logger, writer, options):
@@ -575,9 +609,9 @@ def _write_makefile(logger, options, sample_info):
         _write_all_target(logger, writer)
         _write_filtered_reads_target(logger, writer)
         _write_sorted_reads_target(logger, writer)
-        _write_mapped_reads_target(logger, writer)
+        _write_mapped_reads_target(logger, writer, sample_info)
         #_write_masked_reads_target(logger, writer)
-        _write_collate_raw_reads_target(logger, writer)
+        _write_collate_raw_reads_target(logger, writer, sample_info)
         #_write_mask_star_index_targets(logger, writer, options)
         _write_main_star_index_targets(logger, writer, options)
         _write_clean_target(logger, writer)
