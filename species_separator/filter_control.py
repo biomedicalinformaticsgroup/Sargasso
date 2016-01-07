@@ -149,7 +149,7 @@ def _run_processes(logger, options):
         commands = ["filter_sample_reads",
                     options[SPECIES_ONE], sp1_in, os.path.abspath(sp1_out),
                     options[SPECIES_TWO], sp2_in, os.path.abspath(sp2_out),
-                    options[MISMATCH_THRESHOLD], options[MINMATCH_THRESHOLD]
+                    options[MISMATCH_THRESHOLD], options[MINMATCH_THRESHOLD],
                     options[MULTIMAP_THRESHOLD], options[ALIGNMENT_SCORE_THRESHOLD]]
 
         proc = subprocess.Popen(commands)
