@@ -129,7 +129,7 @@ def _run_processes(logger, options):
     get_input_path = lambda x: os.path.join(options[BLOCK_DIR], x)
 
     # initialise results file
-    write_result_file(out_dir)
+    write_result_file(options[OUTPUT_DIR])
 
     # cycle through chunks
     for sp1_file in block_file_dict.keys():
