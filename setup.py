@@ -23,5 +23,6 @@ setup(
         'bin/filter_sample_reads',
         'bin/map_reads',
         'bin/sort_reads',
+        'bin/species_separator',
     ]
 )
