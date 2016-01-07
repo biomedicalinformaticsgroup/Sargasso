@@ -323,7 +323,7 @@ class _HitsChecker:
     # check whether a read is mapped over a splice junction and if not, whether its score is above threshold
     def check_alignment_score(self,hits_info):
         hit_index = -1
-        score_threshold = ALIGNMENT_SCORE_THRESHOLD #100
+        score_threshold = self.alignment_score_thresh #ALIGNMENT_SCORE_THRESHOLD #100
         cigars = hits_info.get_cigars()
         #for score in hits_info.get_min_alignment_score():
         #print "CIGARS: "+str(cigars)
@@ -331,7 +331,7 @@ class _HitsChecker:
         score = hits_info.get_min_alignment_score()
         for cig in cigars:
             hit_index += 1
-            print "AS: "+str(score)+", CIGAR: "+cigars[hit_index]
+            #print "AS: "+str(score)+", CIGAR: "+cigars[hit_index]
             if "N" in cigars[hit_index]:
                 return 1 # Not concerning ourselves with these reads for this filtering as we know this filtering doesn't apply to them; as such they are subject to regular filtering
         if score < score_threshold:
