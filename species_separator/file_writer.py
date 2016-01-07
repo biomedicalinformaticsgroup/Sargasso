@@ -26,7 +26,7 @@ class _Writer(object):
 
 
 class MakefileWriter(_Writer):
-    INDENT = '    '
+    INDENT = '\t'
 
     def __init__(self):
         _Writer.__init__(self)
@@ -43,6 +43,9 @@ class MakefileWriter(_Writer):
         line_string = MakefileWriter.INDENT * self.indent_level + line_string
         _Writer._add_line(self, line_string)
 
+    def add_blank_line(self):
+        self.add_line("")
+
     @contextlib.contextmanager
     def target_definition(self, target, dependencies, raw_target=False, raw_dependencies=False):
         self.add_line("{tar}: {deps}".format(
@@ -54,7 +57,7 @@ class MakefileWriter(_Writer):
             yield
         finally:
             self.deindent()
-            self.add_line("")
+            self.add_blank_line()
 
     def add_comment(self, comment):
         lines = textwrap.wrap(
@@ -68,3 +71,13 @@ class MakefileWriter(_Writer):
 
     def variable_val(self, variable, raw=False):
         return variable if raw else "$({var})".format(var=variable)
+
+    def make_target_directory(self, target):
+        self.add_command("mkdir", ["-p", self.variable_val(target)])
+
+    def remove_target_directory(self, target, raw_target=False):
+        self.add_command("rm", ["-rf", self.variable_val(target, raw_target)])
+
+    def add_command(self, command_name, options):
+        line_elements = [command_name] + options
+        self.add_line(" ".join(line_elements))

@@ -1,125 +1,169 @@
 #!/usr/bin/env python
 
-# This script reads the read mapping BAM files & parallelises its filtering
+"""Usage:
+    filter_control [--log-level=<log-level>] <block-dir> <output-dir> <sample-name> <species-one> <species-two> <mismatch_threshold> <minmatch_threshold> <multimap_threshold> <alignment_score_threshold>
 
-# Parameters:
-# 1 - Block directory filepath
-# 2 - Output directory
-# 3 - No. Threads
-# 4 - Species 1
-# 5 - Species 2
-# 6 - Mismatch Threshold
-# 7 - Minmatch Threshold
-# 8 - Multimap Threshold
-# 9 - Alignment Score Threshold
+Option:
+{help_option_spec}
+    {help_option_description}
+{ver_option_spec}
+    {ver_option_description}
+{log_option_spec}
+    {log_option_description}
+<block-dir>             Directory containing mapped read BAM files, split into bloccks by read name.
+<output-dir>            Directory into which species-separated reads will be written.
+<sample-name>           Name of RNA-seq sample being processed.
+<species-one>           Name of first species.
+<species-two>           Name of second species.
+<mismatch_threshold>	Maximum number of mismatches to be allowed in the filtering stage
+<minmatch_threshold>	Minimum number of bases that have to be perfectly matched in the filtering stage
+<multimap_threshold>	Maximum number of multiple mappings a read can have to pass the filtering stage
+<alignment_score_threshold> Minimum alignment score to be allowed in the filtering stage
 
-import subprocess
+TODO: what does this script do...
+"""
+
+import docopt
 import os
-from os import listdir
-from os.path import isdir, join
+import os.path
+import schema
+import subprocess
+
+from . import options as opt
+from .__init__ import __version__
+
+BLOCK_DIR = "<block-dir>"
+OUTPUT_DIR = "<output-dir>"
+SAMPLE_NAME = "<sample-name>"
+SPECIES_ONE = "<species-one>"
+SPECIES_TWO = "<species-two>"
+MISMATCH_THRESHOLD = "<mismatch_threshold>"
+MINMATCH_THRESHOLD = "<minmatch_threshold>"
+MULTIMAP_THRESHOLD = "<multimap_threshold>"
+ALIGNMENT_SCORE_THRESHOLD = "<alignment_score_threshold>"
+
+def _validate_command_line_options(options):
+    """
+    Validate command line options are correctly specified.
+
+    options: dictionary of command line options.
+    """
+    try:
+        opt.validate_log_level(options)
+        opt.validate_dir_option(
+            options[BLOCK_DIR],
+            "Mapped reads block file directory does not exist")
+        opt.validate_dir_option(
+            options[OUTPUT_DIR],
+            "Filtered reads output directory does not exist")
+    except schema.SchemaError as exc:
+        # TODO: format exit message for 80 columns
+        exit("Exiting: " + exc.code)
 
 
-# Check whether output dir exists
-def check_dir(dir):
-    if not os.path.isdir(dir):
-        print "Filepath Parameter does not exist"
-    quit()
+def _all_processes_finished(processes):
+    """
+    Return True if all processes have finished.
 
-
-# Check how many instances of a process are running at the present time
-def check_processes(processes, max):
-    busy = 0
+    processes: List of subprocess instances.
+    """
+    finished = True
     i = 0
-    threshold = max
+
     while True:
         if i < len(processes):
             if processes[i].poll() is None:
-                busy = busy + 1
+                finished = False
             elif processes[i].poll() == 0:
                 del processes[i]
                 i = i - 1
-            if busy >= threshold:
+            if not finished:
                 return False
             i = i + 1
         else:
             break
+
     return True
 
 
-# turn file list into dictionary; d[species1file] = species2file
-def dictionary_files(files, sp1, sp2):
-    file_dict = {}
-    files = sorted(files)
-    for file in files:
-        sections = file.split("_")
+def _get_block_file_dictionary(block_files, sp1, sp2):
+    """
+    Return a dictionary mapping from species 1 to species 2 block files.
+
+    block_files: List of block file names
+    sp1: species one name
+    sp2: species two name
+    """
+    block_file_dict = {}
+
+    for block_file in sorted(block_files):
+        sections = block_file.split("_")
         if sections[1] == sp1:
             sections[1] = sp2
-            file_dict[file] = sections[0] + "_" + sections[1] + \
-                "_" + sections[2] + "_" + sections[3]
-    return file_dict
+            block_file_dict[block_file] = "_".join(sections)
+
+    return block_file_dict
 
 
-# Cycles through previously indexed chunks of read data & assigns it to the
-# filter subprocess script Chunks; for the time being I'm considering each
-# chunk to be 10 read pairs organised as a list of dictionaries
-def run_processes(params):
-    chunk_dir = params[0]
-    out_dir = params[1]
-    sample = params[2]
-    species1 = params[3]
-    species2 = params[4]
-    mismatch_threshold = params[5]
-    minmatch_threshold = params[6]
-    multimap_threshold = params[7]
-    alignment_score_threshold = params[8]
+def _run_processes(logger, options):
+    """
+    Run filtering script in a separate process for each pair of block files.
 
-    #print "AS PARAM: "+str(alignment_score_threshold)
+    logger: logging object
+    options: dictionary of command-line options
+    """
+    # get block files
+    is_block_file = lambda f: not os.path.isdir(
+        os.path.join(options[BLOCK_DIR], f))
+    block_files = [f for f in os.listdir(options[BLOCK_DIR])
+                   if is_block_file(f)]
+
+    # create dictionary mapping from species 1 to species 2 block files
+    block_file_dict = _get_block_file_dictionary(
+        block_files, options[SPECIES_ONE], options[SPECIES_TWO])
 
     # keep track of all processes
     all_processes = []
-    process_no = -1
+    proc_no = -1
 
-    # get block files
-    block_files = [f for f in listdir(chunk_dir) if not isdir(join(chunk_dir, f))]
-
-    # remove species 2 block files
-    file_pairs = dictionary_files(block_files, species1, species2)
+    get_input_path = lambda x: os.path.join(options[BLOCK_DIR], x)
 
     # initialise results file
     write_result_file(out_dir)
 
     # cycle through chunks
-    for file1 in file_pairs.keys():
-        process_no = process_no + 1
+    for sp1_file in block_file_dict.keys():
+        proc_no += 1
+
         # create input paths
-        sp1in = chunk_dir + "/" + file1
-        sp2in = chunk_dir + "/" + file_pairs[file1]
+        sp1_in = get_input_path(sp1_file)
+        sp2_in = get_input_path(block_file_dict[sp1_file])
+
         # create output paths
-        sp1out = out_dir + "/" + sample + "_" + species1 + "_" + \
-            str(process_no) + "-filtered.bam"
-        sp2out = out_dir + "/" + sample + "_" + species2 + "_" + \
-            str(process_no) + "-filtered.bam"
+        get_output_path = lambda x: os.path.join(
+            options[OUTPUT_DIR],
+            "_".join([options[SAMPLE_NAME], x, str(proc_no), "filtered.bam"]))
+        sp1_out = get_output_path(options[SPECIES_ONE])
+        sp2_out = get_output_path(options[SPECIES_TWO])
+
         commands = ["filter_sample_reads",
-                    species1, sp1in, os.path.abspath(sp1out),
-                    species2, sp2in, os.path.abspath(sp2out),
-                    mismatch_threshold, minmatch_threshold,
-                    multimap_threshold, alignment_score_threshold]
+                    options[SPECIES_ONE], sp1_in, os.path.abspath(sp1_out),
+                    options[SPECIES_TWO], sp2_in, os.path.abspath(sp2_out),
+                    options[MISMATCH_THRESHOLD], options[MINMATCH_THRESHOLD]
+                    options[MULTIMAP_THRESHOLD], options[ALIGNMENT_SCORE_THRESHOLD]]
+
         proc = subprocess.Popen(commands)
         all_processes.append(proc)
 
     # check all processes finished
-    print "Waiting for Threads"
-    free = check_processes(all_processes, 1)
-    while not free:
-        #print "Waiting for Threads"
+    while not _all_processes_finished(all_processes):
+        logger.info("Waiting for Threads")
         all_processes[0].wait()
-        free = check_processes(all_processes, 1)
 
-    print "Filtering Complete"
+    # TODO: need to concatenate output files
+    logger.info("Filtering Complete")
 
-    # NEED TO CONCATENATE THE OUTPUT FILES
-
-# initialise the results file so the threads can append
+# initialise the results file so the threads can append # DEBUGGING PURPOSES ONLY - Remove once filtering optimisation has been completed
 def write_result_file(outDir):
     out = "Filtered-Hits-S1\tFiltered-Reads-S1\tRejected-Hits-S1\tRejected-Reads-S1\tAmbiguous-Hits-S1\tAmbiguous-Reads-S1\tFiltered-Hits-S2\tFiltered-Reads-S2\tRejected-Hits-S2\tRejected-Reads-S2\tAmbiguous-Hits-S2\tAmbiguous-Reads-S2\n"
     outFile = outDir+"/filtering_result_summary.txt"
@@ -127,22 +171,23 @@ def write_result_file(outDir):
     f.write(out)
     f.close()
 
-def validate_params(params):
-    # check output dir exists & create if not
-    #check_dir(params[1])
-    #check_dir(params[2])
-    #if not params[3].isnumeric():
-    #   print "Number of threads specified is not a number"
-    #   quit()
-    #if !os.path.isfile(params[2]):
-    #   print "The filepath for the first BAM file points to a non-existant file"
-    #   return False
-    #if !os.path.isfile(params[3]):
-        #        print "The filepath for the second BAM file points to a non-existant file"
-        #        return False
-    return True
-
 
 def filter_control(args):
-    if validate_params(args):
-        run_processes(args)
+    """
+    Reads mapped read block files and parallelises their filtering.
+
+    args: list of command line arguments
+    """
+    # Read in command line options
+    docstring = opt.substitute_common_options_into_usage(__doc__)
+    options = docopt.docopt(docstring, argv=args,
+                            version="filter_control v" + __version__)
+
+    # Validate command line options
+    _validate_command_line_options(options)
+
+    # Set up logger
+    logger = opt.get_logger_for_options(options)
+
+    # Parallelise species separation filtering of mapped read block files
+    _run_processes(logger, options)
