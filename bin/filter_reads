@@ -10,6 +10,10 @@ SAMPLES=$3
 INPUT_DIR=$4
 OUTPUT_DIR=$5
 THREADS=$6 #How many chunks to split the read files into
+MISMATCH_THRESHOLD=$7
+MINMATCH_THRESHOLD=$8
+MULTIMAP_THRESHOLD=$9
+ALIGNMENT_SCORE_THRESHOLD=${10}
 
 BLOCK_DIR=${OUTPUT_DIR}/Blocks
 mkdir -p $BLOCK_DIR
@@ -72,24 +76,29 @@ for sample in ${SAMPLES}; do
 
     START_IDS=($( sambamba view -t "${THREADS}" "${sorted_reads_prefix}"."${LARGER_SPECIES}".bam | sed -n "${SED_COMMAND}" | awk '{print $1}' ))
 
+    #echo "IDS: ${START_IDS}"
+    #echo "Sed command: ${SED_COMMAND}"
+
     # extract blocks for both species
     for i in $(seq "${THREADS}" )
     do
+        #echo "${i}    ${START_IDS[$(( i - 1 ))]}"
         if [ "$i" -ne "${THREADS}" ]
         then
             OPERATOR="<"
         else
             OPERATOR="<="
         fi
-
+	
         (sambamba view --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name ${OPERATOR} '${START_IDS[${i}]}'" ${SPECIES_ONE_BAM} -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}".bam -l 1 -h
         sambamba view --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name ${OPERATOR} '${START_IDS[${i}]}'" ${SPECIES_TWO_BAM} -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}".bam -l 1 -h) &
     done
 
     wait
 
-    # execute python process control script passing over file location info
-    filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${SPECIES_ONE} ${SPECIES_TWO}
+    # execute python process control script passing over file location and filtering info
+    #echo "AS PARAM: ${ALIGNMENT_SCORE_THRESHOLD}"
+    filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${SPECIES_ONE} ${SPECIES_TWO} ${MISMATCH_THRESHOLD} ${MINMATCH_THRESHOLD} ${MULTIMAP_THRESHOLD} ${ALIGNMENT_SCORE_THRESHOLD}
 
     for i in $(seq "${THREADS}" )
     do
