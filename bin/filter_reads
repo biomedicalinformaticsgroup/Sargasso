@@ -100,10 +100,33 @@ for sample in ${SAMPLES}; do
     #echo "AS PARAM: ${ALIGNMENT_SCORE_THRESHOLD}"
     filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${SPECIES_ONE} ${SPECIES_TWO} ${MISMATCH_THRESHOLD} ${MINMATCH_THRESHOLD} ${MULTIMAP_THRESHOLD} ${ALIGNMENT_SCORE_THRESHOLD}
 
+    # Merge the resultant BAM files produced by the filtering into 1 file
+    SP1_FILES=()
+    SP2_FILES=()
+    for i in $(seq 0 1 $((${THREADS}-1)));
+    do
+    	SP1_FILES[i]="${OUTPUT_DIR}"/"${sample}"_"${SPECIES_ONE}"_"${i}"_filtered.bam
+    	SP2_FILES[i]="${OUTPUT_DIR}"/"${sample}"_"${SPECIES_TWO}"_"${i}"_filtered.bam
+    done
+
+    #echo "SP1 FILES:\n"
+    #echo "${SP1_FILES}"
+    #echo "SP2 FILES:\n"
+    #echo "${SP2_FILES}"
+
+    sambamba merge "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_ONE}"_filtered.bam ${SP1_FILES[@]}
+    sambamba merge "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_TWO}"_filtered.bam ${SP2_FILES[@]}
+
+    #echo "SAMBAMBA CODE:\n"
+    #echo "sambamba merge" "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_ONE}"_filtered.bam SP1_FILES[@]
+
     for i in $(seq "${THREADS}" )
     do
         rm "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}".bam
         rm "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}".bam
+        less=$(( ${i} - 1))
+        rm "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_ONE}"_"${less}"_filtered.bam
+        rm "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_TWO}"_"${less}"_filtered.bam
     done
 done
 
