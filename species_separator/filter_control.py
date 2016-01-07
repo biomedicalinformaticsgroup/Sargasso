@@ -40,6 +40,9 @@ MISMATCH_THRESHOLD = "<mismatch_threshold>"
 MINMATCH_THRESHOLD = "<minmatch_threshold>"
 MULTIMAP_THRESHOLD = "<multimap_threshold>"
 
+BLOCK_FILE_SEPARATOR = "___"
+
+
 def _validate_command_line_options(options):
     """
     Validate command line options are correctly specified.
@@ -95,10 +98,10 @@ def _get_block_file_dictionary(block_files, sp1, sp2):
     block_file_dict = {}
 
     for block_file in sorted(block_files):
-        sections = block_file.split("_")
+        sections = block_file.split(BLOCK_FILE_SEPARATOR)
         if sections[1] == sp1:
             sections[1] = sp2
-            block_file_dict[block_file] = "_".join(sections)
+            block_file_dict[block_file] = BLOCK_FILE_SEPARATOR.join(sections)
 
     return block_file_dict
 
@@ -161,10 +164,11 @@ def _run_processes(logger, options):
     # TODO: need to concatenate output files
     logger.info("Filtering Complete")
 
+
 # initialise the results file so the threads can append # DEBUGGING PURPOSES ONLY - Remove once filtering optimisation has been completed
 def write_result_file(outDir):
     out = "Filtered-Hits-S1\tFiltered-Reads-S1\tRejected-Hits-S1\tRejected-Reads-S1\tAmbiguous-Hits-S1\tAmbiguous-Reads-S1\tFiltered-Hits-S2\tFiltered-Reads-S2\tRejected-Hits-S2\tRejected-Reads-S2\tAmbiguous-Hits-S2\tAmbiguous-Reads-S2\n"
-    outFile = outDir+"/filtering_result_summary.txt"
+    outFile = outDir + "/filtering_result_summary.txt"
     f = open(outFile, 'w')
     f.write(out)
     f.close()

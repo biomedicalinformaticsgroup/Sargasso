@@ -2,7 +2,9 @@
 
 set -o nounset
 set -o errexit
-#set -o xtrace
+set -o xtrace
+
+SEPARATOR="___"
 
 SPECIES_ONE=$1
 SPECIES_TWO=$2
@@ -26,74 +28,72 @@ for sample in ${SAMPLES}; do
 
     if [ "${THREADS}" -eq "1" ]
     then
-        ln -rs ${SPECIES_ONE_BAM} ${BLOCK_DIR}/"${sample}"_"${SPECIES_ONE}"_BLOCK_1.bam
-        ln -rs ${SPECIES_TWO_BAM} ${BLOCK_DIR}/"${sample}"_"${SPECIES_TWO}"_BLOCK_1.bam
-        continue
-    fi
-
-    # extract the no. reads for this sample for species 1 & 2 from the read
-    # summary file
-    READ_NUMBER_1=$(sambamba view -c -t ${THREADS} ${SPECIES_ONE_BAM})
-    READ_NUMBER_2=$(sambamba view -c -t ${THREADS} ${SPECIES_TWO_BAM})
-
-    # calculate block sizes for larger species
-    LARGEST=0
-    LARGER_SPECIES=""
-    if [ "$READ_NUMBER_1" -gt "$READ_NUMBER_2" ]
-    then
-        LARGEST=${READ_NUMBER_1}
-        LARGER_SPECIES="${SPECIES_ONE}"
+        ln -rs ${SPECIES_ONE_BAM} ${BLOCK_DIR}/"${sample}${SEPARATOR}${SPECIES_ONE}${SEPARATOR}"BLOCK"${SEPARATOR}"1.bam
+        ln -rs ${SPECIES_TWO_BAM} ${BLOCK_DIR}/"${sample}${SEPARATOR}${SPECIES_TWO}${SEPARATOR}"BLOCK"${SEPARATOR}"1.bam
     else
-        LARGEST=${READ_NUMBER_2}
-        LARGER_SPECIES="${SPECIES_TWO}"
-    fi
+        # extract the no. reads for this sample for species 1 & 2 from the read
+        # summary file
+        READ_NUMBER_1=$(sambamba view -c -t ${THREADS} ${SPECIES_ONE_BAM})
+        READ_NUMBER_2=$(sambamba view -c -t ${THREADS} ${SPECIES_TWO_BAM})
 
-    BLOCKSIZE=$(( LARGEST / THREADS ))
-
-    # Calculate the line indexes to extract the start/end ids of the blocks
-    ID_INDICES=()
-    POS=1
-
-    ID_INDICES["0"]="${POS}"
-
-    for index in $( seq 1 $(( THREADS - 1 )) )
-    do
-        POS=$(( POS + BLOCKSIZE ))
-        ID_INDICES["${index}"]="${POS}"
-    done
-
-    ID_INDICES["${THREADS}"]="${LARGEST}"
-       
-    # fetch the ids from the largest file & store in array
-    SED_COMMAND=""
-
-    for i in $(seq $(( THREADS + 1)) )
-    do
-        j=$(( i - 1))
-        SED_COMMAND="${SED_COMMAND} ${ID_INDICES[${j}]}p;"
-    done
-
-    START_IDS=($( sambamba view -t "${THREADS}" "${sorted_reads_prefix}"."${LARGER_SPECIES}".bam | sed -n "${SED_COMMAND}" | awk '{print $1}' ))
-
-    #echo "IDS: ${START_IDS}"
-    #echo "Sed command: ${SED_COMMAND}"
-
-    # extract blocks for both species
-    for i in $(seq "${THREADS}" )
-    do
-        #echo "${i}    ${START_IDS[$(( i - 1 ))]}"
-        if [ "$i" -ne "${THREADS}" ]
+        # calculate block sizes for larger species
+        LARGEST=0
+        LARGER_SPECIES=""
+        if [ "$READ_NUMBER_1" -gt "$READ_NUMBER_2" ]
         then
-            OPERATOR="<"
+            LARGEST=${READ_NUMBER_1}
+            LARGER_SPECIES="${SPECIES_ONE}"
         else
-            OPERATOR="<="
+            LARGEST=${READ_NUMBER_2}
+            LARGER_SPECIES="${SPECIES_TWO}"
         fi
-	
-        (sambamba view --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name ${OPERATOR} '${START_IDS[${i}]}'" ${SPECIES_ONE_BAM} -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}".bam -l 1 -h
-        sambamba view --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name ${OPERATOR} '${START_IDS[${i}]}'" ${SPECIES_TWO_BAM} -o "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}".bam -l 1 -h) &
-    done
 
-    wait
+        BLOCKSIZE=$(( LARGEST / THREADS ))
+
+        # Calculate the line indexes to extract the start/end ids of the blocks
+        ID_INDICES=()
+        POS=1
+
+        ID_INDICES["0"]="${POS}"
+
+        for index in $( seq 1 $(( THREADS - 1 )) )
+        do
+            POS=$(( POS + BLOCKSIZE ))
+            ID_INDICES["${index}"]="${POS}"
+        done
+
+        ID_INDICES["${THREADS}"]="${LARGEST}"
+           
+        # fetch the ids from the largest file & store in array
+        SED_COMMAND=""
+
+        for i in $(seq $(( THREADS + 1)) )
+        do
+            j=$(( i - 1))
+            SED_COMMAND="${SED_COMMAND} ${ID_INDICES[${j}]}p;"
+        done
+
+        START_IDS=($( sambamba view -t "${THREADS}" "${sorted_reads_prefix}"."${LARGER_SPECIES}".bam | sed -n "${SED_COMMAND}" | awk '{print $1}' ))
+
+        #echo "IDS: ${START_IDS}"
+        #echo "Sed command: ${SED_COMMAND}"
+
+        # extract blocks for both species
+        for i in $(seq "${THREADS}" )
+        do
+            if [ "$i" -ne "${THREADS}" ]
+            then
+                OPERATOR="<"
+            else
+                OPERATOR="<="
+            fi
+
+            (sambamba view --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name ${OPERATOR} '${START_IDS[${i}]}'" ${SPECIES_ONE_BAM} -o "${BLOCK_DIR}"/"${sample}${SEPARATOR}${SPECIES_ONE}${SEPARATOR}"BLOCK"${SEPARATOR}${i}".bam -l 1 -h
+            sambamba view --filter "read_name >= '${START_IDS[$(( i - 1 ))]}' and read_name ${OPERATOR} '${START_IDS[${i}]}'" ${SPECIES_TWO_BAM} -o "${BLOCK_DIR}"/"${sample}${SEPARATOR}${SPECIES_TWO}${SEPARATOR}"BLOCK"${SEPARATOR}${i}".bam -l 1 -h) &
+        done
+
+        wait
+    fi
 
     # execute python process control script passing over file location and filtering info
     filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${SPECIES_ONE} ${SPECIES_TWO} ${MISMATCH_THRESHOLD} ${MINMATCH_THRESHOLD} ${MULTIMAP_THRESHOLD}
@@ -120,11 +120,11 @@ for sample in ${SAMPLES}; do
 
     for i in $(seq "${THREADS}" )
     do
-        rm "${BLOCK_DIR}"/"${sample}"_"${SPECIES_ONE}"_BLOCK_"${i}".bam
-        rm "${BLOCK_DIR}"/"${sample}"_"${SPECIES_TWO}"_BLOCK_"${i}".bam
+        rm "${BLOCK_DIR}"/"${sample}${SEPARATOR}${SPECIES_ONE}${SEPARATOR}"BLOCK"${SEPARATOR}${i}".bam
+        rm "${BLOCK_DIR}"/"${sample}${SEPARATOR}${SPECIES_TWO}${SEPARATOR}"BLOCK"${SEPARATOR}${i}".bam
         less=$(( ${i} - 1))
-        rm "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_ONE}"_"${less}"_filtered.bam
-        rm "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_TWO}"_"${less}"_filtered.bam
+        rm "${OUTPUT_DIR}"/"${sample}"${SEPARATOR}"${SPECIES_ONE}"${SEPARATOR}"${less}"${SEPARATOR}filtered.bam
+        rm "${OUTPUT_DIR}"/"${sample}"${SEPARATOR}"${SPECIES_TWO}"${SEPARATOR}"${less}"${SEPARATOR}filtered.bam
     done
 done
 
