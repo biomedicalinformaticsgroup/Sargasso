@@ -9,3 +9,6 @@ test_results/star_index_mouse_genome
 test_results/star_index_rat_genome
 neuron_astrocyte_activity_results/*
 Mouseonly_results/*
+scratch/*
+filter_batch.sh
+species_separator/sed_block.sh
