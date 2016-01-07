@@ -8,6 +8,10 @@
 # 3 - No. Threads
 # 4 - Species 1
 # 5 - Species 2
+# 6 - Mismatch Threshold
+# 7 - Minmatch Threshold
+# 8 - Multimap Threshold
+# 9 - Alignment Score Threshold
 
 import subprocess
 import os
@@ -64,6 +68,12 @@ def run_processes(params):
     sample = params[2]
     species1 = params[3]
     species2 = params[4]
+    mismatch_threshold = params[5]
+    minmatch_threshold = params[6]
+    multimap_threshold = params[7]
+    alignment_score_threshold = params[8]
+
+    #print "AS PARAM: "+str(alignment_score_threshold)
 
     # keep track of all processes
     all_processes = []
@@ -74,6 +84,9 @@ def run_processes(params):
 
     # remove species 2 block files
     file_pairs = dictionary_files(block_files, species1, species2)
+
+    # initialise results file
+    write_result_file(out_dir)
 
     # cycle through chunks
     for file1 in file_pairs.keys():
@@ -88,14 +101,17 @@ def run_processes(params):
             str(process_no) + "-filtered.bam"
         commands = ["filter_sample_reads",
                     species1, sp1in, os.path.abspath(sp1out),
-                    species2, sp2in, os.path.abspath(sp2out)]
+                    species2, sp2in, os.path.abspath(sp2out),
+                    mismatch_threshold, minmatch_threshold,
+                    multimap_threshold, alignment_score_threshold]
         proc = subprocess.Popen(commands)
         all_processes.append(proc)
 
     # check all processes finished
+    print "Waiting for Threads"
     free = check_processes(all_processes, 1)
     while not free:
-        print "Waiting for Threads"
+        #print "Waiting for Threads"
         all_processes[0].wait()
         free = check_processes(all_processes, 1)
 
@@ -103,6 +119,13 @@ def run_processes(params):
 
     # NEED TO CONCATENATE THE OUTPUT FILES
 
+# initialise the results file so the threads can append
+def write_result_file(outDir):
+    out = "Filtered-Hits-S1\tFiltered-Reads-S1\tRejected-Hits-S1\tRejected-Reads-S1\tAmbiguous-Hits-S1\tAmbiguous-Reads-S1\tFiltered-Hits-S2\tFiltered-Reads-S2\tRejected-Hits-S2\tRejected-Reads-S2\tAmbiguous-Hits-S2\tAmbiguous-Reads-S2\n"
+    outFile = outDir+"/filtering_result_summary.txt"
+    f = open(outFile, 'w')
+    f.write(out)
+    f.close()
 
 def validate_params(params):
     # check output dir exists & create if not
