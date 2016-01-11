@@ -132,7 +132,6 @@ class SampleInfo(object):
         if len(sample_data) == 3:
             self.right_reads[sample_name] = sample_data[2].split(',')
             self.paired_end = True
-            exit(1)
         else:
             self.paired_end = False
 
