@@ -292,8 +292,6 @@ def _hits_generator(all_hits):
             last_hit_name = hit.query_name
             current_hits = [hit]
 
-    yield current_hits
-
 
 def _write_hits(hits_for_read, output_bam):
     for hit in hits_for_read:
