@@ -105,8 +105,8 @@ for sample in ${SAMPLES}; do
     SP2_FILES=()
     for i in $(seq 0 1 $((${THREADS}-1)));
     do
-    	SP1_FILES[i]="${OUTPUT_DIR}"/"${sample}"_"${SPECIES_ONE}"_"${i}"_filtered.bam
-    	SP2_FILES[i]="${OUTPUT_DIR}"/"${sample}"_"${SPECIES_TWO}"_"${i}"_filtered.bam
+    	SP1_FILES[${i}]="${OUTPUT_DIR}"/"${sample}"_"${SPECIES_ONE}"_"${i}"_filtered.bam
+    	SP2_FILES[${i}]="${OUTPUT_DIR}"/"${sample}"_"${SPECIES_TWO}"_"${i}"_filtered.bam
     done
 
     #echo "SP1 FILES:\n"
