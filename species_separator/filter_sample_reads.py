@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """Usage:
-    filter_mapped_hits [--log-level=<log-level>] <species-one> <species-one-input-bam> <species-one-output-bam> <species-two> <species-two-input-bam> <species-two-output-bam> <mismatch-threshold> <minmatch-threshold> <multimap-threshold> <alignment-score-threshold>
+    filter_mapped_hits [--log-level=<log-level>] <species-one> <species-one-input-bam> <species-one-output-bam> <species-two> <species-two-input-bam> <species-two-output-bam> <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
 
 Options:
 {help_option_spec}
@@ -19,7 +19,6 @@ Options:
 <mismatch-threshold>	    Maximum number of mismatches allowed during filtering
 <minmatch-threshold>        Minimum number of read bases that must be perfectly matched
 <multimap-threshold>        Maximum number of multiple mappings allowed during filtering
-<alignment-score-threshold> Minimum alignment score allowed during filtering
 
 TODO: what does this script do...
 """
@@ -41,7 +40,6 @@ SPECIES_TWO_OUTPUT_BAM = "<species-two-output-bam>"
 MISMATCH_THRESHOLD = "<mismatch-threshold>"
 MINMATCH_THRESHOLD = "<minmatch-threshold>"
 MULTIMAP_THRESHOLD = "<multimap-threshold>"
-ALIGNMENT_SCORE_THRESHOLD = "<alignment-score-threshold>"
 
 ASSIGNED_TO_SPECIES_ONE = 1
 ASSIGNED_TO_SPECIES_TWO = 2
@@ -101,7 +99,6 @@ class _HitsInfo:
         self.multimaps = None
         self.max_mismatches = None
         self.min_mismatches = None
-        self.alignment_scores = None
         self.cigar = None
 
     def get_multimaps(self):
@@ -127,15 +124,6 @@ class _HitsInfo:
                     self.min_mismatches = mismatches
         return self.min_mismatches
 
-    def get_min_alignment_score(self):
-        if self.alignment_scores is None:
-            self.alignment_scores = sys.maxsize
-            for hit in self.hits:
-                score = samutils.get_alignment_scores(hit)
-                if score < self.alignment_scores:
-                    self.alignment_scores = score
-        return self.alignment_scores
-
     def get_cigars(self):
         if self.cigar is None:
             self.cigar = {}
@@ -145,12 +133,11 @@ class _HitsInfo:
 
 
 class _HitsChecker:
-    def __init__(self, mismatch_thresh, minmatch_thresh, multimap_thresh, alignment_score_thresh):
-        self.mismatch_thresh = mismatch_thresh
-        self.minmatch_thresh = minmatch_thresh
-        self.multimap_thresh = multimap_thresh
-        self.alignment_score_thresh = alignment_score_thresh
-        #print "PARAMS: mismatch - "+str(mismatch_thresh)+", minmatch - "+str(minmatch_thresh)+", multimap - "+str(multimap_thresh)+", alignment score - "+str(alignment_score_thresh)
+    def __init__(self, mismatch_thresh, minmatch_thresh, multimap_thresh):
+        self.mismatch_thresh = int(mismatch_thresh)
+        self.minmatch_thresh = int(minmatch_thresh)
+        self.multimap_thresh = int(multimap_thresh)
+        print "PARAMS: mismatch - "+str(mismatch_thresh)+", minmatch - "+str(minmatch_thresh)+", multimap - "+str(multimap_thresh)
 
     def check_hits(self, hits_info):
         # check that the hits for a read are - in themselves - satisfactory to
@@ -160,19 +147,12 @@ class _HitsChecker:
         # - no mismatches
         # - CIGAR string satisfactory
 
-        #if hits_info.get_multimaps() > 1:
-        if hits_info.get_multimaps() > self.multimap_thresh: #MULTIMAP_THRESHOLD:
+        if hits_info.get_multimaps() > self.multimap_thresh:
             return False
 
-        #if hits_info.get_max_mismatches() > 0:
-        if hits_info.get_max_mismatches() > self.mismatch_thresh: #MISMATCH_THRESHOLD:
+        if hits_info.get_max_mismatches() > self.mismatch_thresh:
             return False
 
-        # ENABLE FOR AS FILTERING
-        if self.check_alignment_score(hits_info) == 2:
-            return False
-
-        #if not self.check_cigar(hits_info):
         if self.check_cigar(hits_info) == 2:
             return False
 
@@ -182,62 +162,68 @@ class _HitsChecker:
         # TODO: currently making the assumption that min = max mismatches
         # TODO: initially try to get this to behave in the same way as the original code
 
+        score1 = 0
+        score2 = 0
+
+        violated1 = False
+        violated2 = False
+
         s1_multimaps = s1_hits_info.get_multimaps()
         s2_multimaps = s2_hits_info.get_multimaps()
 
-        mmThresh = self.multimap_thresh #MULTIMAP_THRESHOLD
+        if s1_multimaps > self.multimap_thresh:
+            violated1 = True
+        if s2_multimaps > self.multimap_thresh:
+            violated2 = True
 
-        if s1_multimaps > mmThresh or s2_multimaps > mmThresh:
-            return ASSIGNED_TO_NEITHER_REJECTED
-
-        #print "NEW Param Check: Mismatches - "+str(options[MISMATCH_THRESHOLD])+", Minmatch - "+str(options[MINMATCH_THRESHOLD])+", Multimaps - "+str(options[MULTIMAP_THRESHOLD])+", AS - "+str(options[ALIGNMENT_SCORE_THRESHOLD])
-
-	s1_AS_check = self.check_alignment_score(s1_hits_info)
-        s2_AS_check = self.check_alignment_score(s2_hits_info)
- 
-        if s1_AS_check==0 and s2_AS_check==2:
-            return ASSIGNED_TO_SPECIES_ONE
-        elif s2_AS_check==0 and s1_AS_check==2:
-            return ASSIGNED_TO_SPECIES_TWO
+        mmThresh = self.multimap_thresh
 
         s1_mismatches = s1_hits_info.get_max_mismatches()
         s2_mismatches = s2_hits_info.get_max_mismatches()
 
-        if s1_mismatches < s2_mismatches:
+        if s1_mismatches > self.mismatch_thresh:
+            violated1 = True
+        if s2_mismatches > self.mismatch_thresh:
+            violated2 = True
+
+        s1_cigar_check = self.check_cigar(s1_hits_info)
+        s2_cigar_check = self.check_cigar(s2_hits_info)
+
+        if s1_cigar_check == 2:
+            violated1 = True
+        if s2_cigar_check == 2:
+            violated2 = True
+
+        if s1_mismatches < s2_mismatches and violated1==False:
             return ASSIGNED_TO_SPECIES_ONE
-        elif s2_mismatches < s1_mismatches:
+        elif s2_mismatches < s1_mismatches and violated2==False:
             return ASSIGNED_TO_SPECIES_TWO
         else:
-            s1_cigar_check = self.check_cigar(s1_hits_info)
-            s2_cigar_check = self.check_cigar(s2_hits_info)
-
-            #if s1_cigar_check and not s2_cigar_check:
-            if s1_cigar_check<s2_cigar_check:
+            if s1_cigar_check<s2_cigar_check and violated1==False:
                 return ASSIGNED_TO_SPECIES_ONE
-            #elif not s1_cigar_check and s2_cigar_check:
-            elif s2_cigar_check<s1_cigar_check:
+            elif s2_cigar_check<s1_cigar_check and violated2==False:
                 return ASSIGNED_TO_SPECIES_TWO
-            
-            #s1_AS_check = self.check_alignment_score(s1_hits_info)
-            #s2_AS_check = self.check_alignment_score(s2_hits_info)
- 
-            #if s1_AS_check==0 and s2_AS_check==2:
-            #    return ASSIGNED_TO_SPECIES_ONE
-            #elif s2_AS_check==0 and s1_AS_check==2:
-            #    return ASSIGNED_TO_SPECIES_TWO
+            else:
+                if s1_multimaps < s2_multimaps and violated1==False:
+                    return ASSIGNED_TO_SPECIES_ONE
+                elif s2_multimaps < s1_multimaps and violated2==False:
+                    return ASSIGNED_TO_SPECIES_TWO
 
-        #print "ONE: "+str(s1_cigar_check)+", TWO: "+str(s2_cigar_check)
+        if violated1 == False and violated2 == True:
+            return ASSIGNED_TO_SPECIES_ONE
+        elif violated2 == False and violated1 == True:
+            return ASSIGNED_TO_SPECIES_TWO
+        elif violated2 == True and violated1 == True:
+            return ASSIGNED_TO_NEITHER_REJECTED
+
         return ASSIGNED_TO_NEITHER_AMBIGUOUS
 
     def retreive_full_number(self,cigar):
         for i in range(len(cigar)):
             if len(cigar)-(i+1) > 0:
-                #print "CIGAR: "+cigar+", i: "+str(i)+", length: "+str(len(cigar))
                 if not cigar[len(cigar)-(i+1)].isdigit():
-                    #print "CIGAR: "+cigar+", i: "+str(i)+", FINISHED: "+cigar[(len(cigar)-i):len(cigar)]
                     return cigar[(len(cigar)-i):len(cigar)]
             else:
-                #print "CIGAR: "+cigar+", FINISHED: "+cigar[0:len(cigar)]
                 return cigar[0:len(cigar)]
         return 0 # should never reach here, but just in case
 
@@ -250,7 +236,6 @@ class _HitsChecker:
             for i in range(len(cigar)):
                 if cigar[i] == type:
                     total += int(self.retreive_full_number(cigar[0:i]))
-                    #print "CIGAR: "+cigar+", Passing: "+cigar[0:i]+", Total: "+str(total)
             return total
 
     def check_min_match(self,cigar):
@@ -263,81 +248,30 @@ class _HitsChecker:
                     quantity = int(self.retreive_full_number(cigar[0:i]))
                     if quantity < 5:
                         return False
-                    #print "CIGAR: "+cigar+", Passing: "+cigar[0:i]+", Total: "+str(total)
             return True
 
     def check_cigar(self, hits_info):
         gradedResponse = 0# when allowing other params, this is no longer a t/f scenario; e.g when clipping is allowed a cigar without clipping should score better than one with even though both are allowed
         # Grades: 2 = fail, 1 = less good, 0 = good
         for cigar in hits_info.get_cigars():
-            for c in ["I", "D", "S", "H", "P", "X"]: # ENABLE FOR CONSERVATIVE
-            #for c in ["I", "D", "H", "P", "X"]: # ENABLE FOR SOFT CLIPPING
-                if c in cigar:
-                    return 2
-
-            # ENABLE FOR SOFT CLIPPING
-            #allowedClipping = 5 # FO: allowing soft clipping
-            #noS = self.extract_base_quantity(cigar,"S")
-            #if noS > allowedClipping:
-            #    return 2
-            #elif noS > 0:
-            #    gradedResponse = 1
+            # DO NOT REMOVE:
+            #for c in ["I", "D", "S", "H", "P", "X"]: # ENABLE FOR CONSERVATIVE
+            #    if c in cigar:
+            #        return 2
             
             # ENABLE FOR MINMATCH THRESHOLDING:
-            #minMatch = self.minmatch_thresh #MINMATCH_THRESHOLD #40
-            #noM = self.extract_base_quantity(cigar,"M")
-            #if noM < minMatch:
-            #    return 2
-            #elif noM < 50:
-            #    gradedResponse = 1
+            minMatch = self.minmatch_thresh
+            noM = self.extract_base_quantity(cigar,"M")
+            if noM < minMatch:
+                return 2
+            elif noM < 50:
+                gradedResponse = 1
 
             if "N" in cigar:
-                #if "S" in cigar: # FILTER OPTIMISING; this allows some soft clipping
                 if not self.check_min_match(cigar):
                     return 2
-                
-                #    segments = cigar.split("S")
-                #    if not "M" in segments[0]: # if S only at the start
-                #        if int(segments[0]) > allowedClipping:
-                #            return 2
-                #    elif len(segments)<3:
-		#	#print "SEGMENTS: "+str(segments[0])+" "+str(segments[1])
-                #        #if int(segments[1]) > allowedClipping:
-                #        print "SEGS: "+str(segments)
-                #        if int(segments[0].split("M")[2]) > allowedClipping:
-                #            return 2
-                #    if len(segments)>2: 
-                #        if int(segments[1].split("M")[2]) > allowedClipping:
-                #            return 2
-                #    gradedResponse = 1
-                
-                #else:
-                #segments = cigar.split("M")
-                #noN = self.extract_base_quantity(cigar,"N")
-		#print "CIGAR: "+cigar+", SEGMENTS: "+str(segments)+", NoN: "+str(noN)
-                #if int(segments[0]) < 5 or int(segments[1].split("N")[1]) < 5:
-                #if noN <
-                #    return 2
-        return gradedResponse
 
-    # check whether a read is mapped over a splice junction and if not, whether its score is above threshold
-    def check_alignment_score(self,hits_info):
-        hit_index = -1
-        score_threshold = self.alignment_score_thresh #ALIGNMENT_SCORE_THRESHOLD #100
-        cigars = hits_info.get_cigars()
-        #for score in hits_info.get_min_alignment_score():
-        #print "CIGARS: "+str(cigars)
-	#quit()
-        score = hits_info.get_min_alignment_score()
-        for cig in cigars:
-            hit_index += 1
-            #print "AS: "+str(score)+", CIGAR: "+cigars[hit_index]
-            if "N" in cigars[hit_index]:
-                return 1 # Not concerning ourselves with these reads for this filtering as we know this filtering doesn't apply to them; as such they are subject to regular filtering
-        if score < score_threshold:
-            return 2
-        else:
-            return 0
+        return gradedResponse
 
 def _hits_generator(all_hits):
     last_hit_name = None
