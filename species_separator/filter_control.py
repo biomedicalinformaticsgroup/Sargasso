@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """Usage:
-    filter_control [--log-level=<log-level>] <block-dir> <output-dir> <sample-name> <species-one> <species-two> <mismatch_threshold> <minmatch_threshold> <multimap_threshold> <alignment_score_threshold>
+    filter_control [--log-level=<log-level>] <block-dir> <output-dir> <sample-name> <species-one> <species-two> <mismatch_threshold> <minmatch_threshold> <multimap_threshold>
 
 Option:
 {help_option_spec}
@@ -18,7 +18,6 @@ Option:
 <mismatch_threshold>	Maximum number of mismatches to be allowed in the filtering stage
 <minmatch_threshold>	Minimum number of bases that have to be perfectly matched in the filtering stage
 <multimap_threshold>	Maximum number of multiple mappings a read can have to pass the filtering stage
-<alignment_score_threshold> Minimum alignment score to be allowed in the filtering stage
 
 TODO: what does this script do...
 """
@@ -40,7 +39,6 @@ SPECIES_TWO = "<species-two>"
 MISMATCH_THRESHOLD = "<mismatch_threshold>"
 MINMATCH_THRESHOLD = "<minmatch_threshold>"
 MULTIMAP_THRESHOLD = "<multimap_threshold>"
-ALIGNMENT_SCORE_THRESHOLD = "<alignment_score_threshold>"
 
 def _validate_command_line_options(options):
     """
@@ -150,7 +148,7 @@ def _run_processes(logger, options):
                     options[SPECIES_ONE], sp1_in, os.path.abspath(sp1_out),
                     options[SPECIES_TWO], sp2_in, os.path.abspath(sp2_out),
                     options[MISMATCH_THRESHOLD], options[MINMATCH_THRESHOLD],
-                    options[MULTIMAP_THRESHOLD], options[ALIGNMENT_SCORE_THRESHOLD]]
+                    options[MULTIMAP_THRESHOLD]]
 
         proc = subprocess.Popen(commands)
         all_processes.append(proc)
