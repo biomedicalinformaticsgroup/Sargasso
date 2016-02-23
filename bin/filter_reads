@@ -13,7 +13,6 @@ THREADS=$6 #How many chunks to split the read files into
 MISMATCH_THRESHOLD=$7
 MINMATCH_THRESHOLD=$8
 MULTIMAP_THRESHOLD=$9
-ALIGNMENT_SCORE_THRESHOLD=${10}
 
 BLOCK_DIR=${OUTPUT_DIR}/Blocks
 mkdir -p $BLOCK_DIR
@@ -97,8 +96,7 @@ for sample in ${SAMPLES}; do
     wait
 
     # execute python process control script passing over file location and filtering info
-    #echo "AS PARAM: ${ALIGNMENT_SCORE_THRESHOLD}"
-    filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${SPECIES_ONE} ${SPECIES_TWO} ${MISMATCH_THRESHOLD} ${MINMATCH_THRESHOLD} ${MULTIMAP_THRESHOLD} ${ALIGNMENT_SCORE_THRESHOLD}
+    filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${SPECIES_ONE} ${SPECIES_TWO} ${MISMATCH_THRESHOLD} ${MINMATCH_THRESHOLD} ${MULTIMAP_THRESHOLD}
 
     # Merge the resultant BAM files produced by the filtering into 1 file
     SP1_FILES=()
