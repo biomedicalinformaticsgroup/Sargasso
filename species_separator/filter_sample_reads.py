@@ -89,6 +89,8 @@ def _validate_command_line_options(options):
         opt.validate_file_option(
             options[SPECIES_TWO_INPUT_BAM],
             "Could not find input BAM file for species 2")
+
+        #TODO: Add validation of matching parameters
     except schema.SchemaError as exc:
         exit(exc.code)
 
@@ -258,7 +260,7 @@ class _HitsChecker:
             #for c in ["I", "D", "S", "H", "P", "X"]: # ENABLE FOR CONSERVATIVE
             #    if c in cigar:
             #        return 2
-            
+
             # ENABLE FOR MINMATCH THRESHOLDING:
             minMatch = self.minmatch_thresh
             noM = self.extract_base_quantity(cigar,"M")
@@ -368,7 +370,7 @@ def _filter_sample_reads(logger, options):
     s1_count = 0
     s2_count = 0
 
-    hits_checker = _HitsChecker(options[MISMATCH_THRESHOLD],options[MINMATCH_THRESHOLD],options[MULTIMAP_THRESHOLD],options[ALIGNMENT_SCORE_THRESHOLD])
+    hits_checker = _HitsChecker(options[MISMATCH_THRESHOLD],options[MINMATCH_THRESHOLD],options[MULTIMAP_THRESHOLD])
 
     while True:
     # 1. Attempt to read all hits for the first/next read in each species'

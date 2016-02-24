@@ -80,4 +80,4 @@ class MakefileWriter(_Writer):
 
     def add_command(self, command_name, options):
         line_elements = [command_name] + options
-        self.add_line(" ".join(line_elements))
+        self.add_line(" ".join([str(l) for l in line_elements]))

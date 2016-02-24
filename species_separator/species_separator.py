@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """Usage:
-    species_separator [--log-level=<log-level>] [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>] [--s1-gtf=<species-one-gtf-file>] [--s2-gtf=<species-two-gtf-file>] [--s1-genome-fasta=<species-one-genome-fasta>] [--s2-genome-fasta=<species-two-genome-fasta>] [--s1-index=<species-one-star-index>] [--s2-index=<species-two-star-index>] [--run-separation] <species-one> <species-two> <samples-file> <output-dir>
+    species_separator [--log-level=<log-level>] [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>] [--s1-gtf=<species-one-gtf-file>] [--s2-gtf=<species-two-gtf-file>] [--s1-genome-fasta=<species-one-genome-fasta>] [--s2-genome-fasta=<species-two-genome-fasta>] [--s1-index=<species-one-star-index>] [--s2-index=<species-two-star-index>] [--mismatch-threshold=<mismatch-threshold>] --minmatch-threshold=<minmatch-threshold> [--multimap-threshold=<multimap-threshold>] [--run-separation] <species-one> <species-two> <samples-file> <output-dir>
 
 Options:
 {help_option_spec}
@@ -22,6 +22,9 @@ Options:
 --s2-genome-fasta=<species-two-genome-fasta>    Directory containing genome FASTA files for second species.
 --s1-index=<species-one-star-index>             STAR index directory for first species.
 --s2-index=<species-two-star-index>             STAR index directory for second species.
+--mismatch-threshold=<mismatch-threshold>       Maximum number of mismatches allowed during filtering [default: 0].
+--minmatch-threshold=<minmatch-threshold>       Minimum number of read bases that must be perfectly matched
+--multimap-threshold=<multimap-threshold>       Maximum number of multiple mappings allowed during filtering [default: 1].
 --run-separation                                If specified, species separation will be run; otherwise scripts to perform separation will be created but not run.
 
 TODO: what does this script do...
@@ -51,6 +54,9 @@ SPECIES_ONE_GENOME_FASTA = "--s1-genome-fasta"
 SPECIES_TWO_GENOME_FASTA = "--s2-genome-fasta"
 SPECIES_ONE_INDEX = "--s1-index"
 SPECIES_TWO_INDEX = "--s2-index"
+MISMATCH_THRESHOLD = "--mismatch-threshold"
+MINMATCH_THRESHOLD = "--minmatch-threshold"
+MULTIMAP_THRESHOLD = "--multimap-threshold"
 RUN_SEPARATION = "--run-separation"
 
 SPECIES_NAME = "species-name"
@@ -260,6 +266,18 @@ def _validate_command_line_options(options):
         opt.validate_dir_option(
             options[OUTPUT_DIR], "Output directory should not exist",
             should_exist=False)
+        options[MISMATCH_THRESHOLD] = opt.validate_int_option(
+            options[MISMATCH_THRESHOLD],
+            "Maximum number of mismatches must be a non-negative integer.",
+            0, True)
+        options[MINMATCH_THRESHOLD] = opt.validate_int_option(
+            options[MINMATCH_THRESHOLD],
+            "Minimum number of perfect matches must be a positive integer.",
+            1)
+        options[MULTIMAP_THRESHOLD] = opt.validate_int_option(
+            options[MULTIMAP_THRESHOLD],
+            "Maximum number of multiple mappings must be a positive integer.",
+            1)
 
         species_one_options = _get_species_options(
             options, SPECIES_ONE, SPECIES_ONE_GTF,
@@ -394,7 +412,7 @@ def _write_all_target(logger, writer):
         pass
 
 
-def _write_filtered_reads_target(logger, writer):
+def _write_filtered_reads_target(logger, writer, options):
     """
     Write target to separate reads by species to Makefile.
 
@@ -414,7 +432,10 @@ def _write_filtered_reads_target(logger, writer):
              "\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
              writer.variable_val(SORTED_READS_TARGET),
              writer.variable_val(FILTERED_READS_TARGET),
-             writer.variable_val(NUM_THREADS_VARIABLE)])
+             writer.variable_val(NUM_THREADS_VARIABLE),
+             options[MISMATCH_THRESHOLD],
+             options[MINMATCH_THRESHOLD],
+             options[MULTIMAP_THRESHOLD]])
 
 
 def _write_sorted_reads_target(logger, writer):
@@ -606,7 +627,7 @@ def _write_makefile(logger, options, sample_info):
         _write_target_variable_definitions(logger, writer)
         _write_phony_targets(logger, writer)
         _write_all_target(logger, writer)
-        _write_filtered_reads_target(logger, writer)
+        _write_filtered_reads_target(logger, writer, options)
         _write_sorted_reads_target(logger, writer)
         _write_mapped_reads_target(logger, writer, sample_info)
         #_write_masked_reads_target(logger, writer)
