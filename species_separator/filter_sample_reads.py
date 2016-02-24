@@ -370,7 +370,7 @@ def _filter_sample_reads(logger, options):
     s1_count = 0
     s2_count = 0
 
-    hits_checker = _HitsChecker(options[MISMATCH_THRESHOLD],options[MINMATCH_THRESHOLD],options[MULTIMAP_THRESHOLD],options[ALIGNMENT_SCORE_THRESHOLD])
+    hits_checker = _HitsChecker(options[MISMATCH_THRESHOLD],options[MINMATCH_THRESHOLD],options[MULTIMAP_THRESHOLD])
 
     while True:
     # 1. Attempt to read all hits for the first/next read in each species'
