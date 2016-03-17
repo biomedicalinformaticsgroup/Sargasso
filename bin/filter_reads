@@ -98,33 +98,35 @@ for sample in ${SAMPLES}; do
     # execute python process control script passing over file location and filtering info
     filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${SPECIES_ONE} ${SPECIES_TWO} ${MISMATCH_THRESHOLD} ${MINMATCH_THRESHOLD} ${MULTIMAP_THRESHOLD}
 
-    # Merge the resultant BAM files produced by the filtering into 1 file
-    SP1_FILES=()
-    SP2_FILES=()
-    for i in $(seq 0 1 $((${THREADS}-1)));
-    do
-    	SP1_FILES[${i}]="${OUTPUT_DIR}"/"${sample}"_"${SPECIES_ONE}"_"${i}"_filtered.bam
-    	SP2_FILES[${i}]="${OUTPUT_DIR}"/"${sample}"_"${SPECIES_TWO}"_"${i}"_filtered.bam
-    done
+    if [ "${THREADS}" -eq "1" ]
+    then
+        mv "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_ONE}"_0_filtered.bam "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_ONE}"_filtered.bam
+        mv "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_TWO}"_0_filtered.bam "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_TWO}"_filtered.bam
+    else
+        # Merge the resultant BAM files produced by the filtering into 1 file
+        SP1_FILES=()
+        SP2_FILES=()
+        for i in $(seq 0 1 $((${THREADS}-1)));
+        do
+            SP1_FILES[${i}]="${OUTPUT_DIR}"/"${sample}"_"${SPECIES_ONE}"_"${i}"_filtered.bam
+            SP2_FILES[${i}]="${OUTPUT_DIR}"/"${sample}"_"${SPECIES_TWO}"_"${i}"_filtered.bam
+        done
 
-    #echo "SP1 FILES:\n"
-    #echo "${SP1_FILES}"
-    #echo "SP2 FILES:\n"
-    #echo "${SP2_FILES}"
-
-    sambamba merge "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_ONE}"_filtered.bam ${SP1_FILES[@]}
-    sambamba merge "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_TWO}"_filtered.bam ${SP2_FILES[@]}
-
-    #echo "SAMBAMBA CODE:\n"
-    #echo "sambamba merge" "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_ONE}"_filtered.bam SP1_FILES[@]
+        sambamba merge "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_ONE}"_filtered.bam ${SP1_FILES[@]}
+        sambamba merge "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_TWO}"_filtered.bam ${SP2_FILES[@]}
+    fi
 
     for i in $(seq "${THREADS}" )
     do
         rm "${BLOCK_DIR}"/"${sample}${SEPARATOR}${SPECIES_ONE}${SEPARATOR}"BLOCK"${SEPARATOR}${i}".bam
         rm "${BLOCK_DIR}"/"${sample}${SEPARATOR}${SPECIES_TWO}${SEPARATOR}"BLOCK"${SEPARATOR}${i}".bam
         less=$(( ${i} - 1))
-        rm "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_ONE}"_"${less}"_filtered.bam
-        rm "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_TWO}"_"${less}"_filtered.bam
+
+        if [ "${THREADS}" -ne "1" ]
+        then
+            rm "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_ONE}"_"${less}"_filtered.bam
+            rm "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_TWO}"_"${less}"_filtered.bam
+        fi
     done
 done
 
