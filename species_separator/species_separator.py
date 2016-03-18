@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """Usage:
-    species_separator [--log-level=<log-level>] [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>] [--s1-gtf=<species-one-gtf-file>] [--s2-gtf=<species-two-gtf-file>] [--s1-genome-fasta=<species-one-genome-fasta>] [--s2-genome-fasta=<species-two-genome-fasta>] [--s1-index=<species-one-star-index>] [--s2-index=<species-two-star-index>] [--mismatch-threshold=<mismatch-threshold>] --minmatch-threshold=<minmatch-threshold> [--multimap-threshold=<multimap-threshold>] [--run-separation] <species-one> <species-two> <samples-file> <output-dir>
+    species_separator [--log-level=<log-level>] [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>] [--s1-gtf=<species-one-gtf-file>] [--s2-gtf=<species-two-gtf-file>] [--s1-genome-fasta=<species-one-genome-fasta>] [--s2-genome-fasta=<species-two-genome-fasta>] [--s1-index=<species-one-star-index>] [--s2-index=<species-two-star-index>] [--mismatch-threshold=<mismatch-threshold>] [--minmatch-threshold=<minmatch-threshold>] [--multimap-threshold=<multimap-threshold>] [--run-separation] <species-one> <species-two> <samples-file> <output-dir>
 
 Options:
 {help_option_spec}
@@ -23,7 +23,7 @@ Options:
 --s1-index=<species-one-star-index>             STAR index directory for first species.
 --s2-index=<species-two-star-index>             STAR index directory for second species.
 --mismatch-threshold=<mismatch-threshold>       Maximum number of mismatches allowed during filtering [default: 0].
---minmatch-threshold=<minmatch-threshold>       Minimum number of read bases that must be perfectly matched
+--minmatch-threshold=<minmatch-threshold>       Maximum number of read bases allowed to be not perfectly matched [default: 0].
 --multimap-threshold=<multimap-threshold>       Maximum number of multiple mappings allowed during filtering [default: 1].
 --run-separation                                If specified, species separation will be run; otherwise scripts to perform separation will be created but not run.
 
@@ -275,12 +275,12 @@ def _validate_command_line_options(options):
             0, True)
         options[MINMATCH_THRESHOLD] = opt.validate_int_option(
             options[MINMATCH_THRESHOLD],
-            "Minimum number of perfect matches must be a positive integer.",
-            1)
+            "Maximum number of not perfect matches must be a non-negative " +
+            "integer.", 0, True)
         options[MULTIMAP_THRESHOLD] = opt.validate_int_option(
             options[MULTIMAP_THRESHOLD],
             "Maximum number of multiple mappings must be a positive integer.",
-            1)
+            1, True)
 
         species_one_options = _get_species_options(
             options, SPECIES_ONE, SPECIES_ONE_GTF,

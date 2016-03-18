@@ -16,7 +16,7 @@ Option:
 <species-one>           Name of first species.
 <species-two>           Name of second species.
 <mismatch_threshold>	Maximum number of mismatches to be allowed in the filtering stage
-<minmatch_threshold>	Minimum number of bases that have to be perfectly matched in the filtering stage
+<minmatch_threshold>	Maximum number of bases allowed to be not perfectly matched in the filtering stage
 <multimap_threshold>	Maximum number of multiple mappings a read can have to pass the filtering stage
 
 TODO: what does this script do...

@@ -98,10 +98,16 @@ def _validate_command_line_options(options):
 class _HitsInfo:
     def __init__(self, hits):
         self.hits = hits
+        self.length = None
         self.multimaps = None
         self.max_mismatches = None
         self.min_mismatches = None
         self.cigar = None
+
+    def get_length(self):
+        if self.length is None:
+            self.length = samutils.get_length(self.hits[0])
+        return self.length
 
     def get_multimaps(self):
         if self.multimaps is None:
@@ -253,6 +259,9 @@ class _HitsChecker:
             return True
 
     def check_cigar(self, hits_info):
+        length = hits_info.get_length()
+        minMatch = length - self.minmatch_thresh
+
         gradedResponse = 0# when allowing other params, this is no longer a t/f scenario; e.g when clipping is allowed a cigar without clipping should score better than one with even though both are allowed
         # Grades: 2 = fail, 1 = less good, 0 = good
         for cigar in hits_info.get_cigars():
@@ -262,11 +271,10 @@ class _HitsChecker:
             #        return 2
 
             # ENABLE FOR MINMATCH THRESHOLDING:
-            minMatch = self.minmatch_thresh
             noM = self.extract_base_quantity(cigar,"M")
             if noM < minMatch:
                 return 2
-            elif noM < 50:
+            elif noM < length:
                 gradedResponse = 1
 
             if "N" in cigar:
