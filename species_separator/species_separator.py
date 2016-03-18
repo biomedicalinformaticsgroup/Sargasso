@@ -38,6 +38,7 @@ import os.path
 import schema
 
 from . import file_writer as fw
+from . import filter_sample_reads
 from . import options as opt
 from . import process
 from .__init__ import __version__
@@ -268,18 +269,9 @@ def _validate_command_line_options(options):
         opt.validate_dir_option(
             options[OUTPUT_DIR], "Output directory should not exist",
             should_exist=False)
-        options[MISMATCH_THRESHOLD] = opt.validate_int_option(
-            options[MISMATCH_THRESHOLD],
-            "Maximum number of mismatches must be a non-negative integer.",
-            0, True)
-        options[MINMATCH_THRESHOLD] = opt.validate_int_option(
-            options[MINMATCH_THRESHOLD],
-            "Maximum number of not perfect matches must be a non-negative " +
-            "integer.", 0, True)
-        options[MULTIMAP_THRESHOLD] = opt.validate_int_option(
-            options[MULTIMAP_THRESHOLD],
-            "Maximum number of multiple mappings must be a positive integer.",
-            1, True)
+
+        filter_sample_reads.validate_threshold_options(
+            options, MISMATCH_THRESHOLD, MINMATCH_THRESHOLD, MULTIMAP_THRESHOLD)
 
         species_one_options = _get_species_options(
             options, SPECIES_ONE, SPECIES_ONE_GTF,

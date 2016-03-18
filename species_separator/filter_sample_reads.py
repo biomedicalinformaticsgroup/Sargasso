@@ -43,6 +43,23 @@ MINMATCH_THRESHOLD = "<minmatch-threshold>"
 MULTIMAP_THRESHOLD = "<multimap-threshold>"
 
 
+def validate_threshold_options(
+        options, mismatch_opt_name, minmatch_opt_name, multimap_opt_name):
+
+    options[mismatch_opt_name] = opt.validate_int_option(
+        options[mismatch_opt_name],
+        "Maximum number of mismatches must be a non-negative integer.",
+        0, True)
+    options[minmatch_opt_name] = opt.validate_int_option(
+        options[minmatch_opt_name],
+        "Maximum number of not perfect matches must be a non-negative " +
+        "integer.", 0, True)
+    options[multimap_opt_name] = opt.validate_int_option(
+        options[multimap_opt_name],
+        "Maximum number of multiple mappings must be a positive integer.",
+        1, True)
+
+
 def _validate_command_line_options(options):
     try:
         opt.validate_log_level(options)
@@ -54,7 +71,8 @@ def _validate_command_line_options(options):
             options[SPECIES_TWO_INPUT_BAM],
             "Could not find input BAM file for species 2")
 
-        #TODO: Add validation of matching parameters
+        validate_threshold_options(options, MISMATCH_THRESHOLD,
+                                   MINMATCH_THRESHOLD, MULTIMAP_THRESHOLD)
     except schema.SchemaError as exc:
         exit(exc.code)
 
