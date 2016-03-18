@@ -83,6 +83,9 @@ RAW_READS_DIRECTORY_VARIABLE = "RAW_READS_DIRECTORY"
 RAW_READS_LEFT_VARIABLE = "RAW_READS_FILES_1"
 RAW_READS_RIGHT_VARIABLE = "RAW_READS_FILES_2"
 
+SINGLE_END_READS_TYPE = "single"
+PAIRED_END_READS_TYPE = "paired"
+
 
 # TODO: deal with single-end reads
 class SampleInfo(object):
@@ -481,19 +484,21 @@ def _write_mapped_reads_target(logger, writer, sample_info):
             "Map reads for each sample to each species' genome")
         writer.make_target_directory(MAPPED_READS_TARGET)
 
-        map_reads_command = "map_reads_pe" if sample_info.paired_end_reads() \
-            else "map_reads_se"
-
-        writer.add_command(
-            map_reads_command,
-            ["\"{s1} {s2}\"".format(
+        map_reads_params = [
+            "\"{s1} {s2}\"".format(
                 s1=writer.variable_val(SPECIES_ONE_VARIABLE),
                 s2=writer.variable_val(SPECIES_TWO_VARIABLE)),
-             "\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
-             writer.variable_val(STAR_INDICES_TARGET),
-             writer.variable_val(NUM_THREADS_VARIABLE),
-             writer.variable_val(COLLATE_RAW_READS_TARGET),
-             writer.variable_val(MAPPED_READS_TARGET)])
+            "\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
+            writer.variable_val(STAR_INDICES_TARGET),
+            writer.variable_val(NUM_THREADS_VARIABLE),
+            writer.variable_val(COLLATE_RAW_READS_TARGET),
+            writer.variable_val(MAPPED_READS_TARGET)]
+
+        map_reads_params.append(
+            PAIRED_END_READS_TYPE if sample_info.paired_end_reads()
+            else SINGLE_END_READS_TYPE)
+
+        writer.add_command("map_reads", map_reads_params)
 
 
 #def _write_masked_reads_target(logger, writer, options):
@@ -516,24 +521,29 @@ def _write_collate_raw_reads_target(logger, writer, sample_info):
             "for that sample")
         writer.make_target_directory(COLLATE_RAW_READS_TARGET)
 
+        collate_raw_reads_params = [
+            "\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
+            writer.variable_val(RAW_READS_DIRECTORY_VARIABLE),
+            writer.variable_val(COLLATE_RAW_READS_TARGET),
+        ]
+
         if sample_info.paired_end_reads():
-            writer.add_command(
-                "collate_raw_reads_pe",
-                ["\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
-                 writer.variable_val(RAW_READS_DIRECTORY_VARIABLE),
-                 "\"{var}\"".format(
-                     var=writer.variable_val(RAW_READS_LEFT_VARIABLE)),
-                 "\"{var}\"".format(
-                     var=writer.variable_val(RAW_READS_RIGHT_VARIABLE)),
-                 writer.variable_val(COLLATE_RAW_READS_TARGET)])
+            collate_raw_reads_params += [
+                PAIRED_END_READS_TYPE,
+                "\"{var}\"".format(
+                    var=writer.variable_val(RAW_READS_LEFT_VARIABLE)),
+                "\"{var}\"".format(
+                    var=writer.variable_val(RAW_READS_RIGHT_VARIABLE))
+            ]
         else:
-            writer.add_command(
-                "collate_raw_reads_se",
-                ["\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
-                 writer.variable_val(RAW_READS_DIRECTORY_VARIABLE),
-                 "\"{var}\"".format(
-                     var=writer.variable_val(RAW_READS_LEFT_VARIABLE)),
-                 writer.variable_val(COLLATE_RAW_READS_TARGET)])
+            collate_raw_reads_params += [
+                SINGLE_END_READS_TYPE,
+                "\"{var}\"".format(
+                    var=writer.variable_val(RAW_READS_LEFT_VARIABLE)),
+                "\"\""
+            ]
+
+        writer.add_command("collate_raw_reads", collate_raw_reads_params)
 
 
 #def _write_mask_star_index_targets(logger, writer, options):

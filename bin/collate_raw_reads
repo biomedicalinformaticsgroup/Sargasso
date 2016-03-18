@@ -5,9 +5,10 @@ set -o errexit
 
 SAMPLES=( $1 )
 RAW_READS_DIRECTORY=$2
-RAW_READ_FILES_1=( $3 )
-RAW_READ_FILES_2=( $4 )
-READS_DIR=$5
+READS_DIR=$3
+READS_TYPE=$4
+RAW_READ_FILES_1=( $5 )
+RAW_READ_FILES_2=( $6 )
 
 for ((i = 0; i < ${#SAMPLES[@]}; i++)); do
     sample_dir=${READS_DIR}/${SAMPLES[i]}
@@ -16,7 +17,9 @@ for ((i = 0; i < ${#SAMPLES[@]}; i++)); do
     mkdir -p ${sample_reads_1_dir}
     echo "${RAW_READ_FILES_1[i]}" | tr ',' '\n' | xargs -i ln -s ${RAW_READS_DIRECTORY}/{} ${sample_reads_1_dir}
 
-    sample_reads_2_dir=${sample_dir}/reads_2
-    mkdir -p ${sample_reads_2_dir}
-    echo "${RAW_READ_FILES_2[i]}" | tr ',' '\n' | xargs -i ln -s ${RAW_READS_DIRECTORY}/{} ${sample_reads_2_dir}
+    if [[ "${READS_TYPE}" == "paired" ]]; then
+        sample_reads_2_dir=${sample_dir}/reads_2
+        mkdir -p ${sample_reads_2_dir}
+        echo "${RAW_READ_FILES_2[i]}" | tr ',' '\n' | xargs -i ln -s ${RAW_READS_DIRECTORY}/{} ${sample_reads_2_dir}
+    fi
 done
