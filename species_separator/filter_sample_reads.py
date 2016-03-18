@@ -24,6 +24,7 @@ TODO: what does this script do...
 """
 
 import docopt
+import os.path
 import schema
 import sys
 
@@ -141,11 +142,16 @@ class _HitsInfo:
 
 
 class _HitsChecker:
-    def __init__(self, mismatch_thresh, minmatch_thresh, multimap_thresh):
+    def __init__(self, mismatch_thresh, minmatch_thresh, multimap_thresh, logger):
         self.mismatch_thresh = int(mismatch_thresh)
         self.minmatch_thresh = int(minmatch_thresh)
         self.multimap_thresh = int(multimap_thresh)
-        print "PARAMS: mismatch - "+str(mismatch_thresh)+", minmatch - "+str(minmatch_thresh)+", multimap - "+str(multimap_thresh)
+
+        logger.debug(("PARAMS: mismatch - {mism}, minmatch - {minm}, " +
+                      "multimap - {mult}").format(
+            mism=mismatch_thresh,
+            minm=minmatch_thresh,
+            mult=multimap_thresh))
 
     def check_hits(self, hits_info):
         # check that the hits for a read are - in themselves - satisfactory to
@@ -170,9 +176,6 @@ class _HitsChecker:
         # TODO: currently making the assumption that min = max mismatches
         # TODO: initially try to get this to behave in the same way as the original code
 
-        score1 = 0
-        score2 = 0
-
         violated1 = False
         violated2 = False
 
@@ -183,8 +186,6 @@ class _HitsChecker:
             violated1 = True
         if s2_multimaps > self.multimap_thresh:
             violated2 = True
-
-        mmThresh = self.multimap_thresh
 
         s1_mismatches = s1_hits_info.get_max_mismatches()
         s2_mismatches = s2_hits_info.get_max_mismatches()
@@ -202,41 +203,41 @@ class _HitsChecker:
         if s2_cigar_check == 2:
             violated2 = True
 
-        if s1_mismatches < s2_mismatches and violated1==False:
+        if s1_mismatches < s2_mismatches and not violated1:
             return ASSIGNED_TO_SPECIES_ONE
-        elif s2_mismatches < s1_mismatches and violated2==False:
+        elif s2_mismatches < s1_mismatches and not violated2:
             return ASSIGNED_TO_SPECIES_TWO
         else:
-            if s1_cigar_check<s2_cigar_check and violated1==False:
+            if s1_cigar_check < s2_cigar_check and not violated1:
                 return ASSIGNED_TO_SPECIES_ONE
-            elif s2_cigar_check<s1_cigar_check and violated2==False:
+            elif s2_cigar_check < s1_cigar_check and not violated2:
                 return ASSIGNED_TO_SPECIES_TWO
             else:
-                if s1_multimaps < s2_multimaps and violated1==False:
+                if s1_multimaps < s2_multimaps and not violated1:
                     return ASSIGNED_TO_SPECIES_ONE
-                elif s2_multimaps < s1_multimaps and violated2==False:
+                elif s2_multimaps < s1_multimaps and not violated2:
                     return ASSIGNED_TO_SPECIES_TWO
 
-        if violated1 == False and violated2 == True:
+        if not violated1 and violated2:
             return ASSIGNED_TO_SPECIES_ONE
-        elif violated2 == False and violated1 == True:
+        elif not violated2 and violated1:
             return ASSIGNED_TO_SPECIES_TWO
-        elif violated2 == True and violated1 == True:
+        elif violated2 and violated1:
             return ASSIGNED_TO_NEITHER_REJECTED
 
         return ASSIGNED_TO_NEITHER_AMBIGUOUS
 
-    def retreive_full_number(self,cigar):
+    def retreive_full_number(self, cigar):
         for i in range(len(cigar)):
-            if len(cigar)-(i+1) > 0:
-                if not cigar[len(cigar)-(i+1)].isdigit():
-                    return cigar[(len(cigar)-i):len(cigar)]
+            if len(cigar) - (i + 1) > 0:
+                if not cigar[len(cigar) - (i + 1)].isdigit():
+                    return cigar[(len(cigar) - i):len(cigar)]
             else:
                 return cigar[0:len(cigar)]
-        return 0 # should never reach here, but just in case
+        return 0  # should never reach here, but just in case
 
     # extracts the quantity of a certain type of base; e.g M, S, N etc
-    def extract_base_quantity(self,cigar,type):
+    def extract_base_quantity(self, cigar, type):
         if not type in cigar:
             return 0
         else:
@@ -246,7 +247,7 @@ class _HitsChecker:
                     total += int(self.retreive_full_number(cigar[0:i]))
             return total
 
-    def check_min_match(self,cigar):
+    def check_min_match(self, cigar):
         if not "M" in cigar:
             return False
         else:
@@ -260,10 +261,14 @@ class _HitsChecker:
 
     def check_cigar(self, hits_info):
         length = hits_info.get_length()
-        minMatch = length - self.minmatch_thresh
+        min_match = length - self.minmatch_thresh
 
-        gradedResponse = 0# when allowing other params, this is no longer a t/f scenario; e.g when clipping is allowed a cigar without clipping should score better than one with even though both are allowed
+        # when allowing other params, this is no longer a t/f scenario;
+        # e.g. when clipping is allowed a cigar without clipping should score
+        # better than one with even though both are allowed
         # Grades: 2 = fail, 1 = less good, 0 = good
+        graded_response = 0
+
         for cigar in hits_info.get_cigars():
             # DO NOT REMOVE:
             #for c in ["I", "D", "S", "H", "P", "X"]: # ENABLE FOR CONSERVATIVE
@@ -271,17 +276,18 @@ class _HitsChecker:
             #        return 2
 
             # ENABLE FOR MINMATCH THRESHOLDING:
-            noM = self.extract_base_quantity(cigar,"M")
-            if noM < minMatch:
+            num_matches = self.extract_base_quantity(cigar, "M")
+            if num_matches < min_match:
                 return 2
-            elif noM < length:
-                gradedResponse = 1
+            elif num_matches < length:
+                graded_response = 1
 
             if "N" in cigar:
                 if not self.check_min_match(cigar):
                     return 2
 
-        return gradedResponse
+        return graded_response
+
 
 def _hits_generator(all_hits):
     last_hit_name = None
@@ -306,7 +312,6 @@ def _hits_generator(all_hits):
 def _write_hits(hits_for_read, output_bam):
     for hit in hits_for_read:
         output_bam.write(hit)
-        pass
 
 
 def _write_remaining_hits(hits_checker, hits_for_reads, stats, output_bam):
@@ -378,7 +383,9 @@ def _filter_sample_reads(logger, options):
     s1_count = 0
     s2_count = 0
 
-    hits_checker = _HitsChecker(options[MISMATCH_THRESHOLD],options[MINMATCH_THRESHOLD],options[MULTIMAP_THRESHOLD])
+    hits_checker = _HitsChecker(
+        options[MISMATCH_THRESHOLD], options[MINMATCH_THRESHOLD],
+        options[MULTIMAP_THRESHOLD], logger)
 
     while True:
     # 1. Attempt to read all hits for the first/next read in each species'
@@ -388,7 +395,8 @@ def _filter_sample_reads(logger, options):
                 s1_hits_for_read = s1_hits_for_reads.next()
                 s1_count += 1
                 if s1_count % 1000000 == 0:
-                    logger.debug("Read " + str(s1_count) + " reads from species 1")
+                    logger.debug("Read " + str(s1_count) +
+                                 " reads from species 1")
             except StopIteration:
     # 2. If no more reads can be read for species 1:
     #       - all remaining reads in the input file for species 2 can be written
@@ -396,7 +404,8 @@ def _filter_sample_reads(logger, options):
     #       potentially ambiguous.
     #       - END.
     #    Else go to (3).
-                _write_remaining_hits(hits_checker, s2_hits_for_reads, s2_stats, s2_output_bam)
+                _write_remaining_hits(hits_checker, s2_hits_for_reads,
+                                      s2_stats, s2_output_bam)
                 break
 
         if s2_hits_for_read is None:
@@ -404,7 +413,8 @@ def _filter_sample_reads(logger, options):
                 s2_hits_for_read = s2_hits_for_reads.next()
                 s2_count += 1
                 if s2_count % 1000000 == 0:
-                    logger.debug("Read " + str(s2_count) + " reads from species 2")
+                    logger.debug("Read " + str(s2_count) +
+                                 " reads from species 2")
             except StopIteration:
     # 3. If no more reads can be read for species 2:
     #       - all remaining reads in the input file for species 1 can be
@@ -412,7 +422,8 @@ def _filter_sample_reads(logger, options):
     #       inherently potentially ambiguous.
     #       - END.
     #   Else go to (4).
-                _write_remaining_hits(hits_checker, s1_hits_for_reads, s1_stats, s1_output_bam)
+                _write_remaining_hits(hits_checker, s1_hits_for_reads,
+                                      s1_stats, s1_output_bam)
                 break
 
     # 4. We have the hits for a read for each species. Examine the names of the
@@ -468,22 +479,25 @@ def _filter_sample_reads(logger, options):
     logger.info(s1_stats)
     logger.info(s2_stats)
 
-    write_stats(s1_stats,s2_stats,options[SPECIES_ONE_OUTPUT_BAM])
+    write_stats(s1_stats, s2_stats, options[SPECIES_ONE_OUTPUT_BAM])
+
 
 # write filter stats to table in file
-def write_stats(s1,s2,outBam):
-    #out = "Filtered-Hits-S1\tFiltered-Reads-S1\tRejected-Hits-S1\tRejected-Reads-S1\tAmbiguous-Hits-S1\tAmbiguous-Reads-S1\tFiltered-Hits-S2\tFiltered-Reads-S2\tRejected-Hits-S2\tRejected-Reads-S2\tAmbiguous-Hits-S2\tAmbiguous-Reads-S2\n"
-    out = str(s1.hits_written)+"\t"+str(s1.reads_written)+"\t"+str(s1.hits_rejected)+"\t"+str(s1.reads_rejected)+"\t"+str(s1.hits_ambiguous)+"\t"+str(s1.reads_ambiguous)+"\t"+str(s2.hits_written)+"\t"+str(s2.reads_written)+"\t"+str(s2.hits_rejected)+"\t"+str(s2.reads_rejected)+"\t"+str(s2.hits_ambiguous)+"\t"+str(s2.reads_ambiguous)+"\n"
-    #print "FILTER SUMMARY: "+out
-    outSegs = outBam.split("/")
-    outDir = ""
-    for i in range(len(outSegs)-1):
-        outDir += outSegs[i] + "/"
-    outFile = outDir+"filtering_result_summary.txt"
-    #print "FILEDIR: "+outFile
-    f = open(outFile, 'a')
-    f.write(out)
-    f.close()
+def write_stats(s1, s2, outBam):
+    stats = [
+        s1.hits_written, s1.reads_written,
+        s1.hits_rejected, s1.reads_rejected,
+        s1.hits_ambiguous, s1.reads_ambiguous,
+        s2.hits_written, s2.reads_written,
+        s2.hits_rejected, s2.reads_rejected,
+        s2.hits_ambiguous, s2.reads_ambiguous
+    ]
+
+    out_file = os.path.join(
+        os.path.dirname(outBam), "filtering_result_summary.txt")
+    with open(out_file, 'a') as outf:
+        outf.write("\t".join([str(s) for s in stats]) + "\n")
+
 
 def filter_sample_reads(args):
     # Read in command-line options

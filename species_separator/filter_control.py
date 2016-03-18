@@ -165,13 +165,22 @@ def _run_processes(logger, options):
     logger.info("Filtering Complete")
 
 
-# initialise the results file so the threads can append # DEBUGGING PURPOSES ONLY - Remove once filtering optimisation has been completed
-def write_result_file(outDir):
-    out = "Filtered-Hits-S1\tFiltered-Reads-S1\tRejected-Hits-S1\tRejected-Reads-S1\tAmbiguous-Hits-S1\tAmbiguous-Reads-S1\tFiltered-Hits-S2\tFiltered-Reads-S2\tRejected-Hits-S2\tRejected-Reads-S2\tAmbiguous-Hits-S2\tAmbiguous-Reads-S2\n"
-    outFile = outDir + "/filtering_result_summary.txt"
-    f = open(outFile, 'w')
-    f.write(out)
-    f.close()
+# initialise the results file so the threads can append
+# DEBUGGING PURPOSES ONLY - Remove once filtering optimisation has been
+# completed
+def write_result_file(out_dir):
+    cols = [
+        "Filtered-Hits-S1", "Filtered-Reads-S1",
+        "Rejected-Hits-S1", "Rejected-Reads-S1",
+        "Ambiguous-Hits-S1", "Ambiguous-Reads-S1",
+        "Filtered-Hits-S2", "Filtered-Reads-S2",
+        "Rejected-Hits-S2", "Rejected-Reads-S2",
+        "Ambiguous-Hits-S2", "Ambiguous-Reads-S2"
+    ]
+
+    out_file = os.path.join(out_dir, "filtering_result_summary.txt")
+    with open(out_file, 'w') as outf:
+        outf.write("\t".join(cols) + "\n")
 
 
 def filter_control(args):

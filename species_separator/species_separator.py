@@ -87,7 +87,6 @@ SINGLE_END_READS_TYPE = "single"
 PAIRED_END_READS_TYPE = "paired"
 
 
-# TODO: deal with single-end reads
 class SampleInfo(object):
     """
     Encapsulates sample names and their accompanying reads files.
