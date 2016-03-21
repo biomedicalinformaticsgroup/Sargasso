@@ -1,7 +1,19 @@
 #!/usr/bin/env python
 
 """Usage:
-    species_separator [--log-level=<log-level>] [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>] [--s1-gtf=<species-one-gtf-file>] [--s2-gtf=<species-two-gtf-file>] [--s1-genome-fasta=<species-one-genome-fasta>] [--s2-genome-fasta=<species-two-genome-fasta>] [--s1-index=<species-one-star-index>] [--s2-index=<species-two-star-index>] [--mismatch-threshold=<mismatch-threshold>] [--minmatch-threshold=<minmatch-threshold>] [--multimap-threshold=<multimap-threshold>] [--reject-multimaps] [--reject-edits] [--run-separation] <species-one> <species-two> <samples-file> <output-dir>
+    species_separator
+        [--log-level=<log-level>]
+        [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>]
+        [--s1-gtf=<species-one-gtf-file>] [--s2-gtf=<species-two-gtf-file>]
+        [--s1-genome-fasta=<species-one-genome-fasta>]
+        [--s2-genome-fasta=<species-two-genome-fasta>]
+        [--s1-index=<species-one-star-index>]
+        [--s2-index=<species-two-star-index>]
+        [--mismatch-threshold=<mismatch-threshold>]
+        [--minmatch-threshold=<minmatch-threshold>]
+        [--multimap-threshold=<multimap-threshold>]
+        [--reject-multimaps] [--reject-edits] [--run-separation]
+        <species-one> <species-two> <samples-file> <output-dir>
 
 Options:
 {help_option_spec}
@@ -10,28 +22,75 @@ Options:
     {ver_option_description}
 {log_option_spec}
     {log_option_description}
-<species-one>                                   Name of first species.
-<species-two>                                   Name of second species.
-<samples-file>                                  TSV file giving paths of raw RNA-seq read data files for each sample.
-<output-dir>                                    Output directory in which species separation will be performed.
---reads-base-dir=<reads-base-dir>               Base directory for raw RNA-seq read data files.
--t <num-threads> --num-threads=<num-threads>    Number of threads to use for parallel processing. [default: 1]
---s1-gtf=<species-one-gtf-file>                 GTF annotation file for first species.
---s2-gtf=<species-two-gtf-file>                 GTF annotation file for second species.
---s1-genome-fasta=<species-one-genome-fasta>    Directory containing genome FASTA files for first species.
---s2-genome-fasta=<species-two-genome-fasta>    Directory containing genome FASTA files for second species.
---s1-index=<species-one-star-index>             STAR index directory for first species.
---s2-index=<species-two-star-index>             STAR index directory for second species.
---mismatch-threshold=<mismatch-threshold>       Maximum number of mismatches allowed during filtering [default: 0].
---minmatch-threshold=<minmatch-threshold>       Maximum number of read bases allowed to be not perfectly matched [default: 0].
---multimap-threshold=<multimap-threshold>       Maximum number of multiple mappings allowed during filtering [default: 1].
---reject-multimaps                              If set, any read which multimaps to either species' genome will be rejected and not be assigned to either species.
---reject-edits                                  If set, any read will not be assigned to a particular species if it contains any insertions, deletions or clipping with respect to the reference.
---run-separation                                If specified, species separation will be run; otherwise scripts to perform separation will be created but not run.
+<species-one>
+    Name of first species.
+<species-two>
+    Name of second species.
+<samples-file>
+    TSV file giving paths (relative to <reads-base-dir>) of raw RNA-seq read
+    data files for each sample.
+<output-dir>
+    Output directory into which Makefile will be written, and in which species
+    separation will be performed.
+--reads-base-dir=<reads-base-dir>
+    Base directory for raw RNA-seq read data files.
+-t <num-threads> --num-threads=<num-threads>
+    Number of threads to use for parallel processing. [default: 1]
+--s1-gtf=<species-one-gtf-file>
+    GTF annotation file for first species.
+--s2-gtf=<species-two-gtf-file>
+    GTF annotation file for second species.
+--s1-genome-fasta=<species-one-genome-fasta>
+    Directory containing genome FASTA files for first species.
+--s2-genome-fasta=<species-two-genome-fasta>
+    Directory containing genome FASTA files for second species.
+--s1-index=<species-one-star-index>
+    STAR index directory for first species.
+--s2-index=<species-two-star-index>
+    STAR index directory for second species.
+--mismatch-threshold=<mismatch-threshold>
+    Maximum number of mismatches allowed during filtering [default: 0].
+--minmatch-threshold=<minmatch-threshold>
+    Maximum number of read bases allowed to be not perfectly matched
+    [default: 0].
+--multimap-threshold=<multimap-threshold>
+    Maximum number of multiple mappings allowed during filtering [default: 1].
+--reject-multimaps
+    If set, any read which multimaps to either species' genome will be rejected
+    and not be assigned to either species.
+--reject-edits
+    If set, any read will not be assigned to a particular species if it
+    contains any insertions, deletions or clipping with respect to the
+    reference.
+--run-separation
+    If specified, species separation will be run; otherwise scripts to perform
+    separation will be created but not run.
 
-TODO: what does this script do...
+Given a set of RNA-seq samples containing mixed-species read data, determine,
+where possible, from which of the two species each read originated. Mapped
+reads are written to per-sample and -species specific output BAM files.
 
-e.g. bin/species_separator --reads-base-dir=/srv/data/ghardingham/neuron_astrocyte_activity/rnaseq --s1-index=/srv/data/genome/mouse/ensembl-80/STAR_Indices/primary_assembly --s2-index=/srv/data/genome/rat/ensembl-80/STAR_Indices/top_level -t 4 mouse rat samples.tsv my_results
+Species separation of mixed-species RNA-seq data is performed in a number of
+stages, of which the most important steps are:
+
+1) Mapping of raw RNA-seq data to each species' genome using the STAR read
+aligner.
+2) Sorting of mapped RNA-seq data.
+3) Assignment of mapped, sorted RNA-seq reads to their correct species of
+origin.
+
+If the option "--run-separation" is not specified, a Makefile is written to the
+given output directory, via which all stages of species separation can be
+run under the user's control. If "--run-separation" is specified however, the
+Makefile is both written and executed, and all stages of species separation are
+performed automatically.
+
+n.b. Many stages of species separation can be executed across multiple threads
+by specifying the "--num-threads" option.
+
+e.g.:
+
+species_separator --reads-base-dir=/srv/data/rnaseq --s1-index=/srv/data/genome/mouse/STAR_Index --s2-index=/srv/data/genome/rat/STAR_Index --num-threads 4 --run-separation mouse rat samples.tsv my_results
 """
 
 import docopt

@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 
 """Usage:
-    filter_sample_reads [--log-level=<log-level>] [--reject-multimaps] [--reject-edits] <species-one> <species-one-input-bam> <species-one-output-bam> <species-two> <species-two-input-bam> <species-two-output-bam> <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
+    filter_sample_reads
+        [--log-level=<log-level>] [--reject-multimaps] [--reject-edits]
+        <species-one> <species-one-input-bam> <species-one-output-bam>
+        <species-two> <species-two-input-bam> <species-two-output-bam>
+        <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
 
 Options:
 {help_option_spec}
@@ -10,19 +14,45 @@ Options:
     {ver_option_description}
 {log_option_spec}
     {log_option_description}
-<species-one>               Name of first species.
-<species-one-input-bam>     BAM file containing read hits against first species' genome.
-<species-one-output-bam>    BAM file to which reads assigned to first species after filtering will be written.
-<species-two>               Name of first species.
-<species-two-input-bam>     BAM file containing read hits against first species' genome.
-<species-two-output-bam>    BAM file to which reads assigned to first species after filtering will be written.
-<mismatch-threshold>	    Maximum number of mismatches allowed during filtering
-<minmatch-threshold>        Minimum number of read bases that must be perfectly matched
-<multimap-threshold>        Maximum number of multiple mappings allowed during filtering
---reject-multimaps          If set, any read which multimaps to either species' genome will be rejected and not be assigned to either species.
---reject-edits              If set, any read will not be assigned to a particular species if it contains any insertions, deletions or clipping with respect to the reference.
+<species-one>
+    Name of first species.
+<species-one-input-bam>
+    BAM file containing reads mapped against first species' genome.
+<species-one-output-bam>
+    BAM file to which read mappings assigned to first species after filtering
+    will be written.
+<species-two>
+    Name of second species.
+<species-two-input-bam>
+    BAM file containing reads mapped against second species' genome.
+<species-two-output-bam>
+    BAM file to which read mappings assigned to second species after filtering
+    will be written.
+<mismatch-threshold>
+    Maximum number of mismatches allowed during filtering.
+<minmatch-threshold>
+    Maximum number of bases allowed to be not perfectly matched during
+    filtering.
+<multimap-threshold>
+    Maximum number of multiple mappings allowed during filtering.
+--reject-multimaps
+    If set, any read which multimaps to *either* species' genome will be
+    rejected and not be assigned to either species.
+--reject-edits
+    If set, any read will not be assigned to a particular species if it
+    contains any insertions, deletions or clipping with respect to the
+    reference.
 
-TODO: what does this script do...
+filter_sample_reads takes two BAM files as input, the results of mapping a set
+of mixed species RNA-seq reads against the two species' genomes, and
+determines, if possible, from which species each read originates. Disambiguated
+read mappings are written to two species-specific output BAM files.
+
+In normal operation, the user should not need to execute this script by hand
+themselves.
+
+Note: the input BAM files MUST be sorted in read name order. Failure to
+ensure input BAM files are correctly sorted will result in erroneous output.
 """
 
 import docopt
