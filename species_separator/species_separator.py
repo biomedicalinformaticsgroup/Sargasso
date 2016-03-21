@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """Usage:
-    species_separator [--log-level=<log-level>] [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>] [--s1-gtf=<species-one-gtf-file>] [--s2-gtf=<species-two-gtf-file>] [--s1-genome-fasta=<species-one-genome-fasta>] [--s2-genome-fasta=<species-two-genome-fasta>] [--s1-index=<species-one-star-index>] [--s2-index=<species-two-star-index>] [--mismatch-threshold=<mismatch-threshold>] [--minmatch-threshold=<minmatch-threshold>] [--multimap-threshold=<multimap-threshold>] [--run-separation] <species-one> <species-two> <samples-file> <output-dir>
+    species_separator [--log-level=<log-level>] [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>] [--s1-gtf=<species-one-gtf-file>] [--s2-gtf=<species-two-gtf-file>] [--s1-genome-fasta=<species-one-genome-fasta>] [--s2-genome-fasta=<species-two-genome-fasta>] [--s1-index=<species-one-star-index>] [--s2-index=<species-two-star-index>] [--mismatch-threshold=<mismatch-threshold>] [--minmatch-threshold=<minmatch-threshold>] [--multimap-threshold=<multimap-threshold>] [--reject-multimaps] [--reject-edits] [--run-separation] <species-one> <species-two> <samples-file> <output-dir>
 
 Options:
 {help_option_spec}
@@ -25,6 +25,8 @@ Options:
 --mismatch-threshold=<mismatch-threshold>       Maximum number of mismatches allowed during filtering [default: 0].
 --minmatch-threshold=<minmatch-threshold>       Maximum number of read bases allowed to be not perfectly matched [default: 0].
 --multimap-threshold=<multimap-threshold>       Maximum number of multiple mappings allowed during filtering [default: 1].
+--reject-multimaps                              If set, any read which multimaps to either species' genome will be rejected and not be assigned to either species.
+--reject-edits                                  If set, any read will not be assigned to a particular species if it contains any insertions, deletions or clipping with respect to the reference.
 --run-separation                                If specified, species separation will be run; otherwise scripts to perform separation will be created but not run.
 
 TODO: what does this script do...
@@ -58,6 +60,8 @@ SPECIES_TWO_INDEX = "--s2-index"
 MISMATCH_THRESHOLD = "--mismatch-threshold"
 MINMATCH_THRESHOLD = "--minmatch-threshold"
 MULTIMAP_THRESHOLD = "--multimap-threshold"
+REJECT_MULTIMAPS = "--reject-multimaps"
+REJECT_EDITS = "--reject-edits"
 RUN_SEPARATION = "--run-separation"
 
 SPECIES_NAME = "species-name"
@@ -429,7 +433,9 @@ def _write_filtered_reads_target(logger, writer, options):
              writer.variable_val(NUM_THREADS_VARIABLE),
              options[MISMATCH_THRESHOLD],
              options[MINMATCH_THRESHOLD],
-             options[MULTIMAP_THRESHOLD]])
+             options[MULTIMAP_THRESHOLD],
+             "--reject-multimaps" if options[REJECT_MULTIMAPS] else "\"\"",
+             "--reject-edits" if options[REJECT_EDITS] else "\"\""])
 
 
 def _write_sorted_reads_target(logger, writer):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """Usage:
-    filter_control [--log-level=<log-level>] <block-dir> <output-dir> <sample-name> <species-one> <species-two> <mismatch_threshold> <minmatch_threshold> <multimap_threshold>
+    filter_control [--log-level=<log-level>] [--reject-multimaps] [--reject-edits] <block-dir> <output-dir> <sample-name> <species-one> <species-two> <mismatch_threshold> <minmatch_threshold> <multimap_threshold>
 
 Option:
 {help_option_spec}
@@ -18,6 +18,8 @@ Option:
 <mismatch_threshold>	Maximum number of mismatches to be allowed in the filtering stage
 <minmatch_threshold>	Maximum number of bases allowed to be not perfectly matched in the filtering stage
 <multimap_threshold>	Maximum number of multiple mappings a read can have to pass the filtering stage
+--reject-multimaps      If set, any read which multimaps to either species' genome will be rejected and not be assigned to either species.
+--reject-edits          If set, any read will not be assigned to a particular species if it contains any insertions, deletions or clipping with respect to the reference.
 
 TODO: what does this script do...
 """
@@ -39,6 +41,8 @@ SPECIES_TWO = "<species-two>"
 MISMATCH_THRESHOLD = "<mismatch_threshold>"
 MINMATCH_THRESHOLD = "<minmatch_threshold>"
 MULTIMAP_THRESHOLD = "<multimap_threshold>"
+REJECT_MULTIMAPS = "--reject-multimaps"
+REJECT_EDITS = "--reject-edits"
 
 BLOCK_FILE_SEPARATOR = "___"
 
@@ -152,6 +156,12 @@ def _run_processes(logger, options):
                     options[SPECIES_TWO], sp2_in, os.path.abspath(sp2_out),
                     options[MISMATCH_THRESHOLD], options[MINMATCH_THRESHOLD],
                     options[MULTIMAP_THRESHOLD]]
+
+        if options[REJECT_MULTIMAPS]:
+            commands.append("--reject-multimaps")
+
+        if options[REJECT_EDITS]:
+            commands.append("--reject-edits")
 
         proc = subprocess.Popen(commands)
         all_processes.append(proc)
