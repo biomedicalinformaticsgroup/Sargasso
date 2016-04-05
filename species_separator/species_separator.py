@@ -1,7 +1,19 @@
 #!/usr/bin/env python
 
 """Usage:
-    species_separator [--log-level=<log-level>] [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>] [--s1-gtf=<species-one-gtf-file>] [--s2-gtf=<species-two-gtf-file>] [--s1-genome-fasta=<species-one-genome-fasta>] [--s2-genome-fasta=<species-two-genome-fasta>] [--s1-index=<species-one-star-index>] [--s2-index=<species-two-star-index>] [--run-separation] <species-one> <species-two> <samples-file> <output-dir>
+    species_separator
+        [--log-level=<log-level>]
+        [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>]
+        [--s1-gtf=<species-one-gtf-file>] [--s2-gtf=<species-two-gtf-file>]
+        [--s1-genome-fasta=<species-one-genome-fasta>]
+        [--s2-genome-fasta=<species-two-genome-fasta>]
+        [--s1-index=<species-one-star-index>]
+        [--s2-index=<species-two-star-index>]
+        [--mismatch-threshold=<mismatch-threshold>]
+        [--minmatch-threshold=<minmatch-threshold>]
+        [--multimap-threshold=<multimap-threshold>]
+        [--reject-multimaps] [--reject-edits] [--run-separation]
+        <species-one> <species-two> <samples-file> <output-dir>
 
 Options:
 {help_option_spec}
@@ -10,23 +22,75 @@ Options:
     {ver_option_description}
 {log_option_spec}
     {log_option_description}
-<species-one>                                   Name of first species.
-<species-two>                                   Name of second species.
-<samples-file>                                  TSV file giving paths of raw RNA-seq read data files for each sample.
-<output-dir>                                    Output directory in which species separation will be performed.
---reads-base-dir=<reads-base-dir>               Base directory for raw RNA-seq read data files.
--t <num-threads> --num-threads=<num-threads>    Number of threads to use for parallel processing. [default: 1]
---s1-gtf=<species-one-gtf-file>                 GTF annotation file for first species.
---s2-gtf=<species-two-gtf-file>                 GTF annotation file for second species.
---s1-genome-fasta=<species-one-genome-fasta>    Directory containing genome FASTA files for first species.
---s2-genome-fasta=<species-two-genome-fasta>    Directory containing genome FASTA files for second species.
---s1-index=<species-one-star-index>             STAR index directory for first species.
---s2-index=<species-two-star-index>             STAR index directory for second species.
---run-separation                                If specified, species separation will be run; otherwise scripts to perform separation will be created but not run.
+<species-one>
+    Name of first species.
+<species-two>
+    Name of second species.
+<samples-file>
+    TSV file giving paths (relative to <reads-base-dir>) of raw RNA-seq read
+    data files for each sample.
+<output-dir>
+    Output directory into which Makefile will be written, and in which species
+    separation will be performed.
+--reads-base-dir=<reads-base-dir>
+    Base directory for raw RNA-seq read data files.
+-t <num-threads> --num-threads=<num-threads>
+    Number of threads to use for parallel processing. [default: 1]
+--s1-gtf=<species-one-gtf-file>
+    GTF annotation file for first species.
+--s2-gtf=<species-two-gtf-file>
+    GTF annotation file for second species.
+--s1-genome-fasta=<species-one-genome-fasta>
+    Directory containing genome FASTA files for first species.
+--s2-genome-fasta=<species-two-genome-fasta>
+    Directory containing genome FASTA files for second species.
+--s1-index=<species-one-star-index>
+    STAR index directory for first species.
+--s2-index=<species-two-star-index>
+    STAR index directory for second species.
+--mismatch-threshold=<mismatch-threshold>
+    Maximum number of mismatches allowed during filtering [default: 0].
+--minmatch-threshold=<minmatch-threshold>
+    Maximum number of read bases allowed to be not perfectly matched
+    [default: 0].
+--multimap-threshold=<multimap-threshold>
+    Maximum number of multiple mappings allowed during filtering [default: 1].
+--reject-multimaps
+    If set, any read which multimaps to either species' genome will be rejected
+    and not be assigned to either species.
+--reject-edits
+    If set, any read will not be assigned to a particular species if it
+    contains any insertions, deletions or clipping with respect to the
+    reference.
+--run-separation
+    If specified, species separation will be run; otherwise scripts to perform
+    separation will be created but not run.
 
-TODO: what does this script do...
+Given a set of RNA-seq samples containing mixed-species read data, determine,
+where possible, from which of the two species each read originated. Mapped
+reads are written to per-sample and -species specific output BAM files.
 
-e.g. bin/species_separator --reads-base-dir=/srv/data/ghardingham/neuron_astrocyte_activity/rnaseq --s1-index=/srv/data/genome/mouse/ensembl-80/STAR_Indices/primary_assembly --s2-index=/srv/data/genome/rat/ensembl-80/STAR_Indices/top_level -t 4 mouse rat samples.tsv my_results
+Species separation of mixed-species RNA-seq data is performed in a number of
+stages, of which the most important steps are:
+
+1) Mapping of raw RNA-seq data to each species' genome using the STAR read
+aligner.
+2) Sorting of mapped RNA-seq data.
+3) Assignment of mapped, sorted RNA-seq reads to their correct species of
+origin.
+
+If the option "--run-separation" is not specified, a Makefile is written to the
+given output directory, via which all stages of species separation can be
+run under the user's control. If "--run-separation" is specified however, the
+Makefile is both written and executed, and all stages of species separation are
+performed automatically.
+
+n.b. Many stages of species separation can be executed across multiple threads
+by specifying the "--num-threads" option.
+
+e.g.:
+
+species_separator --reads-base-dir=/srv/data/rnaseq --s1-index=/srv/data/genome/mouse/STAR_Index --s2-index=/srv/data/genome/rat/STAR_Index --num-threads 4 --run-separation mouse rat samples.tsv my_results
 """
 
 import docopt
@@ -35,6 +99,7 @@ import os.path
 import schema
 
 from . import file_writer as fw
+from . import filter_sample_reads
 from . import options as opt
 from . import process
 from .__init__ import __version__
@@ -51,6 +116,11 @@ SPECIES_ONE_GENOME_FASTA = "--s1-genome-fasta"
 SPECIES_TWO_GENOME_FASTA = "--s2-genome-fasta"
 SPECIES_ONE_INDEX = "--s1-index"
 SPECIES_TWO_INDEX = "--s2-index"
+MISMATCH_THRESHOLD = "--mismatch-threshold"
+MINMATCH_THRESHOLD = "--minmatch-threshold"
+MULTIMAP_THRESHOLD = "--multimap-threshold"
+REJECT_MULTIMAPS = "--reject-multimaps"
+REJECT_EDITS = "--reject-edits"
 RUN_SEPARATION = "--run-separation"
 
 SPECIES_NAME = "species-name"
@@ -74,11 +144,13 @@ SPECIES_GENOME_FASTA_VARIABLE = "{species}_GENOME_FASTA"
 SPECIES_STAR_INDEX_VARIABLE = "{species}_GENOME_DIR"
 SAMPLES_VARIABLE = "SAMPLES"
 RAW_READS_DIRECTORY_VARIABLE = "RAW_READS_DIRECTORY"
-RAW_READS_SPECIES_ONE_VARIABLE = "RAW_READS_FILES_1"
-RAW_READS_SPECIES_TWO_VARIABLE = "RAW_READS_FILES_2"
+RAW_READS_LEFT_VARIABLE = "RAW_READS_FILES_1"
+RAW_READS_RIGHT_VARIABLE = "RAW_READS_FILES_2"
+
+SINGLE_END_READS_TYPE = "single"
+PAIRED_END_READS_TYPE = "paired"
 
 
-# TODO: deal with single-end reads
 class SampleInfo(object):
     """
     Encapsulates sample names and their accompanying reads files.
@@ -92,6 +164,7 @@ class SampleInfo(object):
         self.base_reads_dir = base_reads_dir
         self.left_reads = {}
         self.right_reads = {}
+        self.paired_end = None
 
     def get_sample_names(self):
         """
@@ -111,17 +184,28 @@ class SampleInfo(object):
         """
         return self.right_reads[sample_name]
 
+    def paired_end_reads(self):
+        """
+        Returns True iff sample read files are paired-end data.
+        """
+        return self.paired_end
+
     def add_sample_data(self, sample_data):
         """
         Add information for a single sample.
 
         sample_data: list of strings - sample name, comma-separated list of
-        first in pair reads files, comma-separated list of second in pair reads
-        files.
+        read files (or comma-separated list of first in pair reads files,
+        comma-separated list of second in pair reads files).
         """
         sample_name = sample_data[0]
         self.left_reads[sample_name] = sample_data[1].split(',')
-        self.right_reads[sample_name] = sample_data[2].split(',')
+
+        if len(sample_data) == 3:
+            self.right_reads[sample_name] = sample_data[2].split(',')
+            self.paired_end = True
+        else:
+            self.paired_end = False
 
     def validate(self):
         """
@@ -214,14 +298,14 @@ def _read_sample_info(options):
     for line in open(options[SAMPLES_FILE], 'r'):
         sample_data = line.split()
 
-        if len(sample_data) != 3:
+        if len(sample_data) < 2 or len(sample_data) > 3:
             line = line.rstrip('\n')
             if len(line) > 80:
                 line = line[0:77] + "..."
             raise schema.SchemaError(
                 None, "Sample file line should contain sample name and " +
-                "lists of first and second pairs of read files, separated " +
-                "by whitespace: \n{info}".format(info=line))
+                "lists of read files (or first and second pairs of read " +
+                "files), separated by whitespace: \n{info}".format(info=line))
 
         sample_info.add_sample_data(sample_data)
 
@@ -249,6 +333,9 @@ def _validate_command_line_options(options):
             options[OUTPUT_DIR], "Output directory should not exist",
             should_exist=False)
 
+        filter_sample_reads.validate_threshold_options(
+            options, MISMATCH_THRESHOLD, MINMATCH_THRESHOLD, MULTIMAP_THRESHOLD)
+
         species_one_options = _get_species_options(
             options, SPECIES_ONE, SPECIES_ONE_GTF,
             SPECIES_ONE_GENOME_FASTA, SPECIES_ONE_INDEX)
@@ -260,6 +347,8 @@ def _validate_command_line_options(options):
         _validate_species_options("two", species_two_options)
 
         sample_info = _read_sample_info(options)
+        # TODO: validate that all samples consistently have either single- or
+        # paired-end reads
         sample_info.validate()
 
         return sample_info
@@ -315,13 +404,16 @@ def _write_variable_definitions(logger, writer, options, sample_info):
         RAW_READS_DIRECTORY_VARIABLE,
         options[READS_BASE_DIR] if options[READS_BASE_DIR] else "/")
     writer.set_variable(
-        RAW_READS_SPECIES_ONE_VARIABLE,
+        RAW_READS_LEFT_VARIABLE,
         " ".join([",".join(sample_info.get_left_reads(name))
                   for name in sample_names]))
-    writer.set_variable(
-        RAW_READS_SPECIES_TWO_VARIABLE,
-        " ".join([",".join(sample_info.get_right_reads(name))
-                  for name in sample_names]))
+
+    if sample_info.paired_end_reads():
+        writer.set_variable(
+            RAW_READS_RIGHT_VARIABLE,
+            " ".join([",".join(sample_info.get_right_reads(name))
+                      for name in sample_names]))
+
     writer.add_blank_line()
 
     species_one_options = _get_species_options(
@@ -377,7 +469,7 @@ def _write_all_target(logger, writer):
         pass
 
 
-def _write_filtered_reads_target(logger, writer):
+def _write_filtered_reads_target(logger, writer, options):
     """
     Write target to separate reads by species to Makefile.
 
@@ -397,7 +489,12 @@ def _write_filtered_reads_target(logger, writer):
              "\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
              writer.variable_val(SORTED_READS_TARGET),
              writer.variable_val(FILTERED_READS_TARGET),
-             writer.variable_val(NUM_THREADS_VARIABLE)])
+             writer.variable_val(NUM_THREADS_VARIABLE),
+             options[MISMATCH_THRESHOLD],
+             options[MINMATCH_THRESHOLD],
+             options[MULTIMAP_THRESHOLD],
+             "--reject-multimaps" if options[REJECT_MULTIMAPS] else "\"\"",
+             "--reject-edits" if options[REJECT_EDITS] else "\"\""])
 
 
 def _write_sorted_reads_target(logger, writer):
@@ -424,7 +521,7 @@ def _write_sorted_reads_target(logger, writer):
              writer.variable_val(SORTED_READS_TARGET)])
 
 
-def _write_mapped_reads_target(logger, writer):
+def _write_mapped_reads_target(logger, writer, sample_info):
     """
     Write target to map reads to each species to Makefile.
 
@@ -442,15 +539,22 @@ def _write_mapped_reads_target(logger, writer):
         writer.add_comment(
             "Map reads for each sample to each species' genome")
         writer.make_target_directory(MAPPED_READS_TARGET)
-        writer.add_command(
-            "map_reads",
-            ["\"{s1} {s2}\"".format(s1=writer.variable_val(SPECIES_ONE_VARIABLE),
-                                    s2=writer.variable_val(SPECIES_TWO_VARIABLE)),
-             "\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
-             writer.variable_val(STAR_INDICES_TARGET),
-             writer.variable_val(NUM_THREADS_VARIABLE),
-             writer.variable_val(COLLATE_RAW_READS_TARGET),
-             writer.variable_val(MAPPED_READS_TARGET)])
+
+        map_reads_params = [
+            "\"{s1} {s2}\"".format(
+                s1=writer.variable_val(SPECIES_ONE_VARIABLE),
+                s2=writer.variable_val(SPECIES_TWO_VARIABLE)),
+            "\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
+            writer.variable_val(STAR_INDICES_TARGET),
+            writer.variable_val(NUM_THREADS_VARIABLE),
+            writer.variable_val(COLLATE_RAW_READS_TARGET),
+            writer.variable_val(MAPPED_READS_TARGET)]
+
+        map_reads_params.append(
+            PAIRED_END_READS_TYPE if sample_info.paired_end_reads()
+            else SINGLE_END_READS_TYPE)
+
+        writer.add_command("map_reads", map_reads_params)
 
 
 #def _write_masked_reads_target(logger, writer, options):
@@ -458,12 +562,13 @@ def _write_mapped_reads_target(logger, writer):
     #pass
 
 
-def _write_collate_raw_reads_target(logger, writer):
+def _write_collate_raw_reads_target(logger, writer, sample_info):
     """
     Write target to collect raw reads files to Makefile.
 
     logger: logging object
     writer: Makefile writer object
+    sample_info: object encapsulating samples and their accompanying read files
     """
     with writer.target_definition(COLLATE_RAW_READS_TARGET, []):
         writer.add_comment(
@@ -471,15 +576,30 @@ def _write_collate_raw_reads_target(logger, writer):
             "each of which contains links to the input raw reads files " +
             "for that sample")
         writer.make_target_directory(COLLATE_RAW_READS_TARGET)
-        writer.add_command(
-            "collate_raw_reads",
-            ["\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
-             writer.variable_val(RAW_READS_DIRECTORY_VARIABLE),
-             "\"{var}\"".format(
-                 var=writer.variable_val(RAW_READS_SPECIES_ONE_VARIABLE)),
-             "\"{var}\"".format(
-                 var=writer.variable_val(RAW_READS_SPECIES_TWO_VARIABLE)),
-             writer.variable_val(COLLATE_RAW_READS_TARGET)])
+
+        collate_raw_reads_params = [
+            "\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
+            writer.variable_val(RAW_READS_DIRECTORY_VARIABLE),
+            writer.variable_val(COLLATE_RAW_READS_TARGET),
+        ]
+
+        if sample_info.paired_end_reads():
+            collate_raw_reads_params += [
+                PAIRED_END_READS_TYPE,
+                "\"{var}\"".format(
+                    var=writer.variable_val(RAW_READS_LEFT_VARIABLE)),
+                "\"{var}\"".format(
+                    var=writer.variable_val(RAW_READS_RIGHT_VARIABLE))
+            ]
+        else:
+            collate_raw_reads_params += [
+                SINGLE_END_READS_TYPE,
+                "\"{var}\"".format(
+                    var=writer.variable_val(RAW_READS_LEFT_VARIABLE)),
+                "\"\""
+            ]
+
+        writer.add_command("collate_raw_reads", collate_raw_reads_params)
 
 
 #def _write_mask_star_index_targets(logger, writer, options):
@@ -573,11 +693,11 @@ def _write_makefile(logger, options, sample_info):
         _write_target_variable_definitions(logger, writer)
         _write_phony_targets(logger, writer)
         _write_all_target(logger, writer)
-        _write_filtered_reads_target(logger, writer)
+        _write_filtered_reads_target(logger, writer, options)
         _write_sorted_reads_target(logger, writer)
-        _write_mapped_reads_target(logger, writer)
+        _write_mapped_reads_target(logger, writer, sample_info)
         #_write_masked_reads_target(logger, writer)
-        _write_collate_raw_reads_target(logger, writer)
+        _write_collate_raw_reads_target(logger, writer, sample_info)
         #_write_mask_star_index_targets(logger, writer, options)
         _write_main_star_index_targets(logger, writer, options)
         _write_clean_target(logger, writer)

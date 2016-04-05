@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
 """Usage:
-    filter_control [--log-level=<log-level>] <block-dir> <output-dir> <sample-name> <species-one> <species-two> <mismatch_threshold> <minmatch_threshold> <multimap_threshold>
+    filter_control
+        [--log-level=<log-level>] [--reject-multimaps] [--reject-edits]
+        <block-dir> <output-dir> <sample-name> <species-one> <species-two>
+        <mismatch_threshold> <minmatch_threshold> <multimap_threshold>
 
 Option:
 {help_option_spec}
@@ -10,16 +13,44 @@ Option:
     {ver_option_description}
 {log_option_spec}
     {log_option_description}
-<block-dir>             Directory containing mapped read BAM files, split into bloccks by read name.
-<output-dir>            Directory into which species-separated reads will be written.
-<sample-name>           Name of RNA-seq sample being processed.
-<species-one>           Name of first species.
-<species-two>           Name of second species.
-<mismatch_threshold>	Maximum number of mismatches to be allowed in the filtering stage
-<minmatch_threshold>	Minimum number of bases that have to be perfectly matched in the filtering stage
-<multimap_threshold>	Maximum number of multiple mappings a read can have to pass the filtering stage
+<block-dir>
+    Directory containing pairs of mapped read BAM files.
+<output-dir>
+    Directory into which species-separated reads will be written.
+<sample-name>
+    Name of RNA-seq sample being processed.
+<species-one>
+    Name of first species.
+<species-two>
+    Name of second species.
+<mismatch_threshold>
+    Maximum number of mismatches allowed during filtering.
+<minmatch_threshold>
+    Maximum number of bases allowed to be not perfectly matched during
+    filtering.
+<multimap_threshold>
+    Maximum number of multiple mappings allowed during filtering.
+--reject-multimaps
+    If set, any read which multimaps to either species' genome will be rejected
+    and not be assigned to either species.
+--reject-edits
+    If set, any read will not be assigned to a particular species if it
+    contains any insertions, deletions or clipping with respect to the
+    reference.
 
-TODO: what does this script do...
+filter_control takes a directory containing pairs of BAM files as input, each
+pair being the result of mapping a set of mixed species RNA-seq reads against
+the two species' genomes. Each pair of BAM files is passed to an instance of
+the script filter_sample_reads, running on a separate thread, which determines
+where possible from which species each read originates. Read mappings for each
+pair of input files are written to a pair of species-specific output BAM files
+in the specified output directory.
+
+In normal operation, the user should not need to execute this script by hand
+themselves.
+
+Note: the input BAM files MUST be sorted in read name order. Failure to ensure
+input BAM files are correctly sorted will result in erroneous output.
 """
 
 import docopt
@@ -39,6 +70,11 @@ SPECIES_TWO = "<species-two>"
 MISMATCH_THRESHOLD = "<mismatch_threshold>"
 MINMATCH_THRESHOLD = "<minmatch_threshold>"
 MULTIMAP_THRESHOLD = "<multimap_threshold>"
+REJECT_MULTIMAPS = "--reject-multimaps"
+REJECT_EDITS = "--reject-edits"
+
+BLOCK_FILE_SEPARATOR = "___"
+
 
 def _validate_command_line_options(options):
     """
@@ -95,10 +131,10 @@ def _get_block_file_dictionary(block_files, sp1, sp2):
     block_file_dict = {}
 
     for block_file in sorted(block_files):
-        sections = block_file.split("_")
+        sections = block_file.split(BLOCK_FILE_SEPARATOR)
         if sections[1] == sp1:
             sections[1] = sp2
-            block_file_dict[block_file] = "_".join(sections)
+            block_file_dict[block_file] = BLOCK_FILE_SEPARATOR.join(sections)
 
     return block_file_dict
 
@@ -150,6 +186,12 @@ def _run_processes(logger, options):
                     options[MISMATCH_THRESHOLD], options[MINMATCH_THRESHOLD],
                     options[MULTIMAP_THRESHOLD]]
 
+        if options[REJECT_MULTIMAPS]:
+            commands.append("--reject-multimaps")
+
+        if options[REJECT_EDITS]:
+            commands.append("--reject-edits")
+
         proc = subprocess.Popen(commands)
         all_processes.append(proc)
 
@@ -161,13 +203,23 @@ def _run_processes(logger, options):
     # TODO: need to concatenate output files
     logger.info("Filtering Complete")
 
-# initialise the results file so the threads can append # DEBUGGING PURPOSES ONLY - Remove once filtering optimisation has been completed
-def write_result_file(outDir):
-    out = "Filtered-Hits-S1\tFiltered-Reads-S1\tRejected-Hits-S1\tRejected-Reads-S1\tAmbiguous-Hits-S1\tAmbiguous-Reads-S1\tFiltered-Hits-S2\tFiltered-Reads-S2\tRejected-Hits-S2\tRejected-Reads-S2\tAmbiguous-Hits-S2\tAmbiguous-Reads-S2\n"
-    outFile = outDir+"/filtering_result_summary.txt"
-    f = open(outFile, 'w')
-    f.write(out)
-    f.close()
+
+# initialise the results file so the threads can append
+# DEBUGGING PURPOSES ONLY - Remove once filtering optimisation has been
+# completed
+def write_result_file(out_dir):
+    cols = [
+        "Filtered-Hits-S1", "Filtered-Reads-S1",
+        "Rejected-Hits-S1", "Rejected-Reads-S1",
+        "Ambiguous-Hits-S1", "Ambiguous-Reads-S1",
+        "Filtered-Hits-S2", "Filtered-Reads-S2",
+        "Rejected-Hits-S2", "Rejected-Reads-S2",
+        "Ambiguous-Hits-S2", "Ambiguous-Reads-S2"
+    ]
+
+    out_file = os.path.join(out_dir, "filtering_result_summary.txt")
+    with open(out_file, 'w') as outf:
+        outf.write("\t".join(cols) + "\n")
 
 
 def filter_control(args):

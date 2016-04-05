@@ -1,6 +1,7 @@
 *.pyc
 species_separator.egg-info/*
 results/*
+pipeline_test/results/*
 test_results/star_indices/*
 test_results/raw_reads/*
 test_results/mapped_reads/*
