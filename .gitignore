@@ -16,4 +16,4 @@ species_separator/sed_block.sh
 merge_test.sh
 star_batch.sh
 acceptance_sampling.py
-
+docs/_build
