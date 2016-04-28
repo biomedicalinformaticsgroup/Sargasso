@@ -23,7 +23,7 @@ setup(
         'pysam==0.8.2.1',
         'pytz==2016.3',
         'schema==0.3.1',
-        'six=1.10.0',
+        'six==1.10.0',
         'snowballstemmer==1.2.1',
     ],
     scripts=[
