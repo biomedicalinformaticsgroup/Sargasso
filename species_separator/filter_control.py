@@ -73,7 +73,7 @@ MULTIMAP_THRESHOLD = "<multimap_threshold>"
 REJECT_MULTIMAPS = "--reject-multimaps"
 REJECT_EDITS = "--reject-edits"
 
-BLOCK_FILE_SEPARATOR = "___"
+BLOCK_FILE_SEPARATOR = "_"#"___"
 
 
 def _validate_command_line_options(options):
@@ -131,6 +131,8 @@ def _get_block_file_dictionary(block_files, sp1, sp2):
     block_file_dict = {}
 
     for block_file in sorted(block_files):
+	#print "BLOCK: "+str(block_file)
+	#print "ALL BLOCKS: "+str(block_files)
         sections = block_file.split(BLOCK_FILE_SEPARATOR)
         if sections[1] == sp1:
             sections[1] = sp2
