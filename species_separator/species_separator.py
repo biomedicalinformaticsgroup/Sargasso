@@ -12,7 +12,7 @@
         [--mismatch-threshold=<mismatch-threshold>]
         [--minmatch-threshold=<minmatch-threshold>]
         [--multimap-threshold=<multimap-threshold>]
-        [--reject-multimaps] [--reject-edits] [--run-separation]
+        [--reject-multimaps] [--run-separation]
         <species-one> <species-two> <samples-file> <output-dir>
 
 Options:
@@ -58,10 +58,6 @@ Options:
 --reject-multimaps
     If set, any read which multimaps to either species' genome will be rejected
     and not be assigned to either species.
---reject-edits
-    If set, any read will not be assigned to a particular species if it
-    contains any insertions, deletions or clipping with respect to the
-    reference.
 --run-separation
     If specified, species separation will be run; otherwise scripts to perform
     separation will be created but not run.
@@ -120,7 +116,6 @@ MISMATCH_THRESHOLD = "--mismatch-threshold"
 MINMATCH_THRESHOLD = "--minmatch-threshold"
 MULTIMAP_THRESHOLD = "--multimap-threshold"
 REJECT_MULTIMAPS = "--reject-multimaps"
-REJECT_EDITS = "--reject-edits"
 RUN_SEPARATION = "--run-separation"
 
 SPECIES_NAME = "species-name"
@@ -493,8 +488,7 @@ def _write_filtered_reads_target(logger, writer, options):
              options[MISMATCH_THRESHOLD],
              options[MINMATCH_THRESHOLD],
              options[MULTIMAP_THRESHOLD],
-             "--reject-multimaps" if options[REJECT_MULTIMAPS] else "\"\"",
-             "--reject-edits" if options[REJECT_EDITS] else "\"\""])
+             "--reject-multimaps" if options[REJECT_MULTIMAPS] else "\"\""])
 
 
 def _write_sorted_reads_target(logger, writer):

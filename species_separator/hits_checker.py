@@ -7,19 +7,15 @@ CIGAR_GOOD = 0
 CIGAR_LESS_GOOD = 1
 CIGAR_FAIL = 2
 
-REJECT_EDITS_OPERATIONS = ["I", "D", "S", "H", "P", "X"]
-
 
 class HitsChecker:
     def __init__(self, mismatch_thresh, minmatch_thresh, multimap_thresh,
-                 reject_multimaps, reject_edits, logger):
+                 reject_multimaps, logger):
         self.mismatch_thresh = mismatch_thresh
         self.minmatch_thresh = minmatch_thresh
         self.multimap_thresh = multimap_thresh
         self._assign_hits = self._assign_hits_reject_multimaps \
             if reject_multimaps else self._assign_hits_standard
-        self._check_cigar = self._check_cigar_reject_edits \
-            if reject_edits else self._check_cigar_standard
 
         self.proportional_weighting = 1.0
 
@@ -128,8 +124,7 @@ class HitsChecker:
 
         return graded_response
 
-    def _check_cigar_standard(
-            self, cigar, current_response, min_match, length):
+    def _check_cigar(self, cigar, current_response, min_match, length):
 
         graded_response = current_response
 
@@ -144,16 +139,6 @@ class HitsChecker:
                 return CIGAR_FAIL
 
         return graded_response
-
-    def _check_cigar_reject_edits(
-            self, cigar, current_response, min_match, length):
-
-        for operation in REJECT_EDITS_OPERATIONS:
-            if operation in cigar:
-                return CIGAR_FAIL
-
-        return self._check_cigar_standard(
-            cigar, current_response, min_match, length)
 
     # extracts the quantity of a certain type of base; e.g M, S, N etc
     def _get_total_cigar_op_length(self, cigar, op_type):

@@ -16,7 +16,6 @@ MISMATCH_THRESHOLD=$7
 MINMATCH_THRESHOLD=$8
 MULTIMAP_THRESHOLD=$9
 REJECT_MULTIMAPS=${10}
-REJECT_EDITS=${11}
 
 BLOCK_DIR=${OUTPUT_DIR}/Blocks
 mkdir -p $BLOCK_DIR
@@ -98,7 +97,7 @@ for sample in ${SAMPLES}; do
     fi
 
     # execute python process control script passing over file location and filtering info
-    filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${SPECIES_ONE} ${SPECIES_TWO} ${MISMATCH_THRESHOLD} ${MINMATCH_THRESHOLD} ${MULTIMAP_THRESHOLD} ${REJECT_MULTIMAPS} ${REJECT_EDITS}
+    filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${SPECIES_ONE} ${SPECIES_TWO} ${MISMATCH_THRESHOLD} ${MINMATCH_THRESHOLD} ${MULTIMAP_THRESHOLD} ${REJECT_MULTIMAPS}
 
     if [ "${THREADS}" -eq "1" ]
     then
