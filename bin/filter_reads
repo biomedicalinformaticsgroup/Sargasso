@@ -4,7 +4,7 @@ set -o nounset
 set -o errexit
 set -o xtrace
 
-SEPARATOR="_"
+SEPARATOR="___"
 
 SPECIES_ONE=$1
 SPECIES_TWO=$2

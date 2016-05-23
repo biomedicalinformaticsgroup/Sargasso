@@ -73,7 +73,7 @@ MULTIMAP_THRESHOLD = "<multimap_threshold>"
 REJECT_MULTIMAPS = "--reject-multimaps"
 REJECT_EDITS = "--reject-edits"
 
-BLOCK_FILE_SEPARATOR = "_"#"___"
+BLOCK_FILE_SEPARATOR = "___"
 
 
 def _validate_command_line_options(options):
