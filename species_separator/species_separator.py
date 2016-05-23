@@ -49,9 +49,10 @@ Options:
 --s2-index=<species-two-star-index>
     STAR index directory for second species.
 --mismatch-threshold=<mismatch-threshold>
-    Maximum number of mismatches allowed during filtering [default: 0].
+    Maximum percentage of read bases allowed to be mismatches against the
+    genome during filtering [default: 0].
 --minmatch-threshold=<minmatch-threshold>
-    Maximum number of read bases allowed to be not perfectly matched
+    Maximum percentage of read length allowed to not be mapped during filtering
     [default: 0].
 --multimap-threshold=<multimap-threshold>
     Maximum number of multiple mappings allowed during filtering [default: 1].

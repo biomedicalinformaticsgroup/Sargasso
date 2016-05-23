@@ -28,10 +28,11 @@ Options:
 <species-two-output-bam>
     BAM file to which read mappings assigned to second species after filtering
     will be written.
-<mismatch-threshold>
-    Maximum number of mismatches allowed during filtering.
-<minmatch-threshold>
-    Maximum number of bases allowed to be not perfectly matched during
+--mismatch-threshold=<mismatch-threshold>
+    Maximum percentage of read bases allowed to be mismatches against the
+    genome during filtering.
+--minmatch-threshold=<minmatch-threshold>
+    Maximum percentage of read length allowed to not be mapped during
     filtering.
 <multimap-threshold>
     Maximum number of multiple mappings allowed during filtering.
@@ -75,14 +76,14 @@ REJECT_MULTIMAPS = "--reject-multimaps"
 def validate_threshold_options(
         options, mismatch_opt_name, minmatch_opt_name, multimap_opt_name):
 
-    options[mismatch_opt_name] = opt.validate_int_option(
+    options[mismatch_opt_name] = opt.validate_float_option(
         options[mismatch_opt_name],
-        "Maximum number of mismatches must be a non-negative integer.",
-        0, True)
-    options[minmatch_opt_name] = opt.validate_int_option(
+        "Maximum percentage of mismatches must be a float between 0 and 100.",
+        0, 100, True)
+    options[minmatch_opt_name] = opt.validate_float_option(
         options[minmatch_opt_name],
-        "Maximum number of not perfect matches must be a non-negative " +
-        "integer.", 0, True)
+        "Maximum percentage of read length which does not match must be a " +
+        "float between 0 and 100.", 0, 100, True)
     options[multimap_opt_name] = opt.validate_int_option(
         options[multimap_opt_name],
         "Maximum number of multiple mappings must be a positive integer.",

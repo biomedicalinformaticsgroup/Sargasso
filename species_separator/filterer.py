@@ -36,9 +36,6 @@ class Filterer(object):
         # rejected as ambiguous
         self._update_hits_info()
         other_filterer._update_hits_info()
-        # check read length to decide a weighting for the filter criteria
-        self.hits_checker._calculate_weighting(self.hits_info)
-        other_filterer.hits_checker._calculate_weighting(self.hits_info)
 
         assignment = self.hits_checker.assign_hits(self.hits_info, other_filterer.hits_info)
 

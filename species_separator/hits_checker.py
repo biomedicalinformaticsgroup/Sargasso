@@ -11,23 +11,23 @@ CIGAR_FAIL = 2
 class HitsChecker:
     def __init__(self, mismatch_thresh, minmatch_thresh, multimap_thresh,
                  reject_multimaps, logger):
-        self.mismatch_thresh = mismatch_thresh
-        self.minmatch_thresh = minmatch_thresh
+        self.mismatch_thresh = mismatch_thresh / 100.0
+        self.minmatch_thresh = minmatch_thresh / 100.0
         self.multimap_thresh = multimap_thresh
         self._assign_hits = self._assign_hits_reject_multimaps \
             if reject_multimaps else self._assign_hits_standard
 
-        self.proportional_weighting = 1.0
-
         logger.debug(("PARAMS: mismatch - {mism}, minmatch - {minm}, " +
                       "multimap - {mult}").format(
-            mism=mismatch_thresh, minm=minmatch_thresh, mult=multimap_thresh))
+            mism=self.mismatch_thresh,
+            minm=self.minmatch_thresh,
+            mult=self.multimap_thresh))
 
     def check_hits(self, hits_info):
         # check that the hits for a read are - in themselves - satisfactory to
         # be assigned to a species.
         return hits_info.get_multimaps() <= self.multimap_thresh and \
-            hits_info.get_max_mismatches() <= (self.mismatch_thresh * self.proportional_weighting) and \
+            hits_info.get_max_mismatches() <= (self.mismatch_thresh * hits_info.get_length()) and \
             self._check_cigars(hits_info) != CIGAR_FAIL
 
     def assign_hits(self, s1_hits_info, s2_hits_info):
@@ -81,24 +81,18 @@ class HitsChecker:
             violated1, s1_multimaps, s1_mismatches, s1_cigar_check,
             violated2, s2_multimaps, s2_mismatches, s2_cigar_check)
 
-    def _calculate_weighting(self, hits_info):
-        length = hits_info.get_length()
-        proportional_weighting = float(length)/50.0
-        if proportional_weighting < 1:
-                proportional_weighting = 1.0
-
-        self.proportional_weighting = proportional_weighting
-
     def _check_thresholds(self, hits_info):
         violated = False
 
         multimaps = hits_info.get_multimaps()
-        if multimaps > round(self.multimap_thresh * self.proportional_weighting):
+        #OD: not sure if this is the right thing to do?
+        #if multimaps > round(self.multimap_thresh * self.proportional_weighting):
+        if multimaps > self.multimap_thresh:
             violated = True
 
         mismatches = hits_info.get_max_mismatches()
 
-        if mismatches > round(self.mismatch_thresh * self.proportional_weighting):
+        if mismatches > round(self.mismatch_thresh * hits_info.get_length()):
             violated = True
 
         cigar_check = self._check_cigars(hits_info)
@@ -109,7 +103,7 @@ class HitsChecker:
 
     def _check_cigars(self, hits_info):
         length = hits_info.get_length()
-        min_match = length - round(self.minmatch_thresh * self.proportional_weighting)
+        min_match = length - round(self.minmatch_thresh * length)
 
         # when allowing other params, this is no longer a t/f scenario;
         # e.g. when clipping is allowed a cigar without clipping should score
