@@ -11,8 +11,8 @@ Install the *species_separator* package and its Python package dependencies into
 
     pip install git+https://github.com/lweasel/species-separator.git
 
-Tests of the species separation pipeline can be run by executing::
+.. Tests of the species separation pipeline can be run by executing::
 
-    (cd pipeline_test; ./run_test.sh)
+..    (cd pipeline_test; ./run_test.sh)
 
-These tests should take a couple of minutes to run; no output, with exit code 0, indicates successful test completion.
+.. These tests should take a couple of minutes to run; no output, with exit code 0, indicates successful test completion.
