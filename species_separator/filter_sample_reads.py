@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 
 """Usage:
@@ -132,6 +133,7 @@ def _filter_sample_reads(logger, options):
     while True:
         # Attempt to read all hits for the next read in each species' input BAM
         # file
+
         try:
             s1_read_name = s1_filterer.get_next_read_name()
         except StopIteration:
