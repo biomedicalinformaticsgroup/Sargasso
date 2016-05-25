@@ -30,8 +30,8 @@ class HitsChecker:
     def check_hits(self, hits_info):
         # check that the hits for a read are - in themselves - satisfactory to
         # be assigned to a species.
-        return hits_info.get_multimaps() <= self.multimap_thresh and \ 
-            hits_info.get_max_mismatches() <= (self.mismatch_thresh * self.proportional_weighting) and \
+        return hits_info.get_multimaps() <= self.multimap_thresh and \ DISABLED MULTIMAP FILTERING
+            hits_info.get_min_mismatches() <= (self.mismatch_thresh * self.proportional_weighting) and \
             self._check_cigars(hits_info) != CIGAR_FAIL
 
     def assign_hits(self, s1_hits_info, s2_hits_info):
@@ -100,7 +100,7 @@ class HitsChecker:
         if multimaps > round(self.multimap_thresh * self.proportional_weighting):
             violated = True
 
-        mismatches = hits_info.get_max_mismatches()
+        mismatches = hits_info.get_min_mismatches() #this was max before
 	
         if mismatches > round(self.mismatch_thresh * self.proportional_weighting):
             violated = True
