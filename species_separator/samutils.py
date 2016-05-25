@@ -38,6 +38,7 @@ def hits_generator(samfile):
     current_hits = []
 
     for hit in all_hits(samfile):
+
         if last_hit_name is None:
             last_hit_name = hit.query_name
 
@@ -51,3 +52,5 @@ def hits_generator(samfile):
             yield current_hits
             last_hit_name = hit.query_name
             current_hits = [hit]
+
+    yield current_hits
