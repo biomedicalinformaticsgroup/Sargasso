@@ -31,7 +31,6 @@ class HitsChecker:
             self._check_cigars(hits_info) != CIGAR_FAIL
 
     def assign_hits(self, s1_hits_info, s2_hits_info):
-        # TODO: currently making the assumption that min = max mismatches
         violated1, s1_multimaps, s1_mismatches, s1_cigar_check = \
             self._check_thresholds(s1_hits_info)
         violated2, s2_multimaps, s2_mismatches, s2_cigar_check = \
