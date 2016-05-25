@@ -57,7 +57,7 @@ class Filterer(object):
 
         self._clear_hits()
         other_filterer._clear_hits()
-
+    
     def check_and_write_hits_for_read(self):
         if self.hits_info is None:
             self._update_hits_info()
@@ -73,8 +73,8 @@ class Filterer(object):
     def check_and_write_hits_for_remaining_reads(self):
         try:
             while True:
-                # TODO: is this potentially skipping a read?
-                self._get_next_read_hits()
+                if self.hits_for_read is None:
+                    self._get_next_read_hits()
                 self.check_and_write_hits_for_read()
         except StopIteration:
             pass
