@@ -129,6 +129,6 @@ for sample in ${SAMPLES}; do
             rm "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_ONE}"_"${less}"_filtered.bam
             rm "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_TWO}"_"${less}"_filtered.bam
         fi
-    done
+    #done
 done
 
