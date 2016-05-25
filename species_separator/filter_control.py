@@ -2,7 +2,7 @@
 
 """Usage:
     filter_control
-        [--log-level=<log-level>] [--reject-multimaps] [--reject-edits]
+        [--log-level=<log-level>] [--reject-multimaps]
         <block-dir> <output-dir> <sample-name> <species-one> <species-two>
         <mismatch_threshold> <minmatch_threshold> <multimap_threshold>
 
@@ -33,10 +33,6 @@ Option:
 --reject-multimaps
     If set, any read which multimaps to either species' genome will be rejected
     and not be assigned to either species.
---reject-edits
-    If set, any read will not be assigned to a particular species if it
-    contains any insertions, deletions or clipping with respect to the
-    reference.
 
 filter_control takes a directory containing pairs of BAM files as input, each
 pair being the result of mapping a set of mixed species RNA-seq reads against
@@ -71,9 +67,8 @@ MISMATCH_THRESHOLD = "<mismatch_threshold>"
 MINMATCH_THRESHOLD = "<minmatch_threshold>"
 MULTIMAP_THRESHOLD = "<multimap_threshold>"
 REJECT_MULTIMAPS = "--reject-multimaps"
-REJECT_EDITS = "--reject-edits"
 
-BLOCK_FILE_SEPARATOR = "_"#"___"
+BLOCK_FILE_SEPARATOR = "___"
 
 
 def _validate_command_line_options(options):
@@ -190,9 +185,6 @@ def _run_processes(logger, options):
 
         if options[REJECT_MULTIMAPS]:
             commands.append("--reject-multimaps")
-
-        if options[REJECT_EDITS]:
-            commands.append("--reject-edits")
 
         proc = subprocess.Popen(commands)
         all_processes.append(proc)

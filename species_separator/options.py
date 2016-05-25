@@ -162,7 +162,8 @@ def validate_int_option(int_option, msg, min_val=None, nullable=False):
     return Schema(validator, error=msg).validate(int_option)
 
 
-def validate_float_option(float_option, msg, min_val=None):
+def validate_float_option(float_option, msg, min_val=None,
+                          max_val=None, nullable=False):
     """
     Check if a command line option is a floating point number.
 
@@ -174,11 +175,18 @@ def validate_float_option(float_option, msg, min_val=None):
     float_option: The command line option, a string.
     msg: Text for the SchemaError exception raised if the test fails.
     min_val: If set, the float must be greater than or equal to this value.
+    max_val: If set, the float must be less than or equal to this value.
+    nullable: If set to True, the command line option is allowed to be 'None'
+    (i.e. the option has not been specified).
     """
     msg = "{msg}: '{val}'".format(msg=msg, val=float_option)
     validator = Use(float)
     if min_val is not None:
         validator = And(validator, lambda x: x >= min_val)
+    if max_val is not None:
+        validator = And(validator, lambda x: x <= max_val)
+    if nullable:
+        validator = _nullable_validator(validator)
 
     return Schema(validator, error=msg).validate(float_option)
 

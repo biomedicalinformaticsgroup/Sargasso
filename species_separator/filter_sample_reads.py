@@ -3,7 +3,7 @@
 
 """Usage:
     filter_sample_reads
-        [--log-level=<log-level>] [--reject-multimaps] [--reject-edits]
+        [--log-level=<log-level>] [--reject-multimaps]
         <species-one> <species-one-input-bam> <species-one-output-bam>
         <species-two> <species-two-input-bam> <species-two-output-bam>
         <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
@@ -29,20 +29,17 @@ Options:
 <species-two-output-bam>
     BAM file to which read mappings assigned to second species after filtering
     will be written.
-<mismatch-threshold>
-    Maximum number of mismatches allowed during filtering.
-<minmatch-threshold>
-    Maximum number of bases allowed to be not perfectly matched during
+--mismatch-threshold=<mismatch-threshold>
+    Maximum percentage of read bases allowed to be mismatches against the
+    genome during filtering.
+--minmatch-threshold=<minmatch-threshold>
+    Maximum percentage of read length allowed to not be mapped during
     filtering.
 <multimap-threshold>
     Maximum number of multiple mappings allowed during filtering.
 --reject-multimaps
     If set, any read which multimaps to *either* species' genome will be
     rejected and not be assigned to either species.
---reject-edits
-    If set, any read will not be assigned to a particular species if it
-    contains any insertions, deletions or clipping with respect to the
-    reference.
 
 filter_sample_reads takes two BAM files as input, the results of mapping a set
 of mixed species RNA-seq reads against the two species' genomes, and
@@ -75,20 +72,19 @@ MISMATCH_THRESHOLD = "<mismatch-threshold>"
 MINMATCH_THRESHOLD = "<minmatch-threshold>"
 MULTIMAP_THRESHOLD = "<multimap-threshold>"
 REJECT_MULTIMAPS = "--reject-multimaps"
-REJECT_EDITS = "--reject-edits"
 
 
 def validate_threshold_options(
         options, mismatch_opt_name, minmatch_opt_name, multimap_opt_name):
 
-    options[mismatch_opt_name] = opt.validate_int_option(
+    options[mismatch_opt_name] = opt.validate_float_option(
         options[mismatch_opt_name],
-        "Maximum number of mismatches must be a non-negative integer.",
-        0, True)
-    options[minmatch_opt_name] = opt.validate_int_option(
+        "Maximum percentage of mismatches must be a float between 0 and 100.",
+        0, 100, True)
+    options[minmatch_opt_name] = opt.validate_float_option(
         options[minmatch_opt_name],
-        "Maximum number of not perfect matches must be a non-negative " +
-        "integer.", 0, True)
+        "Maximum percentage of read length which does not match must be a " +
+        "float between 0 and 100.", 0, 100, True)
     options[multimap_opt_name] = opt.validate_int_option(
         options[multimap_opt_name],
         "Maximum number of multiple mappings must be a positive integer.",
@@ -117,8 +113,7 @@ def _filter_sample_reads(logger, options):
 
     h_check = hits_checker.HitsChecker(
         options[MISMATCH_THRESHOLD], options[MINMATCH_THRESHOLD],
-        options[MULTIMAP_THRESHOLD], options[REJECT_MULTIMAPS],
-        options[REJECT_EDITS], logger)
+        options[MULTIMAP_THRESHOLD], options[REJECT_MULTIMAPS], logger)
 
     s1_filterer = filterer.Filterer(
         1, options[SPECIES_ONE_INPUT_BAM], options[SPECIES_ONE_OUTPUT_BAM],

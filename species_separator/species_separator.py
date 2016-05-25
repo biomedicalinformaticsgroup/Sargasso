@@ -12,7 +12,8 @@
         [--mismatch-threshold=<mismatch-threshold>]
         [--minmatch-threshold=<minmatch-threshold>]
         [--multimap-threshold=<multimap-threshold>]
-        [--reject-multimaps] [--reject-edits] [--run-separation]
+        [--reject-multimaps] [--best] [--conservative]
+        [--run-separation]
         <species-one> <species-two> <samples-file> <output-dir>
 
 Options:
@@ -49,19 +50,27 @@ Options:
 --s2-index=<species-two-star-index>
     STAR index directory for second species.
 --mismatch-threshold=<mismatch-threshold>
-    Maximum number of mismatches allowed during filtering [default: 0].
+    Maximum percentage of read bases allowed to be mismatches against the
+    genome during filtering [default: 0].
 --minmatch-threshold=<minmatch-threshold>
-    Maximum number of read bases allowed to be not perfectly matched
+    Maximum percentage of read length allowed to not be mapped during filtering
     [default: 0].
 --multimap-threshold=<multimap-threshold>
     Maximum number of multiple mappings allowed during filtering [default: 1].
 --reject-multimaps
     If set, any read which multimaps to either species' genome will be rejected
     and not be assigned to either species.
---reject-edits
-    If set, any read will not be assigned to a particular species if it
-    contains any insertions, deletions or clipping with respect to the
-    reference.
+--best
+    Adopt a filtering strategy that provides an excellent balance between
+    sensitivity and specificity. Note that specifying this option overrides the
+    values of the mismatch-threshold, minmatch-threshold and
+    multimap-threshold options. In addition, reject-multimaps is turned off.
+--conservative
+    Adopt a filtering strategy where minimising the number of reads
+    mis-assigned to the wrong species takes foremost priority. Note that
+    specifying this option overrides the values of the mismatch-threshold,
+    minmatch-threshold and multimap-threshold options. In addition,
+    reject-multimaps is turned on.
 --run-separation
     If specified, species separation will be run; otherwise scripts to perform
     separation will be created but not run.
@@ -120,7 +129,8 @@ MISMATCH_THRESHOLD = "--mismatch-threshold"
 MINMATCH_THRESHOLD = "--minmatch-threshold"
 MULTIMAP_THRESHOLD = "--multimap-threshold"
 REJECT_MULTIMAPS = "--reject-multimaps"
-REJECT_EDITS = "--reject-edits"
+OPTIMAL_STRATEGY = "--best"
+CONSERVATIVE_STRATEGY = "--conservative"
 RUN_SEPARATION = "--run-separation"
 
 SPECIES_NAME = "species-name"
@@ -333,6 +343,18 @@ def _validate_command_line_options(options):
             options[OUTPUT_DIR], "Output directory should not exist",
             should_exist=False)
 
+        if options[OPTIMAL_STRATEGY]:
+            # TODO: fill in the optimal threshold values - see issue #34
+            #options[MISMATCH_THRESHOLD] = ??
+            #options[MINMATCH_THRESHOLD] = ??
+            #options[MULTIMAP_THRESHOLD] = ??
+            options[REJECT_MULTIMAPS] = False
+        elif options[CONSERVATIVE_STRATEGY]:
+            options[MISMATCH_THRESHOLD] = 0
+            options[MINMATCH_THRESHOLD] = 0
+            options[MULTIMAP_THRESHOLD] = 1
+            options[REJECT_MULTIMAPS] = True
+
         filter_sample_reads.validate_threshold_options(
             options, MISMATCH_THRESHOLD, MINMATCH_THRESHOLD, MULTIMAP_THRESHOLD)
 
@@ -493,8 +515,7 @@ def _write_filtered_reads_target(logger, writer, options):
              options[MISMATCH_THRESHOLD],
              options[MINMATCH_THRESHOLD],
              options[MULTIMAP_THRESHOLD],
-             "--reject-multimaps" if options[REJECT_MULTIMAPS] else "\"\"",
-             "--reject-edits" if options[REJECT_EDITS] else "\"\""])
+             "--reject-multimaps" if options[REJECT_MULTIMAPS] else "\"\""])
 
 
 def _write_sorted_reads_target(logger, writer):

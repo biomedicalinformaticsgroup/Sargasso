@@ -19,7 +19,7 @@ mkproject species_separator
 Install the *species-separator* package and its Python package dependencies into the virtual environment by running:
 
 ```
-pip install git+https://github.com/lweasel/species-separator.git
+pip install git+https://github.com/statbio/species-separator.git
 ```
 
 Changelog
