@@ -4,7 +4,7 @@
     filter_control
         [--log-level=<log-level>] [--reject-multimaps]
         <block-dir> <output-dir> <sample-name> <species-one> <species-two>
-        <mismatch_threshold> <minmatch_threshold> <multimap_threshold>
+        <mismatch_threshold> <minmatch_threshold> <multimap_threshold> <overhang-threshold>
 
 Option:
 {help_option_spec}
@@ -33,6 +33,9 @@ Option:
 --reject-multimaps
     If set, any read which multimaps to either species' genome will be rejected
     and not be assigned to either species.
+<overhang-threshold>
+    The minimum number of bases that are allowed on
+    either side of an exon boundary for a read mapping to be accepted
 
 filter_control takes a directory containing pairs of BAM files as input, each
 pair being the result of mapping a set of mixed species RNA-seq reads against
@@ -67,6 +70,7 @@ MISMATCH_THRESHOLD = "<mismatch_threshold>"
 MINMATCH_THRESHOLD = "<minmatch_threshold>"
 MULTIMAP_THRESHOLD = "<multimap_threshold>"
 REJECT_MULTIMAPS = "--reject-multimaps"
+OVERHANG_THRESHOLD = "<overhang-threshold>"
 
 BLOCK_FILE_SEPARATOR = "___"
 
@@ -181,7 +185,7 @@ def _run_processes(logger, options):
                     options[SPECIES_ONE], sp1_in, os.path.abspath(sp1_out),
                     options[SPECIES_TWO], sp2_in, os.path.abspath(sp2_out),
                     options[MISMATCH_THRESHOLD], options[MINMATCH_THRESHOLD],
-                    options[MULTIMAP_THRESHOLD]]
+                    options[MULTIMAP_THRESHOLD], options[OVERHANG_THRESHOLD]]
 
         if options[REJECT_MULTIMAPS]:
             commands.append("--reject-multimaps")
