@@ -121,6 +121,7 @@ from . import filter_sample_reads
 from . import options as opt
 from . import process
 from .__init__ import __version__
+from datetime import datetime
 
 SPECIES_ONE = "<species-one>"
 SPECIES_TWO = "<species-two>"
@@ -738,6 +739,39 @@ def _write_makefile(logger, options, sample_info):
         _write_main_star_index_targets(logger, writer, options)
         _write_clean_target(logger, writer)
 
+def _write_execution_record(options):
+    """
+    Write a log file containing all execution parameters in addition to the time and date of execution
+
+    options: dictionary of command-line options
+    """
+    outText="Execution Record - "+str(datetime.now().isoform())
+    outText+="Species 1: "+options[SPECIES_ONE]+"\n"
+    outText+="Species 2: "+options[SPECIES_TWO]+"\n"
+    outText+="Samples File: "+options[SAMPLES_FILE]+"\n"
+    outText+="Output Dir: "+options[OUTPUT_DIR]+"\n"
+    outText+="Reads Base Dir: "+options[READS_BASE_DIR]+"\n"
+    outText+="Number of Threads: "+options[NUM_THREADS]+"\n"
+    outText+="Species 1 GTF: "+options[SPECIES_ONE_GTF]+"\n"
+    outText+="Species 2 GTF: "+options[SPECIES_TWO_GTF]+"\n"
+    outText+="Species 1 Genome FASTA "+options[SPECIES_ONE_GENOME_FASTA]+"\n"
+    outText+="Species 2 Genome FASTA "+options[SPECIES_TWO_GENOME_FASTA]+"\n"
+    outText+="Species 1 Index: "+options[SPECIES_ONE_INDEX]+"\n"
+    outText+="Species 2 Index: "+options[SPECIES_TWO_INDEX]+"\n"
+    outText+="Mismatch Threshold: "+options[MISMATCH_THRESHOLD]+"\n"
+    outText+="Minmatch Threshold: "+options[MINMATCH_THRESHOLD]+"\n"
+    outText+="Multimap Threshold: "+options[MULTIMAP_THRESHOLD]+"\n"
+    outText+="Overhang Threshold: "+options[OVERHANG_THRESHOLD]+"\n"
+    outText+="Reject Multimaps: "+options[REJECT_MULTIMAPS]+"\n"
+    outText+="Optimal Strategy: "+options[OPTIMAL_STRATEGY]+"\n"
+    outText+="Conservative Strategy: "+options[CONSERVATIVE_STRATEGY]+"\n"
+    outText+="Recall Strategy: "+options[RECALL_STRATEGY]+"\n"
+    outText+="Run Separation: "+options[RUN_SEPARATION]+"\n"
+
+    filepath=options[OUTPUT_DIR]+"/execution_record.txt"
+    exrec = open(filepath,'w')
+    exrec.write(outText)
+    exrec.close()
 
 def _run_species_separation(logger, options):
     """
@@ -771,6 +805,9 @@ def separate_species(args):
 
     # Write Makefile to output directory
     _write_makefile(logger, options, sample_info)
+
+    # Write Execution Record to output directory
+    _write_execution_record(options)
 
     # If specified, execute the Makefile with nohup
     if options[RUN_SEPARATION]:
