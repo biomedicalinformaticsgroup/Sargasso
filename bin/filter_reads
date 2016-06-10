@@ -135,5 +135,27 @@ for sample in ${SAMPLES}; do
             rm "${OUTPUT_DIR}"/"${sample}"_"${SPECIES_TWO}"_"${less}"_filtered.bam
         fi
     done
+
+    # Calculate read totals in the summary file
+    SUMMARYFILE="${OUTPUT_DIR}"/filtering_result_summary.txt
+    PARSEHEADER=1   
+    HEADER=""
+    TOTALS=(0 0 0 0 0 0 0 0 0 0 0 0)
+
+    while IFS='' read -r line || [[ -n "$line" ]]; 
+    do
+        if [ $PARSEHEADER -eq 1 ]
+        then
+                HEADER=($line)
+                PARSEHEADER=0
+        else
+                COUNTS=($line)
+                for COUNT in $(seq 0 $((${#COUNTS[@]}-1)) )
+                do
+                        TOTALS[${COUNT}]=$(( TOTALS[${COUNT}] + COUNTS[${COUNT}] ))
+                done
+        fi
+    done < "${SUMMARYFILE}"
+    IFS=",";echo -e "${HEADER[*]}\n${TOTALS[*]}\n" > "${OUTPUT_DIR}/filtering_result_summary.txt";IFS=$' \t\n'
 done
 
