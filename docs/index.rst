@@ -16,6 +16,7 @@ Contents:
    intro
    installation
    example_usage
+   pipeline
    usage_reference
    support_scripts
    references
