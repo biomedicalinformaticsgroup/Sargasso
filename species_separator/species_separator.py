@@ -12,7 +12,8 @@
         [--mismatch-threshold=<mismatch-threshold>]
         [--minmatch-threshold=<minmatch-threshold>]
         [--multimap-threshold=<multimap-threshold>]
-        [--reject-multimaps] [--best] [--conservative]
+        [--overhang-threshold=<overhang-threshold>]
+        [--reject-multimaps] [--best] [--conservative] [--recall]
         [--run-separation]
         <species-one> <species-two> <samples-file> <output-dir>
 
@@ -57,6 +58,9 @@ Options:
     [default: 0].
 --multimap-threshold=<multimap-threshold>
     Maximum number of multiple mappings allowed during filtering [default: 1].
+--overhang-threshold=<overhang-threshold>
+    If set, allows specification of the minimum number of bases that are allowed on
+    either side of an exon boundary for a read mapping to be accepted
 --reject-multimaps
     If set, any read which multimaps to either species' genome will be rejected
     and not be assigned to either species.
@@ -71,6 +75,11 @@ Options:
     specifying this option overrides the values of the mismatch-threshold,
     minmatch-threshold and multimap-threshold options. In addition,
     reject-multimaps is turned on.
+--recall
+    Adopt a filtering strategy where sensitivity is prioritised over specificity.
+    Note that specifying this option overrides the
+    values of the mismatch-threshold, minmatch-threshold and
+    multimap-threshold options. In addition, reject-multimaps is turned off.
 --run-separation
     If specified, species separation will be run; otherwise scripts to perform
     separation will be created but not run.
@@ -112,6 +121,7 @@ from . import filter_sample_reads
 from . import options as opt
 from . import process
 from .__init__ import __version__
+from datetime import datetime
 
 SPECIES_ONE = "<species-one>"
 SPECIES_TWO = "<species-two>"
@@ -128,9 +138,11 @@ SPECIES_TWO_INDEX = "--s2-index"
 MISMATCH_THRESHOLD = "--mismatch-threshold"
 MINMATCH_THRESHOLD = "--minmatch-threshold"
 MULTIMAP_THRESHOLD = "--multimap-threshold"
+OVERHANG_THRESHOLD = "--overhang-threshold"
 REJECT_MULTIMAPS = "--reject-multimaps"
 OPTIMAL_STRATEGY = "--best"
 CONSERVATIVE_STRATEGY = "--conservative"
+RECALL_STRATEGY = "--recall"
 RUN_SEPARATION = "--run-separation"
 
 SPECIES_NAME = "species-name"
@@ -344,19 +356,23 @@ def _validate_command_line_options(options):
             should_exist=False)
 
         if options[OPTIMAL_STRATEGY]:
-            # TODO: fill in the optimal threshold values - see issue #34
-            #options[MISMATCH_THRESHOLD] = ??
-            #options[MINMATCH_THRESHOLD] = ??
-            #options[MULTIMAP_THRESHOLD] = ??
+            options[MISMATCH_THRESHOLD] = 1
+            options[MINMATCH_THRESHOLD] = 1
+            options[MULTIMAP_THRESHOLD] = 999999
             options[REJECT_MULTIMAPS] = False
         elif options[CONSERVATIVE_STRATEGY]:
             options[MISMATCH_THRESHOLD] = 0
             options[MINMATCH_THRESHOLD] = 0
             options[MULTIMAP_THRESHOLD] = 1
             options[REJECT_MULTIMAPS] = True
+        elif options[RECALL_STRATEGY]:
+            options[MISMATCH_THRESHOLD] = 2
+            options[MINMATCH_THRESHOLD] = 5
+            options[MULTIMAP_THRESHOLD] = 999999
+            options[REJECT_MULTIMAPS] = False
 
         filter_sample_reads.validate_threshold_options(
-            options, MISMATCH_THRESHOLD, MINMATCH_THRESHOLD, MULTIMAP_THRESHOLD)
+            options, MISMATCH_THRESHOLD, MINMATCH_THRESHOLD, MULTIMAP_THRESHOLD, OVERHANG_THRESHOLD)
 
         species_one_options = _get_species_options(
             options, SPECIES_ONE, SPECIES_ONE_GTF,
@@ -515,8 +531,8 @@ def _write_filtered_reads_target(logger, writer, options):
              options[MISMATCH_THRESHOLD],
              options[MINMATCH_THRESHOLD],
              options[MULTIMAP_THRESHOLD],
+             options[OVERHANG_THRESHOLD],
              "--reject-multimaps" if options[REJECT_MULTIMAPS] else "\"\""])
-
 
 def _write_sorted_reads_target(logger, writer):
     """
@@ -723,6 +739,39 @@ def _write_makefile(logger, options, sample_info):
         _write_main_star_index_targets(logger, writer, options)
         _write_clean_target(logger, writer)
 
+def _write_execution_record(options):
+    """
+    Write a log file containing all execution parameters in addition to the time and date of execution
+
+    options: dictionary of command-line options
+    """
+    outText="Execution Record - "+str(datetime.now().isoform())
+    outText+="Species 1: "+options[SPECIES_ONE]+"\n"
+    outText+="Species 2: "+options[SPECIES_TWO]+"\n"
+    outText+="Samples File: "+options[SAMPLES_FILE]+"\n"
+    outText+="Output Dir: "+options[OUTPUT_DIR]+"\n"
+    outText+="Reads Base Dir: "+options[READS_BASE_DIR]+"\n"
+    outText+="Number of Threads: "+options[NUM_THREADS]+"\n"
+    outText+="Species 1 GTF: "+options[SPECIES_ONE_GTF]+"\n"
+    outText+="Species 2 GTF: "+options[SPECIES_TWO_GTF]+"\n"
+    outText+="Species 1 Genome FASTA "+options[SPECIES_ONE_GENOME_FASTA]+"\n"
+    outText+="Species 2 Genome FASTA "+options[SPECIES_TWO_GENOME_FASTA]+"\n"
+    outText+="Species 1 Index: "+options[SPECIES_ONE_INDEX]+"\n"
+    outText+="Species 2 Index: "+options[SPECIES_TWO_INDEX]+"\n"
+    outText+="Mismatch Threshold: "+options[MISMATCH_THRESHOLD]+"\n"
+    outText+="Minmatch Threshold: "+options[MINMATCH_THRESHOLD]+"\n"
+    outText+="Multimap Threshold: "+options[MULTIMAP_THRESHOLD]+"\n"
+    outText+="Overhang Threshold: "+options[OVERHANG_THRESHOLD]+"\n"
+    outText+="Reject Multimaps: "+options[REJECT_MULTIMAPS]+"\n"
+    outText+="Optimal Strategy: "+options[OPTIMAL_STRATEGY]+"\n"
+    outText+="Conservative Strategy: "+options[CONSERVATIVE_STRATEGY]+"\n"
+    outText+="Recall Strategy: "+options[RECALL_STRATEGY]+"\n"
+    outText+="Run Separation: "+options[RUN_SEPARATION]+"\n"
+
+    filepath=options[OUTPUT_DIR]+"/execution_record.txt"
+    exrec = open(filepath,'w')
+    exrec.write(outText)
+    exrec.close()
 
 def _run_species_separation(logger, options):
     """
@@ -756,6 +805,9 @@ def separate_species(args):
 
     # Write Makefile to output directory
     _write_makefile(logger, options, sample_info)
+
+    # Write Execution Record to output directory
+    _write_execution_record(options)
 
     # If specified, execute the Makefile with nohup
     if options[RUN_SEPARATION]:

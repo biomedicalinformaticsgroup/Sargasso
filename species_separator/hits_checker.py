@@ -10,12 +10,13 @@ CIGAR_FAIL = 2
 
 class HitsChecker:
     def __init__(self, mismatch_thresh, minmatch_thresh, multimap_thresh,
-                 reject_multimaps, logger):
+                 reject_multimaps, overhang_threshold, logger):
         self.mismatch_thresh = mismatch_thresh / 100.0
         self.minmatch_thresh = minmatch_thresh / 100.0
         self.multimap_thresh = multimap_thresh
         self._assign_hits = self._assign_hits_reject_multimaps \
             if reject_multimaps else self._assign_hits_standard
+        self.overhang_threshold = overhang_threshold
 
         logger.debug(("PARAMS: mismatch - {mism}, minmatch - {minm}, " +
                       "multimap - {mult}").format(
@@ -31,7 +32,6 @@ class HitsChecker:
             self._check_cigars(hits_info) != CIGAR_FAIL
 
     def assign_hits(self, s1_hits_info, s2_hits_info):
-        # TODO: currently making the assumption that min = max mismatches
         violated1, s1_multimaps, s1_mismatches, s1_cigar_check = \
             self._check_thresholds(s1_hits_info)
         violated2, s2_multimaps, s2_mismatches, s2_cigar_check = \
@@ -90,8 +90,8 @@ class HitsChecker:
         if multimaps > self.multimap_thresh:
             violated = True
 
-        mismatches = hits_info.get_max_mismatches()
-
+        mismatches = hits_info.get_min_mismatches()
+	
         if mismatches > round(self.mismatch_thresh * hits_info.get_length()):
             violated = True
 
@@ -150,7 +150,7 @@ class HitsChecker:
 
         for i, char in enumerate(cigar):
             if char == "M":
-                if self._get_length_of_cigar_op(cigar, i) < 5:
+                if self._get_length_of_cigar_op(cigar, i) < self.overhang_threshold:
                     return False
         return True
 
