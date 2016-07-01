@@ -18,13 +18,12 @@ MULTIMAP_THRESHOLD=$9
 OVERHANG_THRESHOLD=${10}
 REJECT_MULTIMAPS=${11}
 
-if [ -z "${OVERHANG_THRESHOLD}" ]
-  then
-    OVERHANG_THRESHOLD=5
-fi
-
 BLOCK_DIR=${OUTPUT_DIR}/Blocks
 mkdir -p $BLOCK_DIR
+
+FIRST_SAMPLE=1
+TMP_SUMMARY_FILE="${OUTPUT_DIR}"/filtering_result_summary.txt
+OVERALL_SUMMARY_FILE="${OUTPUT_DIR}"/overall_filtering_summary.txt
 
 for sample in ${SAMPLES}; do
     sorted_reads_prefix="${INPUT_DIR}/${sample}"
@@ -137,17 +136,14 @@ for sample in ${SAMPLES}; do
     done
 
     # Calculate read totals in the summary file
-    SUMMARYFILE="${OUTPUT_DIR}"/filtering_result_summary.txt
-    PARSEHEADER=1   
     HEADER=""
     TOTALS=(0 0 0 0 0 0 0 0 0 0 0 0)
 
     while IFS='' read -r line || [[ -n "$line" ]]; 
     do
-        if [ $PARSEHEADER -eq 1 ]
+        if [ -z ${HEADER} ]
         then
                 HEADER=($line)
-                PARSEHEADER=0
         else
                 COUNTS=($line)
                 for COUNT in $(seq 0 $((${#COUNTS[@]}-1)) )
@@ -155,7 +151,18 @@ for sample in ${SAMPLES}; do
                         TOTALS[${COUNT}]=$(( TOTALS[${COUNT}] + COUNTS[${COUNT}] ))
                 done
         fi
-    done < "${SUMMARYFILE}"
-    IFS=",";echo -e "${HEADER[*]}\n${TOTALS[*]}\n" > "${OUTPUT_DIR}/filtering_result_summary.txt";IFS=$' \t\n'
+    done < "${TMP_SUMMARY_FILE}"
+
+    IFS=","
+    if [ ${FIRST_SAMPLE} -eq 1 ]
+    then
+        echo -e "Sample,${HEADER[*]}" > "${OVERALL_SUMMARY_FILE}"
+        FIRST_SAMPLE=0
+    fi
+
+    echo -e "${sample},${TOTALS[*]}" >> "${OVERALL_SUMMARY_FILE}"
+    IFS=$' \t\n'
+
+    rm ${TMP_SUMMARY_FILE}
 done
 
