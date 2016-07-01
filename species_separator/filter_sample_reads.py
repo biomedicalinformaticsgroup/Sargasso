@@ -77,24 +77,26 @@ MULTIMAP_THRESHOLD = "<multimap-threshold>"
 REJECT_MULTIMAPS = "--reject-multimaps"
 OVERHANG_THRESHOLD = "<overhang-threshold>"
 
+
 def validate_threshold_options(
-        options, mismatch_opt_name, minmatch_opt_name, multimap_opt_name, overhang_opt_name):
+        options, mismatch_opt_name, minmatch_opt_name, multimap_opt_name,
+        overhang_opt_name):
 
     options[mismatch_opt_name] = opt.validate_float_option(
         options[mismatch_opt_name],
-        "Maximum percentage of mismatches must be a float between 0 and 100.",
+        "Maximum percentage of mismatches must be a float between 0 and 100",
         0, 100, True)
     options[minmatch_opt_name] = opt.validate_float_option(
         options[minmatch_opt_name],
         "Maximum percentage of read length which does not match must be a " +
-        "float between 0 and 100.", 0, 100, True)
+        "float between 0 and 100", 0, 100, True)
     options[multimap_opt_name] = opt.validate_int_option(
         options[multimap_opt_name],
-        "Maximum number of multiple mappings must be a positive integer.",
+        "Maximum number of multiple mappings must be a positive integer",
         1, True)
     options[overhang_opt_name] = opt.validate_int_option(
         options[overhang_opt_name],
-        "Minimum overhang threshold must be an integer 0 or greater.",
+        "Minimum overhang threshold must be an integer 0 or greater",
         0, True)
 
 

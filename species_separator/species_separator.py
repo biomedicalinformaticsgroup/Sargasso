@@ -59,8 +59,9 @@ Options:
 --multimap-threshold=<multimap-threshold>
     Maximum number of multiple mappings allowed during filtering [default: 1].
 --overhang-threshold=<overhang-threshold>
-    If set, allows specification of the minimum number of bases that are allowed on
-    either side of an exon boundary for a read mapping to be accepted
+    If set, allows specification of the minimum number of bases that are
+    allowed on either side of an exon boundary for a read mapping to be
+    accepted [default: 5].
 --reject-multimaps
     If set, any read which multimaps to either species' genome will be rejected
     and not be assigned to either species.
@@ -171,6 +172,30 @@ RAW_READS_RIGHT_VARIABLE = "RAW_READS_FILES_2"
 
 SINGLE_END_READS_TYPE = "single"
 PAIRED_END_READS_TYPE = "paired"
+
+EXECUTION_RECORD_ENTRIES = [
+    ["Species 1", SPECIES_ONE],
+    ["Species 2", SPECIES_TWO],
+    ["Samples File", SAMPLES_FILE],
+    ["Output Dir", OUTPUT_DIR],
+    ["Reads Base Dir", READS_BASE_DIR],
+    ["Number of Threads", NUM_THREADS],
+    ["Species 1 GTF", SPECIES_ONE_GTF],
+    ["Species 2 GTF", SPECIES_TWO_GTF],
+    ["Species 1 Genome FASTA", SPECIES_ONE_GENOME_FASTA],
+    ["Species 2 Genome FASTA", SPECIES_TWO_GENOME_FASTA],
+    ["Species 1 Index", SPECIES_ONE_INDEX],
+    ["Species 2 Index", SPECIES_TWO_INDEX],
+    ["Mismatch Threshold", MISMATCH_THRESHOLD],
+    ["Minmatch Threshold", MINMATCH_THRESHOLD],
+    ["Multimap Threshold", MULTIMAP_THRESHOLD],
+    ["Overhang Threshold", OVERHANG_THRESHOLD],
+    ["Reject Multimaps", REJECT_MULTIMAPS],
+    ["Optimal Strategy", OPTIMAL_STRATEGY],
+    ["Conservative Strategy", CONSERVATIVE_STRATEGY],
+    ["Recall Strategy", RECALL_STRATEGY],
+    ["Run Separation", RUN_SEPARATION],
+]
 
 
 class SampleInfo(object):
@@ -534,6 +559,7 @@ def _write_filtered_reads_target(logger, writer, options):
              options[OVERHANG_THRESHOLD],
              "--reject-multimaps" if options[REJECT_MULTIMAPS] else "\"\""])
 
+
 def _write_sorted_reads_target(logger, writer):
     """
     Write target to sort reads by name to Makefile.
@@ -739,39 +765,24 @@ def _write_makefile(logger, options, sample_info):
         _write_main_star_index_targets(logger, writer, options)
         _write_clean_target(logger, writer)
 
+
 def _write_execution_record(options):
     """
-    Write a log file containing all execution parameters in addition to the time and date of execution
+    Write a log file containing all execution parameters in addition to the
+    time and date of execution
 
     options: dictionary of command-line options
     """
-    outText="Execution Record - "+str(datetime.now().isoform())
-    outText+="Species 1: "+options[SPECIES_ONE]+"\n"
-    outText+="Species 2: "+options[SPECIES_TWO]+"\n"
-    outText+="Samples File: "+options[SAMPLES_FILE]+"\n"
-    outText+="Output Dir: "+options[OUTPUT_DIR]+"\n"
-    outText+="Reads Base Dir: "+options[READS_BASE_DIR]+"\n"
-    outText+="Number of Threads: "+options[NUM_THREADS]+"\n"
-    outText+="Species 1 GTF: "+options[SPECIES_ONE_GTF]+"\n"
-    outText+="Species 2 GTF: "+options[SPECIES_TWO_GTF]+"\n"
-    outText+="Species 1 Genome FASTA "+options[SPECIES_ONE_GENOME_FASTA]+"\n"
-    outText+="Species 2 Genome FASTA "+options[SPECIES_TWO_GENOME_FASTA]+"\n"
-    outText+="Species 1 Index: "+options[SPECIES_ONE_INDEX]+"\n"
-    outText+="Species 2 Index: "+options[SPECIES_TWO_INDEX]+"\n"
-    outText+="Mismatch Threshold: "+options[MISMATCH_THRESHOLD]+"\n"
-    outText+="Minmatch Threshold: "+options[MINMATCH_THRESHOLD]+"\n"
-    outText+="Multimap Threshold: "+options[MULTIMAP_THRESHOLD]+"\n"
-    outText+="Overhang Threshold: "+options[OVERHANG_THRESHOLD]+"\n"
-    outText+="Reject Multimaps: "+options[REJECT_MULTIMAPS]+"\n"
-    outText+="Optimal Strategy: "+options[OPTIMAL_STRATEGY]+"\n"
-    outText+="Conservative Strategy: "+options[CONSERVATIVE_STRATEGY]+"\n"
-    outText+="Recall Strategy: "+options[RECALL_STRATEGY]+"\n"
-    outText+="Run Separation: "+options[RUN_SEPARATION]+"\n"
+    out_text = "Execution Record - {t}\n".format(
+        t=str(datetime.now().isoformat()))
+    out_text += "\n".join(["{desc}: {val}".format(
+                           desc=it[0], val=str(options[it[1]]))
+                           for it in EXECUTION_RECORD_ENTRIES])
 
-    filepath=options[OUTPUT_DIR]+"/execution_record.txt"
-    exrec = open(filepath,'w')
-    exrec.write(outText)
-    exrec.close()
+    out_file = os.path.join(options[OUTPUT_DIR], "execution_record.txt")
+    with open(out_file, 'w') as erf:
+        erf.write(out_text)
+
 
 def _run_species_separation(logger, options):
     """
