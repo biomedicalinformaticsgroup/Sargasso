@@ -9,7 +9,7 @@ Create and work in a virtual environment for *species-separator* using the ``vir
 
 Install the *species_separator* package and its Python package dependencies into the virtual environment by running::
 
-    pip install git+https://github.com/lweasel/species-separator.git
+    pip install git+https://github.com/statbio/species-separator.git
 
 .. Tests of the species separation pipeline can be run by executing::
 
