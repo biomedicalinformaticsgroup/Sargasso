@@ -77,10 +77,10 @@ Options:
     minmatch-threshold and multimap-threshold options. In addition,
     reject-multimaps is turned on.
 --recall
-    Adopt a filtering strategy where sensitivity is prioritised over specificity.
-    Note that specifying this option overrides the
-    values of the mismatch-threshold, minmatch-threshold and
-    multimap-threshold options. In addition, reject-multimaps is turned off.
+    Adopt a filtering strategy where sensitivity is prioritised over
+    specificity.  Note that specifying this option overrides the values of the
+    mismatch-threshold, minmatch-threshold and multimap-threshold options. In
+    addition, reject-multimaps is turned off.
 --run-separation
     If specified, species separation will be run; otherwise scripts to perform
     separation will be created but not run.
@@ -397,7 +397,8 @@ def _validate_command_line_options(options):
             options[REJECT_MULTIMAPS] = False
 
         filter_sample_reads.validate_threshold_options(
-            options, MISMATCH_THRESHOLD, MINMATCH_THRESHOLD, MULTIMAP_THRESHOLD, OVERHANG_THRESHOLD)
+            options, MISMATCH_THRESHOLD, MINMATCH_THRESHOLD,
+            MULTIMAP_THRESHOLD, OVERHANG_THRESHOLD)
 
         species_one_options = _get_species_options(
             options, SPECIES_ONE, SPECIES_ONE_GTF,
@@ -416,7 +417,6 @@ def _validate_command_line_options(options):
 
         return sample_info
     except schema.SchemaError as exc:
-        # TODO: format exit message for 80 columns
         exit("Exiting: " + exc.code)
 
 

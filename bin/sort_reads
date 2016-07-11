@@ -2,6 +2,7 @@
 
 set -o nounset
 set -o errexit
+set -o xtrace
 
 SPECIES=$1
 SAMPLES=$2

@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 
 """Usage:
@@ -6,7 +5,8 @@
         [--log-level=<log-level>] [--reject-multimaps]
         <species-one> <species-one-input-bam> <species-one-output-bam>
         <species-two> <species-two-input-bam> <species-two-output-bam>
-        <mismatch-threshold> <minmatch-threshold> <multimap-threshold> <overhang-threshold>
+        <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
+        <overhang-threshold>
 
 Options:
 {help_option_spec}
@@ -112,10 +112,28 @@ def _validate_command_line_options(options):
             "Could not find input BAM file for species 2")
 
         validate_threshold_options(options, MISMATCH_THRESHOLD,
-                                   MINMATCH_THRESHOLD, MULTIMAP_THRESHOLD, OVERHANG_THRESHOLD)
+                                   MINMATCH_THRESHOLD, MULTIMAP_THRESHOLD,
+                                   OVERHANG_THRESHOLD)
 
     except schema.SchemaError as exc:
         exit(exc.code)
+
+
+# write filter stats to table in file
+def _write_stats(s1_stats, s2_stats, out_bam):
+    stats = [
+        s1_stats.hits_written, s1_stats.reads_written,
+        s1_stats.hits_rejected, s1_stats.reads_rejected,
+        s1_stats.hits_ambiguous, s1_stats.reads_ambiguous,
+        s2_stats.hits_written, s2_stats.reads_written,
+        s2_stats.hits_rejected, s2_stats.reads_rejected,
+        s2_stats.hits_ambiguous, s2_stats.reads_ambiguous
+    ]
+
+    out_file = os.path.join(
+        os.path.dirname(out_bam), "filtering_result_summary.txt")
+    with open(out_file, 'a') as outf:
+        outf.write("\t".join([str(s) for s in stats]) + "\n")
 
 
 def _filter_sample_reads(logger, options):
@@ -123,7 +141,8 @@ def _filter_sample_reads(logger, options):
 
     h_check = hits_checker.HitsChecker(
         options[MISMATCH_THRESHOLD], options[MINMATCH_THRESHOLD],
-        options[MULTIMAP_THRESHOLD], options[REJECT_MULTIMAPS], options[OVERHANG_THRESHOLD], logger)
+        options[MULTIMAP_THRESHOLD], options[REJECT_MULTIMAPS],
+        options[OVERHANG_THRESHOLD], logger)
 
     s1_filterer = filterer.Filterer(
         1, options[SPECIES_ONE_INPUT_BAM], options[SPECIES_ONE_OUTPUT_BAM],
@@ -138,7 +157,6 @@ def _filter_sample_reads(logger, options):
     while True:
         # Attempt to read all hits for the next read in each species' input BAM
         # file
-
         try:
             s1_read_name = s1_filterer.get_next_read_name()
         except StopIteration:
@@ -176,24 +194,8 @@ def _filter_sample_reads(logger, options):
     s1_filterer.log_stats()
     s2_filterer.log_stats()
 
-    write_stats(s1_filterer.stats, s2_filterer.stats, options[SPECIES_ONE_OUTPUT_BAM])
-
-
-# write filter stats to table in file
-def write_stats(s1, s2, outBam):
-    stats = [
-        s1.hits_written, s1.reads_written,
-        s1.hits_rejected, s1.reads_rejected,
-        s1.hits_ambiguous, s1.reads_ambiguous,
-        s2.hits_written, s2.reads_written,
-        s2.hits_rejected, s2.reads_rejected,
-        s2.hits_ambiguous, s2.reads_ambiguous
-    ]
-
-    out_file = os.path.join(
-        os.path.dirname(outBam), "filtering_result_summary.txt")
-    with open(out_file, 'a') as outf:
-        outf.write("\t".join([str(s) for s in stats]) + "\n")
+    _write_stats(s1_filterer.stats, s2_filterer.stats,
+                 options[SPECIES_ONE_OUTPUT_BAM])
 
 
 def filter_sample_reads(args):

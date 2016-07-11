@@ -91,7 +91,6 @@ def _validate_command_line_options(options):
             options[OUTPUT_DIR],
             "Filtered reads output directory does not exist")
     except schema.SchemaError as exc:
-        # TODO: format exit message for 80 columns
         exit("Exiting: " + exc.code)
 
 
@@ -120,19 +119,21 @@ def _all_processes_finished(processes):
     return True
 
 
-def _get_block_file_dictionary(block_files, sp1, sp2):
+def _get_block_file_dictionary(block_dir, sp1, sp2):
     """
     Return a dictionary mapping from species 1 to species 2 block files.
 
-    block_files: List of block file names
+    block_dir: Directory containing block files.
     sp1: species one name
     sp2: species two name
     """
+    # get block files
+    is_block_file = lambda f: not os.path.isdir(os.path.join(block_dir, f))
+    block_files = [f for f in os.listdir(block_dir) if is_block_file(f)]
+
     block_file_dict = {}
 
     for block_file in sorted(block_files):
-	#print "BLOCK: "+str(block_file)
-	#print "ALL BLOCKS: "+str(block_files)
         sections = block_file.split(BLOCK_FILE_SEPARATOR)
         if sections[1] == sp1:
             sections[1] = sp2
@@ -148,15 +149,9 @@ def _run_processes(logger, options):
     logger: logging object
     options: dictionary of command-line options
     """
-    # get block files
-    is_block_file = lambda f: not os.path.isdir(
-        os.path.join(options[BLOCK_DIR], f))
-    block_files = [f for f in os.listdir(options[BLOCK_DIR])
-                   if is_block_file(f)]
-
     # create dictionary mapping from species 1 to species 2 block files
     block_file_dict = _get_block_file_dictionary(
-        block_files, options[SPECIES_ONE], options[SPECIES_TWO])
+        options[BLOCK_DIR], options[SPECIES_ONE], options[SPECIES_TWO])
 
     # keep track of all processes
     all_processes = []
@@ -165,7 +160,7 @@ def _run_processes(logger, options):
     get_input_path = lambda x: os.path.join(options[BLOCK_DIR], x)
 
     # initialise results file
-    write_result_file(options[OUTPUT_DIR])
+    _initialise_result_file(options[OUTPUT_DIR])
 
     # cycle through chunks
     for sp1_file in block_file_dict.keys():
@@ -199,14 +194,15 @@ def _run_processes(logger, options):
         logger.info("Waiting for Threads")
         all_processes[0].wait()
 
-    # TODO: need to concatenate output files
     logger.info("Filtering Complete")
 
 
-# initialise the results file so the threads can append
-# DEBUGGING PURPOSES ONLY - Remove once filtering optimisation has been
-# completed
-def write_result_file(out_dir):
+def _initialise_result_file(out_dir):
+    """
+    Initialise results summary file.
+
+    out_dir: Directory into which filtered BAM files will be written.
+    """
     cols = [
         "Filtered-Hits-S1", "Filtered-Reads-S1",
         "Rejected-Hits-S1", "Rejected-Reads-S1",

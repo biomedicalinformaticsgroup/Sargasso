@@ -2,6 +2,7 @@
 
 set -o nounset
 set -o errexit
+set -o xtrace
 
 SEQUENCE_FASTA_FILES=$1
 GTF_FILE=$2

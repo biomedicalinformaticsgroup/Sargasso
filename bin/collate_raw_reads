@@ -2,6 +2,7 @@
 
 set -o nounset
 set -o errexit
+set -o xtrace
 
 SAMPLES=( $1 )
 RAW_READS_DIRECTORY=$2
