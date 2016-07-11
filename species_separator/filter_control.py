@@ -23,19 +23,20 @@ Option:
     Name of first species.
 <species-two>
     Name of second species.
-<mismatch_threshold>
-    Maximum number of mismatches allowed during filtering.
-<minmatch_threshold>
-    Maximum number of bases allowed to be not perfectly matched during
+<mismatch-threshold>
+    Maximum percentage of read bases allowed to be mismatches against the
+    genome during filtering.
+<minmatch-threshold>
+    Maximum percentage of read length allowed to not be mapped during
     filtering.
 <multimap_threshold>
     Maximum number of multiple mappings allowed during filtering.
---reject-multimaps
-    If set, any read which multimaps to either species' genome will be rejected
-    and not be assigned to either species.
 <overhang-threshold>
     The minimum number of bases that are allowed on
     either side of an exon boundary for a read mapping to be accepted
+--reject-multimaps
+    If set, any read which multimaps to either species' genome will be rejected
+    and not be assigned to either species.
 
 filter_control takes a directory containing pairs of BAM files as input, each
 pair being the result of mapping a set of mixed species RNA-seq reads against

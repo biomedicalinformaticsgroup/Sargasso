@@ -166,4 +166,4 @@ These parameters display or create information to help you understand the softwa
 ``--log-level=<log-level>``
     *Type: text parameter*
 
-    Sets the minimum severity level at which log messages will be output (one of debug, info, warning, error or critical).
+    Sets the minimum severity level at which log messages will be output (one of "debug", "info", "warning", "error" or "critical").
