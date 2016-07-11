@@ -1,7 +1,25 @@
 Usage reference
 ===============
 
-The main ``species_separator`` script has a number of command line options to alter the behaviour and functionary of read assignment. These parameters are listed and explained below for reference, grouped by their functionality.
+The main ``species_separator`` script has a number of command line options to alter the behaviour and function of read assignment::
+
+    species_separator
+        [--log-level=<log-level>]
+        [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>]
+        [--s1-gtf=<species-one-gtf-file>] [--s2-gtf=<species-two-gtf-file>]
+        [--s1-genome-fasta=<species-one-genome-fasta>]
+        [--s2-genome-fasta=<species-two-genome-fasta>]
+        [--s1-index=<species-one-star-index>]
+        [--s2-index=<species-two-star-index>]
+        [--mismatch-threshold=<mismatch-threshold>]
+        [--minmatch-threshold=<minmatch-threshold>]
+        [--multimap-threshold=<multimap-threshold>]
+        [--overhang-threshold=<overhang-threshold>]
+        [--reject-multimaps] [--best] [--conservative] [--recall]
+        [--run-separation]
+        <species-one> <species-two> <samples-file> <output-dir>
+
+These parameters are listed and explained below for reference, grouped by their functionality.
 
 Core
 ----
@@ -23,53 +41,17 @@ These parameters are required as the base minimum for the execution of the pipel
 
     TSV file giving paths (relative to ``<reads-base-dir>``) of raw RNA-seq read data files for each sample.
 
+.. TODO: explain format required for TSV file
+
 ``<output-dir>``
     *Type: file path*
 
     Output directory into which the Makefile will be written, and in which species separation will be performed.
 
+Mapping
+-------
 
-Administrative
---------------
-
-These parameters display or create information to help you understand the software package.
-
-``-h --help``
-    *Type: flag*
-
-    Outputs the pipeline's help documentation.
-
-``-v --version``
-    *Type: flag*
-
-    Outputs the pipeline's version.
-
-``--log-level=<log-level>``
-    *Type: text parameter*
-
-    Sets the minimum severity level at which log messages will be output (one of debug, info, warning, error or critical).
-
-
-Performance
------------
-
-These are optional parameters concerning the running of the pipeline.
-
-``-t <num-threads> --num-threads=<num-threads>``
-    *Type: integer*
-
-    Number of threads to use for parallel processing (default: 1).
-
-``--run-separation``
-    *Type: flag*
-
-    If specified, species separation will be run; otherwise scripts to perform separation will be created but not run. If the option "--run-separation" is not specified, a Makefile is written to the given output directory, via which all stages of species separation can be run under the user's control. If "--run-separation" is specified however, the Makefile is both written and executed, and all stages of species separation are performed automatically.
-
-
-I/O
----
-
-The I/O parameters are used to specify directories for data input and output.
+These parameters control the mapping of mixed-species RNA-seq reads to reference genomes.
 
 ``--reads-base-dir=<reads-base-dir>``
     *Type: file path*
@@ -105,7 +87,6 @@ The I/O parameters are used to specify directories for data input and output.
     *Type: file path*
 
     STAR index directory for second species.
-
 
 Assignment Criteria & Optimisation
 ----------------------------------
@@ -151,3 +132,38 @@ These parameters are used to specify criteria that affect how reads are assigned
     *Type: flag*
 
     Adopt a filtering strategy where sensitivity is prioritised over specificity. Note that specifying this option overrides the values of the ``--mismatch-threshold``, ``--minmatch-threshold`` and ``--multimap-threshold`` options. In addition, ``--reject-multimaps`` is turned off.
+
+Performance
+-----------
+
+These are optional parameters concerning the running of the pipeline.
+
+``-t <num-threads> --num-threads=<num-threads>``
+    *Type: integer*
+
+    Number of threads to use for parallel processing (default: 1).
+
+``--run-separation``
+    *Type: flag*
+
+    If specified, species separation will be run; otherwise scripts to perform separation will be created but not run. If the option "--run-separation" is not specified, a Makefile is written to the given output directory, via which all stages of species separation can be run under the user's control. If "--run-separation" is specified however, the Makefile is both written and executed, and all stages of species separation are performed automatically.
+
+Administrative
+--------------
+
+These parameters display or create information to help you understand the software package, or trace its execution.
+
+``-h --help``
+    *Type: flag*
+
+    Outputs the pipeline's help documentation.
+
+``-v --version``
+    *Type: flag*
+
+    Outputs the pipeline's version.
+
+``--log-level=<log-level>``
+    *Type: text parameter*
+
+    Sets the minimum severity level at which log messages will be output (one of debug, info, warning, error or critical).
