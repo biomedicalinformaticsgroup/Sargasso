@@ -8,6 +8,9 @@ test_results/mapped_reads/*
 test_results/filtered_reads/*
 test_results/star_index_mouse_genome
 test_results/star_index_rat_genome
+paper_analysis/data
+paper_analysis/results
+nohup.out
 neuron_astrocyte_activity_results/*
 Mouseonly_results/*
 scratch/*
@@ -18,3 +21,4 @@ star_batch.sh
 acceptance_sampling.py
 docs/_build
 imposeError.py
+*.Rproj*
