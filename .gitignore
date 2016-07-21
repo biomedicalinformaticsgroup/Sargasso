@@ -22,3 +22,4 @@ acceptance_sampling.py
 docs/_build
 imposeError.py
 *.Rproj*
+.Rproj.user

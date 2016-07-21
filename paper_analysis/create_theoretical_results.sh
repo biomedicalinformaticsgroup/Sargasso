@@ -5,7 +5,7 @@ set -o errexit
 set -o xtrace
 
 source definitions.sh
-#source common_functions.sh
+source common_functions.sh
 
 function get_protein_coding_exons {
     GTF_FILE=$1
@@ -78,14 +78,22 @@ function collate_mapped_read_counts {
         cut -d, -f 1,2,3,4,6,7
 }
 
-function collate_theoretical_data {
-    READ_COUNTS=$1
-    SPECIES=$2
-    READ_LENGTH=$3
-    OUTPUT_FILE=$4
+function collate_assigned_read_counts {
+    CONSERVATIVE_ASSIGNED=$1
+    BEST_ASSIGNED=$2
+    UNFILTERED_ASSIGNED=$3
 
-    Rscript collate_theoretical_data.R ${READ_COUNTS} ${SPECIES} ${READ_LENGTH} ${OUTPUT_FILE}
+    join ${CONSERVATIVE_ASSIGNED} ${BEST_ASSIGNED} | join - ${UNFILTERED_ASSIGNED}
 }
+
+#function collate_theoretical_data {
+    #READ_COUNTS=$1
+    #SPECIES=$2
+    #READ_LENGTH=$3
+    #OUTPUT_FILE=$4
+
+    #Rscript collate_theoretical_data.R ${READ_COUNTS} ${SPECIES} ${READ_LENGTH} ${OUTPUT_FILE}
+#}
 
 function get_protein_coding_exons_for_both_species {
     get_protein_coding_exons ${MOUSE_GTF} > ${MOUSE_GTF_EXONS}
@@ -142,13 +150,28 @@ function collate_mapped_read_counts_for_both_species {
     collate_mapped_read_counts ${RAT_CORRECT_READS_PER_GENE_BEST} ${RAT_INCORRECT_READS_PER_GENE_BEST} > ${RAT_READS_PER_GENE_BEST}
 }
 
-function collate_theoretical_data_for_both_species {
-    collate_theoretical_data ${MOUSE_READS_PER_GENE_CONSERVATIVE} mouse ${READ_LENGTH} ${THEORETICAL_RESULTS_DIR}/mouse_feasibility.conservative.csv
-    collate_theoretical_data ${RAT_READS_PER_GENE_CONSERVATIVE} rat ${READ_LENGTH} ${THEORETICAL_RESULTS_DIR}/rat_feasibility.conservative.csv
+function count_assigned_reads_for_both_species {
+    count_reads_for_features ${NUM_THREADS} ${MOUSE_GTF_EXONS} ${THEORETICAL_SSS_FILTERED_READS_DIR_CONSERVATIVE}/mouse_reads_reads_mouse_filtered.bam ${MOUSE_ASSIGNED_READS_PER_GENE_CONSERVATIVE}
+    count_reads_for_features ${NUM_THREADS} ${MOUSE_GTF_EXONS} ${THEORETICAL_SSS_FILTERED_READS_DIR_BEST}/mouse_reads_reads_mouse_filtered.bam ${MOUSE_ASSIGNED_READS_PER_GENE_BEST}
+    count_reads_for_features ${NUM_THREADS} ${MOUSE_GTF_EXONS} ${THEORETICAL_SSS_MAPPED_READS_DIR_BEST}/mouse_reads_reads.mouse.bam ${MOUSE_ASSIGNED_READS_PER_GENE_UNFILTERED}
 
-    collate_theoretical_data ${MOUSE_READS_PER_GENE_BEST} mouse ${READ_LENGTH} ${THEORETICAL_RESULTS_DIR}/mouse_feasibility.best.csv
-    collate_theoretical_data ${RAT_READS_PER_GENE_BEST} rat ${READ_LENGTH} ${THEORETICAL_RESULTS_DIR}/rat_feasibility.best.csv
+    count_reads_for_features ${NUM_THREADS} ${RAT_GTF_EXONS} ${THEORETICAL_SSS_FILTERED_READS_DIR_CONSERVATIVE}/rat_reads_reads_rat_filtered.bam ${RAT_ASSIGNED_READS_PER_GENE_CONSERVATIVE}
+    count_reads_for_features ${NUM_THREADS} ${RAT_GTF_EXONS} ${THEORETICAL_SSS_FILTERED_READS_DIR_BEST}/rat_reads_reads_rat_filtered.bam ${RAT_ASSIGNED_READS_PER_GENE_BEST}
+    count_reads_for_features ${NUM_THREADS} ${RAT_GTF_EXONS} ${THEORETICAL_SSS_MAPPED_READS_DIR_BEST}/rat_reads_reads.rat.bam ${RAT_ASSIGNED_READS_PER_GENE_UNFILTERED}
 }
+
+function collate_assigned_read_counts_for_both_species {
+    collate_assigned_read_counts ${MOUSE_ASSIGNED_READS_PER_GENE_CONSERVATIVE} ${MOUSE_ASSIGNED_READS_PER_GENE_BEST} ${MOUSE_ASSIGNED_READS_PER_GENE_UNFILTERED} > ${MOUSE_ASSIGNED_READS_PER_GENE}
+    collate_assigned_read_counts ${RAT_ASSIGNED_READS_PER_GENE_CONSERVATIVE} ${RAT_ASSIGNED_READS_PER_GENE_BEST} ${RAT_ASSIGNED_READS_PER_GENE_UNFILTERED} > ${RAT_ASSIGNED_READS_PER_GENE}
+}
+
+#function collate_theoretical_data_for_both_species {
+    #collate_theoretical_data ${MOUSE_READS_PER_GENE_CONSERVATIVE} mouse ${READ_LENGTH} ${THEORETICAL_RESULTS_DIR}/mouse_feasibility.conservative.csv
+    #collate_theoretical_data ${RAT_READS_PER_GENE_CONSERVATIVE} rat ${READ_LENGTH} ${THEORETICAL_RESULTS_DIR}/rat_feasibility.conservative.csv
+
+    #collate_theoretical_data ${MOUSE_READS_PER_GENE_BEST} mouse ${READ_LENGTH} ${THEORETICAL_RESULTS_DIR}/mouse_feasibility.best.csv
+    #collate_theoretical_data ${RAT_READS_PER_GENE_BEST} rat ${READ_LENGTH} ${THEORETICAL_RESULTS_DIR}/rat_feasibility.best.csv
+#}
 
 THEORETICAL_RESULTS_DIR=${RESULTS_DIR}/theoretical
 TRANSCRIPT_SEQUENCES_DIR=${THEORETICAL_RESULTS_DIR}/transcript_sequences
@@ -156,6 +179,7 @@ THEORETICAL_SSS_DIR_CONSERVATIVE=${THEORETICAL_RESULTS_DIR}/sss.conservative
 THEORETICAL_SSS_FILTERED_READS_DIR_CONSERVATIVE=${THEORETICAL_SSS_DIR_CONSERVATIVE}/filtered_reads
 THEORETICAL_SSS_DIR_BEST=${THEORETICAL_RESULTS_DIR}/sss.best
 THEORETICAL_SSS_FILTERED_READS_DIR_BEST=${THEORETICAL_SSS_DIR_BEST}/filtered_reads
+THEORETICAL_SSS_MAPPED_READS_DIR_BEST=${THEORETICAL_SSS_DIR_BEST}/mapped_reads
 
 READ_LENGTH=50
 INSERT_SIZE=150
@@ -188,10 +212,21 @@ RAT_INCORRECT_READS_PER_GENE_CONSERVATIVE=${THEORETICAL_RESULTS_DIR}/incorrect_r
 MOUSE_INCORRECT_READS_PER_GENE_BEST=${THEORETICAL_RESULTS_DIR}/incorrect_mouse_reads_${READ_LENGTH}.best.csv
 RAT_INCORRECT_READS_PER_GENE_BEST=${THEORETICAL_RESULTS_DIR}/incorrect_rat_reads_${READ_LENGTH}.best.csv
 
+MOUSE_ASSIGNED_READS_PER_GENE_CONSERVATIVE=${THEORETICAL_RESULTS_DIR}/assigned_mouse_reads_${READ_LENGTH}.conservative.csv
+MOUSE_ASSIGNED_READS_PER_GENE_BEST=${THEORETICAL_RESULTS_DIR}/assigned_mouse_reads_${READ_LENGTH}.best.csv
+MOUSE_ASSIGNED_READS_PER_GENE_UNFILTERED=${THEORETICAL_RESULTS_DIR}/assigned_mouse_reads_${READ_LENGTH}.unfiltered.csv
+
+RAT_ASSIGNED_READS_PER_GENE_CONSERVATIVE=${THEORETICAL_RESULTS_DIR}/assigned_rat_reads_${READ_LENGTH}.conservative.csv
+RAT_ASSIGNED_READS_PER_GENE_BEST=${THEORETICAL_RESULTS_DIR}/assigned_rat_reads_${READ_LENGTH}.best.csv
+RAT_ASSIGNED_READS_PER_GENE_UNFILTERED=${THEORETICAL_RESULTS_DIR}/assigned_rat_reads_${READ_LENGTH}.unfiltered.csv
+
 MOUSE_READS_PER_GENE_CONSERVATIVE=${THEORETICAL_RESULTS_DIR}/mouse_reads_per_gene_${READ_LENGTH}.conservative.csv 
 RAT_READS_PER_GENE_CONSERVATIVE=${THEORETICAL_RESULTS_DIR}/rat_reads_per_gene_${READ_LENGTH}.conservative.csv 
 MOUSE_READS_PER_GENE_BEST=${THEORETICAL_RESULTS_DIR}/mouse_reads_per_gene_${READ_LENGTH}.best.csv 
 RAT_READS_PER_GENE_BEST=${THEORETICAL_RESULTS_DIR}/rat_reads_per_gene_${READ_LENGTH}.best.csv 
+
+MOUSE_ASSIGNED_READS_PER_GENE=${THEORETICAL_RESULTS_DIR}/assigned_mouse_reads_per_gene_${READ_LENGTH}.csv
+RAT_ASSIGNED_READS_PER_GENE=${THEORETICAL_RESULTS_DIR}/assigned_rat_reads_per_gene_${READ_LENGTH}.csv
 
 mkdir -p ${TRANSCRIPT_SEQUENCES_DIR}
 
@@ -204,5 +239,8 @@ mkdir -p ${TRANSCRIPT_SEQUENCES_DIR}
 #separate_species_reads
 #count_theoretical_reads_per_gene_for_both_species
 #count_mapped_reads_for_both_species
-#collate_mapped_read_counts_for_both_species
-collate_theoretical_data_for_both_species
+collate_mapped_read_counts_for_both_species
+#count_assigned_reads_for_both_species
+#collate_assigned_read_counts_for_both_species
+
+#collate_theoretical_data_for_both_species
