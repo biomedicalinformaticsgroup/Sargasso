@@ -29,7 +29,7 @@ class HitsChecker:
         # be assigned to a species.
         return hits_info.get_multimaps() <= self.multimap_thresh and \
             hits_info.get_max_mismatches() <= \
-            (self.mismatch_thresh * hits_info.get_length()) and \
+            round(self.mismatch_thresh * hits_info.get_total_length()) and \
             self._check_cigars(hits_info) != CIGAR_FAIL
 
     def assign_hits(self, s1_hits_info, s2_hits_info):
@@ -91,7 +91,8 @@ class HitsChecker:
 
         mismatches = hits_info.get_min_mismatches()
 
-        if mismatches > round(self.mismatch_thresh * hits_info.get_length()):
+        if mismatches > round(self.mismatch_thresh *
+                              hits_info.get_total_length()):
             violated = True
 
         cigar_check = self._check_cigars(hits_info)
@@ -101,8 +102,8 @@ class HitsChecker:
         return (violated, multimaps, mismatches, cigar_check)
 
     def _check_cigars(self, hits_info):
-        length = hits_info.get_length()
-        min_match = length - round(self.minmatch_thresh * length)
+        read_length = hits_info.get_read_length()
+        min_match = read_length - round(self.minmatch_thresh * read_length)
 
         # when allowing other params, this is no longer a t/f scenario;
         # e.g. when clipping is allowed a cigar without clipping should score
@@ -111,7 +112,7 @@ class HitsChecker:
 
         for cigar in hits_info.get_cigars():
             graded_response = self._check_cigar(
-                cigar, graded_response, min_match, length)
+                cigar, graded_response, min_match, read_length)
             if graded_response == CIGAR_FAIL:
                 return graded_response
 

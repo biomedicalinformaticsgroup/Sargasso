@@ -6,16 +6,22 @@ from . import samutils
 class HitsInfo:
     def __init__(self, hits):
         self.hits = hits
-        self.length = None
+        self.read_length = None
+        self.total_length = None
         self.multimaps = None
         self.max_mismatches = None
         self.min_mismatches = None
         self.cigar = None
 
-    def get_length(self):
-        if self.length is None:
-            self.length = samutils.get_length(self.hits[0])
-        return self.length
+    def get_read_length(self):
+        if self.read_length is None:
+            self.read_length = samutils.get_read_length(self.hits[0])
+        return self.read_length
+
+    def get_total_length(self):
+        if self.total_length is None:
+            self.total_length = samutils.get_total_length(self.hits[0])
+        return self.total_length
 
     def get_multimaps(self):
         if self.multimaps is None:

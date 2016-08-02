@@ -13,8 +13,15 @@ def all_hits(samfile):
     return samfile.fetch(until_eof=True)
 
 
-def get_length(hit):
+def get_read_length(hit):
     return hit.query_length
+
+
+def get_total_length(hit):
+    total_length = hit.query_length
+    if hit.is_paired:
+        total_length *= 2
+    return total_length
 
 
 def get_multimaps(hit):

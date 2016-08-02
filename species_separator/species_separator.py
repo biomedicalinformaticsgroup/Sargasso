@@ -51,11 +51,13 @@ Options:
 --s2-index=<species-two-star-index>
     STAR index directory for second species.
 --mismatch-threshold=<mismatch-threshold>
-    Maximum percentage of read bases allowed to be mismatches against the
-    genome during filtering [default: 0].
+    Maximum percentage of bases allowed to be mismatches against the genome
+    during filtering. For single-end reads, the total number of bases is the
+    read length; for paired-end reads it is twice the read length [default: 0].
 --minmatch-threshold=<minmatch-threshold>
-    Maximum percentage of read length allowed to not be mapped during filtering
-    [default: 0].
+    Maximum percentage of read length allowed to not be mapped during
+    filtering. Read length refers to the length of a single read in both
+    single- and paired-end cases [default: 0].
 --multimap-threshold=<multimap-threshold>
     Maximum number of multiple mappings allowed during filtering [default: 1].
 --overhang-threshold=<overhang-threshold>
@@ -382,7 +384,7 @@ def _validate_command_line_options(options):
 
         if options[OPTIMAL_STRATEGY]:
             options[MISMATCH_THRESHOLD] = 1
-            options[MINMATCH_THRESHOLD] = 1
+            options[MINMATCH_THRESHOLD] = 2
             options[MULTIMAP_THRESHOLD] = 999999
             options[REJECT_MULTIMAPS] = False
         elif options[CONSERVATIVE_STRATEGY]:
@@ -392,7 +394,7 @@ def _validate_command_line_options(options):
             options[REJECT_MULTIMAPS] = True
         elif options[RECALL_STRATEGY]:
             options[MISMATCH_THRESHOLD] = 2
-            options[MINMATCH_THRESHOLD] = 5
+            options[MINMATCH_THRESHOLD] = 10
             options[MULTIMAP_THRESHOLD] = 999999
             options[REJECT_MULTIMAPS] = False
 
