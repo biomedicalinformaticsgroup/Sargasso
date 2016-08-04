@@ -101,7 +101,7 @@ function get_protein_coding_exons_for_both_species {
 }
 
 function create_transcript_sequences_for_both_species {
-    #create_transcript_sequences ${MOUSE_GTF_EXONS} ${MOUSE_CHR_FASTA} ${TRANSCRIPT_SEQUENCES_DIR}/${MOUSE_PREFIX}
+    create_transcript_sequences ${MOUSE_GTF_EXONS} ${MOUSE_CHR_FASTA} ${TRANSCRIPT_SEQUENCES_DIR}/${MOUSE_PREFIX}
     create_transcript_sequences ${RAT_GTF_EXONS} ${RAT_CHR_FASTA} ${TRANSCRIPT_SEQUENCES_DIR}/${RAT_PREFIX}
 }
 
@@ -230,17 +230,14 @@ RAT_ASSIGNED_READS_PER_GENE=${THEORETICAL_RESULTS_DIR}/assigned_rat_reads_per_ge
 
 mkdir -p ${TRANSCRIPT_SEQUENCES_DIR}
 
-# TODO: currently this is only producing the paired-end results, but we've
-# included the single-end results in the paper.
-
-#get_protein_coding_exons_for_both_species
-#create_transcript_sequences_for_both_species
-#create_reads_from_transcripts_for_both_species
-#separate_species_reads
-#count_theoretical_reads_per_gene_for_both_species
-#count_mapped_reads_for_both_species
+get_protein_coding_exons_for_both_species
+create_transcript_sequences_for_both_species
+create_reads_from_transcripts_for_both_species
+separate_species_reads
+count_theoretical_reads_per_gene_for_both_species
+count_mapped_reads_for_both_species
 collate_mapped_read_counts_for_both_species
-#count_assigned_reads_for_both_species
-#collate_assigned_read_counts_for_both_species
+count_assigned_reads_for_both_species
+collate_assigned_read_counts_for_both_species
 
 #collate_theoretical_data_for_both_species

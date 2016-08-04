@@ -14,12 +14,12 @@ rename_cols <- function(in_df, old_names, new_names) {
 }
 
 select_cols <- function(in_df, col_names) {
-  out_df <- in_df %>% select_(.dots=col_names)
+  out_df <- in_df %>% dplyr::select_(.dots=col_names)
   return(out_df)
 }
 
 remove_cols <- function(in_df, col_names) {
-  out_df <- in_df %>% select_(.dots=str_c("-", col_names))
+  out_df <- in_df %>% dplyr::select_(.dots=str_c("-", col_names))
   return(out_df)
 }
 
@@ -53,7 +53,7 @@ get_ortholog_info <- function() {
         group_by_(gene_column) %>% 
         mutate(num_genes=n()) %>% 
         filter(num_genes == 1) %>%
-        select(-num_genes) %>%
+        dplyr::select(-num_genes) %>%
         ungroup()
       
       return(duplicates_removed)
@@ -62,7 +62,7 @@ get_ortholog_info <- function() {
     # Select only 1-to-1 orthologs
     o2o_orthologs <- orthologs %>%
       filter(type == "ortholog_one2one") %>%
-      select(-type) %>%
+      dplyr::select(-type) %>%
       mutate(o2o_ortholog="Y") %>%
       remove_duplicate_genes("mouse_gene") %>% 
       remove_duplicate_genes("rat_gene")
@@ -71,12 +71,12 @@ get_ortholog_info <- function() {
     rat_genes <- get_gene_info("rat")
 
     same_name_genes <- (mouse_genes %>% 
-                          select(-chromosome, -description) %>% 
+                          dplyr::select(-chromosome, -description) %>% 
                           dplyr::rename(mouse_gene=gene)) %>% 
       inner_join(rat_genes %>% 
-                   select(-chromosome, -description) %>% 
+                   dplyr::select(-chromosome, -description) %>% 
                    dplyr::rename(rat_gene=gene)) %>% 
-      select(-gene_name) %>%
+      dplyr::select(-gene_name) %>%
       mutate(same_name="Y") %>%
       remove_duplicate_genes("mouse_gene") %>% 
       remove_duplicate_genes("rat_gene")
@@ -135,7 +135,7 @@ assemble_count_data <- function(counts_dir, conditions, replicates, count_type,
   }
   
   row.names(count_data) <- count_data$gene
-  count_data %<>% select(-gene)
+  count_data %<>% dplyr::select(-gene)
 
   return(count_data)
 }
@@ -168,10 +168,14 @@ get_deseq2_dataset <- function(count_data, sample_data, filter_low_counts=TRUE,
 }
 
 get_deseq2_results <- function(dds, condition, condition_base) {
-    res <- results(dds, c("condition", condition, condition_base)) %>%
+    res <- results(dds, c("condition", condition, condition_base)) 
+    
+    print(summary(res))
+    
+    res %<>%
       as.data.frame() %>%
-      add_rownames(var="gene") %>%
-      select(-baseMean, -lfcSE, -stat)
+      tibble::rownames_to_column(var="gene") %>%
+      dplyr::select(-baseMean, -lfcSE, -stat)
 
     return(res)
 }
@@ -180,7 +184,7 @@ get_count_data <- function(dds, norm=T) {
   counts <- dds %>%
     counts(normalized=norm) %>%
     as.data.frame() %>%
-    add_rownames(var="gene")
+    tibble::rownames_to_column(var="gene")
 
   return(counts)
 }
@@ -208,5 +212,5 @@ get_fpkms <- function(all_counts, gene_lengths, samples, col_suffix) {
                function(x, y) x / y / mmr * 1000)
   }
   
-  all_counts %>% select(gene, contains(col_suffix))
+  all_counts %>% dplyr::select(gene, dplyr::contains(col_suffix))
 }
