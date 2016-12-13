@@ -53,9 +53,7 @@ Takes as input a directory containing pairs of BAM files, each pair being the re
 ``filter_control`` is called by the script ``filter_reads``.
 
 * ``--log-level=<log-level>`` (_text parameter_): Sets the minimum severity level at which log messages will be output (one of "debug", "info", "warning", "error" or "criticial").
-
 * ``--reject-multimaps` (_flag_): If set, any read which multimaps to either species' genome will be rejected and not be assigned to either species.
-
 * ``<block-dir>`` (_file path_): Directory containing pairs of mapped read BAM files.
 * ``<output-dir>` (_file path_): Directory into which species-separated reads will be written.
 * ``<sample-name>`` (_text parameter_): Name of RNA-seq sample being processed.
