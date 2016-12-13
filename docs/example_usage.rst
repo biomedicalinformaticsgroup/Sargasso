@@ -1,7 +1,7 @@
 Example usage
 =============
 
-To illustrate the usage of the *species-separator* pipeline, we will process a test data set consisting of RNA-seq reads derived from both mouse and rat. The test FASTQ files can be found in the directory ``pipeline_test/data/fastq/`` within the *species-separator* repository.
+To illustrate the usage of the *Sargasso* pipeline, we will process a test data set consisting of RNA-seq reads derived from both mouse and rat. The test FASTQ files can be found in the directory ``pipeline_test/data/fastq/`` within the *Sargasso* repository.
 
 We begin by constructing a tab-separated file giving the paths of the raw RNA-seq read data files for each sample in our experiment. This should contain one line per-sample, giving a sample name, and two comma-separated lists of FASTQ files containing paired-end RNA-seq reads (or a single comma-separated list in the case of single-end reads). Note that the FASTQ files are assumed to be gzipped.
 
@@ -9,7 +9,7 @@ In our example case we have a single sample, with a single pair of paired-end re
 
     our_sample  pipeline_test/data/fastq/mouse_rat_test_1.fastq.gz  pipeline_test/data/fastq/mouse_rat_test_2.fastq.gz
 
-The *species-separator* pipeline uses STAR [STAR]_, an efficient and accurate short RNA-seq read aligner, to map reads to reference genomes. We will assume that STAR indices have already been built for the mouse and rat genomes, and are located in the directories ``~/data/genome/<species>/STAR_index/``. Then the entire species separation pipeline can be executed with the following command::
+The *Sargasso* pipeline uses STAR [STAR]_, an efficient and accurate short RNA-seq read aligner, to map reads to reference genomes. We will assume that STAR indices have already been built for the mouse and rat genomes, and are located in the directories ``~/data/genome/<species>/STAR_index/``. Then the entire species separation pipeline can be executed with the following command::
 
     species_separator --reads-base-dir=<repository_dir> --s1-index=~/data/genome/mouse/STAR_index --s2-index=~/data/genome/rat/STAR_index --best --run-separation mouse rat test_samples.tsv test_results
 
@@ -27,4 +27,4 @@ On this small data set (100,000 paired-end reads), species separation should tak
 
 The BAM files in the ``filtered_reads`` directory are the final output of the *species-separator* pipeline. These can then be taken as input to further downstream analyses, for example for read counting and differential expression.
 
-In addition, two further log files are written. In the ``filtered_reads`` directory, ``overall_filtering_summary.txt`` contains per-sample statistics describing the reads that were assigned to each genome, or were rejected as ambiguous. In the top-level ``test_results`` directory, ``execution_record.txt`` contains a record of the command line options that were passed to *species-separator*, and the date and time of execution.
+In addition, two further log files are written. In the ``filtered_reads`` directory, ``overall_filtering_summary.txt`` contains per-sample statistics describing the reads that were assigned to each genome, or were rejected as ambiguous. In the top-level ``test_results`` directory, ``execution_record.txt`` contains a record of the command line options that were passed to *Sargasso*, and the date and time of execution.

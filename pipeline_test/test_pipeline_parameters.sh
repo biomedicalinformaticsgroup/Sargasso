@@ -46,7 +46,7 @@ SSS_SORTED_DIR=${SSS_DIR}/sorted_reads
 SAMPLES_FILE=${RESULTS_DIR}/samples.tsv
 LOG_FILE=${RESULTS_DIR}/log.txt
 
-ENSEMBL_VERSION=83
+ENSEMBL_VERSION=86
 MOUSE_GENOME_DIR=/srv/data/genome/mouse/ensembl-${ENSEMBL_VERSION}
 MOUSE_STAR_INDEX=${MOUSE_GENOME_DIR}/STAR_indices/primary_assembly
 RAT_GENOME_DIR=/srv/data/genome/rat/ensembl-${ENSEMBL_VERSION}

@@ -1,7 +1,7 @@
 Support scripts
 ===============
 
-In addition to the main ``species_separator`` script, execution of the *species-separator* pipeline relies on a number of supporting Python and Bash scripts. Their usage patterns are described here; note, however, that in normal usage these scripts need not be executed directly by the user.
+In addition to the main ``species_separator`` script, execution of the *Sargasso* pipeline relies on a number of supporting Python and Bash scripts. Their usage patterns are described here; note, however, that in normal usage these scripts need not be executed directly by the user.
 
 build_star_index (Bash)
 -----------------------
