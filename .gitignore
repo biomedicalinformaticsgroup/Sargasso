@@ -2,8 +2,6 @@
 species_separator.egg-info/*
 results/*
 pipeline_test/results/*
-docs/_build
-docs.tar.gz
 *.Rproj*
 .RData
 .Rhistory
