@@ -8,7 +8,7 @@ Makefile
 
 The *Sargasso* pipline is invoked through execution of its main Python script, ``species_separator``. This writes a Makefile with targets corresponding to all stages of the pipeline, namely:
 
-* building or linking to ``STAR`` [STAR]_ indices
+* building or linking to [``STAR``](references.md) indices
 * collating raw reads files
 * mapping reads from all samples to each genome
 * sorting mapped reads in preparation for filtering
@@ -36,7 +36,7 @@ Note that when invoking ``STAR``, reads are mapped allowing alignments to multip
 Sorting reads
 -------------
 
-Mapped RNA-seq reads are subsequently sorted into name order, so that, when filtering according to their true species of origin, the mappings for each read (or each read pair, in the case of paired-end reads) to each genome can be assessed together. Reads are sorted using the ``sambamba`` [Sambamba]_ alignment processing tool.
+Mapped RNA-seq reads are subsequently sorted into name order, so that, when filtering according to their true species of origin, the mappings for each read (or each read pair, in the case of paired-end reads) to each genome can be assessed together. Reads are sorted using the [``Sambamba``](references.md) alignment processing tool.
 
 Filtering reads
 ---------------
