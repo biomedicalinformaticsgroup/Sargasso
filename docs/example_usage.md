@@ -9,7 +9,7 @@ In our example case we have a single sample, with a single pair of paired-end re
 
     our_sample  pipeline_test/data/fastq/mouse_rat_test_1.fastq.gz  pipeline_test/data/fastq/mouse_rat_test_2.fastq.gz
 
-The *Sargasso* pipeline uses STAR [STAR]_, an efficient and accurate short RNA-seq read aligner, to map reads to reference genomes. We will assume that STAR indices have already been built for the mouse and rat genomes, and are located in the directories ``~/data/genome/<species>/STAR_index/``. Then the entire species separation pipeline can be executed with the following command::
+The *Sargasso* pipeline uses [STAR](references.md), an efficient and accurate short RNA-seq read aligner, to map reads to reference genomes. We will assume that STAR indices have already been built for the mouse and rat genomes, and are located in the directories ``~/data/genome/<species>/STAR_index/``. Then the entire species separation pipeline can be executed with the following command::
 
     species_separator --reads-base-dir=<repository_dir> --s1-index=~/data/genome/mouse/STAR_index --s2-index=~/data/genome/rat/STAR_index --best --run-separation mouse rat test_samples.tsv test_results
 
