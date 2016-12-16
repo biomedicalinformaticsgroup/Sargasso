@@ -7,7 +7,7 @@ Create and work in a virtual environment for *Sargasso* using the ``virtualenvwr
 
     mkproject sargasso
 
-Then install the *Sargasso* package and its Python package dependencies into the virtual environment by running::
+Then install the latest version of the *Sargasso* package and its Python package dependencies into the virtual environment by running::
 
     pip install git+https://github.com/statbio/Sargasso.git
     
