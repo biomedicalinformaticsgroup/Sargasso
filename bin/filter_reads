@@ -34,8 +34,8 @@ for sample in ${SAMPLES}; do
 
     if [ "${THREADS}" -eq "1" ]
     then
-        ln -rs ${SPECIES_ONE_BAM} ${BLOCK_DIR}/"${sample}${SEPARATOR}${SPECIES_ONE}${SEPARATOR}"BLOCK"${SEPARATOR}"1.bam
-        ln -rs ${SPECIES_TWO_BAM} ${BLOCK_DIR}/"${sample}${SEPARATOR}${SPECIES_TWO}${SEPARATOR}"BLOCK"${SEPARATOR}"1.bam
+        ln -s $(pwd)/${SPECIES_ONE_BAM} ${BLOCK_DIR}/"${sample}${SEPARATOR}${SPECIES_ONE}${SEPARATOR}"BLOCK"${SEPARATOR}"1.bam
+        ln -s $(pwd)/${SPECIES_TWO_BAM} ${BLOCK_DIR}/"${sample}${SEPARATOR}${SPECIES_TWO}${SEPARATOR}"BLOCK"${SEPARATOR}"1.bam
     else
         # extract the no. reads for this sample for species 1 & 2 from the read
         # summary file
