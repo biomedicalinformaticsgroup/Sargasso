@@ -5,7 +5,7 @@ import species_separator
 setup(
     name="species_separator",
     version=species_separator.__version__,
-    url='https://github.com/lweasel/species-separator',
+    url='https://github.com/statbio/sargasso',
     license='MIT License',
     author='Owen Dando',
     author_email='owen.dando@ed.ac.uk',
