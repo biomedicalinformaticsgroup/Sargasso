@@ -10,3 +10,5 @@ Create and work in a virtual environment for *Sargasso* using the ``virtualenvwr
 Then install the *Sargasso* package and its Python package dependencies into the virtual environment by running::
 
     pip install git+https://github.com/statbio/Sargasso.git
+    
+Note that the *Sargasso* pipeline uses the short RNA-seq read aligner [STAR](https://github.com/alexdobin/STAR), and the [Sambamba](http://lomereiter.github.io/sambamba/) alignment processing tool. These should be installed before using *Sargasso*.
