@@ -6,7 +6,7 @@ Separation of mixed-species RNA-seq reads is performed in a number of stages. Wh
 Makefile
 --------
 
-The *Sargasso* pipline is invoked through execution of its main Python script, ``species_separator``. This writes a Makefile with targets corresponding to all stages of the pipeline, namely:
+The *Sargasso* pipeline is invoked through execution of its main Python script, ``species_separator``. This writes a Makefile with targets corresponding to all stages of the pipeline, namely:
 
 * building or linking to [``STAR``](references.md) indices
 * collating raw reads files
@@ -19,7 +19,7 @@ In this fashion, fine user control over the pipeline is allowed --- processing c
 STAR indices
 ------------
 
-The *Sargasso* pipeline uses the efficient and accurate ``STAR`` short RNA-seq read aligner to map mixed species reads to reference genomes. For best speed of operation, paths to pre-existing ``STAR`` indices for the two reference genomes can be supplied to the ``species_separator`` script via its ``--s1-index`` and ``--s2-index`` command-line options. Alternatively, if paths to directories containing genome FASTA files for each species are supplied (via the ``--s1-genome`` and ``--s2-genome`` options) and GTF annotation files (via ``--s1-gtf`` and ``-s2-gtf``), then ``STAR`` will be invoked in index-generation mode to build genome indices for each species.
+The *Sargasso* pipeline uses the efficient and accurate ``STAR`` short RNA-seq read aligner to map mixed-species reads to reference genomes. For best speed of operation, paths to pre-existing ``STAR`` indices for the two reference genomes can be supplied to the ``species_separator`` script via its ``--s1-index`` and ``--s2-index`` command-line options. Alternatively, if paths to directories containing genome FASTA files for each species are supplied (via the ``--s1-genome`` and ``--s2-genome`` options) and GTF annotation files (via ``--s1-gtf`` and ``-s2-gtf``), then ``STAR`` will be invoked in index-generation mode to build genome indices for each species.
 
 Collating raw reads
 -------------------
@@ -36,7 +36,7 @@ Note that when invoking ``STAR``, reads are mapped allowing alignments to multip
 Sorting reads
 -------------
 
-Mapped RNA-seq reads are subsequently sorted into name order, so that, when filtering according to their true species of origin, the mappings for each read (or each read pair, in the case of paired-end reads) to each genome can be assessed together. Reads are sorted using the [``Sambamba``](references.md) alignment processing tool.
+Mapped RNA-seq reads are subsequently sorted into name order, so that, when filtering according to their true species of origin, the mappings for each read (or each read pair, in the case of paired-end reads) to each genome can be assessed together. Reads are sorted using the [``sambamba``](references.md) alignment processing tool.
 
 Filtering reads
 ---------------
@@ -61,7 +61,7 @@ If the mappings to both species' genomes satisfy all thresholds, these sets of m
 * If all the alignments to both species' genomes are full length, or both sets of mappings contain alignments which are clipped, then the number of multi-mappings of the read or read pair to each species' genome are compared. The genome with fewer multi-mappings is chosen as the likely species of origin.
 * Finally, if aligning the read or read pair to each species's genome gives the same number of multi-maps, then the read is discarded as ambiguous.
 
-Different filtering strategies, providing a particular balance between sensitivity and specificity, can be adopted by choice of values of threshold options. While these strategies can be fine-tuned by the user, a number of "pre-packaged" strategies are also available. By specifying the ``--best`` command-line option, a filtering strategy is used that provides an excellent balance between precision and recall in a wide variety of situations, whichver the species of origin of the mixed-species RNA-seq data (note that specifying this, or any of the pre-packaged strategies, overrides the values of the ``--mismatch-threshold``, ``--minmatch-threshold`` and ``--multimap-threshold`` options).
+Different filtering strategies, providing a particular balance between sensitivity and specificity, can be adopted by choice of values of threshold options. While these strategies can be fine-tuned by the user, a number of "pre-packaged" strategies are also available. By specifying the ``--best`` command-line option, a filtering strategy is used that provides an excellent balance between precision and recall in a wide variety of situations, whichever the species of origin of the mixed-species RNA-seq data (note that specifying this, or any of the pre-packaged strategies, overrides the values of the ``--mismatch-threshold``, ``--minmatch-threshold`` and ``--multimap-threshold`` options).
 
 On the other hand, in some cases it may be of particular importance to minimise the number of reads mis-assigned to the wrong species, or to prioritise sensitivity over specificity. These two strategies can be adopted via the ``--conservative`` and ``--recall`` command-line options.
 
