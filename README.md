@@ -3,7 +3,7 @@ Sargasso
 
 *Sargasso* is a Python tool to disambiguate mixed-species RNA-seq reads according to their species of origin. Given a set of RNA-seq samples containing RNA-seq data originating from two different species, mapped, disambiguated reads are written to per-sample and -species specific output BAM files.
 
-The latest *Sargasso* documentation can be found **docs placeholder**.
+The latest *Sargasso* documentation can be found [here](http://statbio.github.io/sargasso/).
 
 Installation
 ============
@@ -25,4 +25,4 @@ pip install git+https://github.com/statbio/sargasso.git
 Changelog
 =========
 
-* 1.0 (xx/xx/16): First full release
+* 1.0 (16/12/2016): First full release
