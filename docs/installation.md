@@ -9,4 +9,4 @@ Create and work in a virtual environment for *Sargasso* using the ``virtualenvwr
 
 Then install the *Sargasso* package and its Python package dependencies into the virtual environment by running::
 
-    pip install git+https://github.com/statbio/sargasso.git
+    pip install git+https://github.com/statbio/Sargasso.git
