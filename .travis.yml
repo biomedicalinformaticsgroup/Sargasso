@@ -6,4 +6,4 @@ install:
     - "pip install pysam"
     - "pip install schema"
 script: 
-    - "cd pipeline_test;./run_test.sh"
+    - "cd pipeline_test; ./run_test.sh"
