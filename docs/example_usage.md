@@ -15,10 +15,10 @@ The *Sargasso* pipeline uses [STAR](references.md), an efficient and accurate sh
 
     species_separator 
         --reads-base-dir=<fastq_files_path> 
-        --s1-index=~/data/genome/mouse/STAR_index 
-        --s2-index=~/data/genome/rat/STAR_index 
         --best --run-separation 
-        mouse rat test_samples.tsv test_results
+        test_samples.tsv test_results
+        mouse ~/data/genome/mouse/STAR_index
+        rat ~/data/genome/rat/STAR_index
 
 where ``<fastq_files_path>`` is the full path to the directory containing the FASTQ files.
 
