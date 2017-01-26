@@ -4,9 +4,18 @@ set -o nounset
 set -o errexit
 set -o xtrace
 
-SEQUENCE_FASTA_FILES=$1
+SEQUENCE_FASTA_DIR=$1
 GTF_FILE=$2
 NUM_THREADS=$3
 INDEX_DIR=$4
 
-STAR --runThreadN ${NUM_THREADS} --runMode genomeGenerate --genomeDir ${INDEX_DIR} --genomeFastaFiles ${SEQUENCE_FASTA_FILES} --sjdbGTFfile ${GTF_FILE} --sjdbOverhang 100
+function list_files {
+    local DELIMITER=$1
+    shift
+    local FILES=$@
+        
+    LIST=$(ls -1 $FILES | tr '\n' "$DELIMITER")
+    echo ${LIST%$DELIMITER}    
+}
+
+STAR --runThreadN ${NUM_THREADS} --runMode genomeGenerate --genomeDir ${INDEX_DIR} --genomeFastaFiles $(list_files ' ' ${SEQUENCE_FASTA_DIR}/*.fa) --sjdbGTFfile ${GTF_FILE} --sjdbOverhang 100

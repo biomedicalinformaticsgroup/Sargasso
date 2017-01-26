@@ -4,18 +4,16 @@
     species_separator
         [--log-level=<log-level>]
         [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>]
-        [--s1-gtf=<species-one-gtf-file>] [--s2-gtf=<species-two-gtf-file>]
-        [--s1-genome-fasta=<species-one-genome-fasta>]
-        [--s2-genome-fasta=<species-two-genome-fasta>]
-        [--s1-index=<species-one-star-index>]
-        [--s2-index=<species-two-star-index>]
         [--mismatch-threshold=<mismatch-threshold>]
         [--minmatch-threshold=<minmatch-threshold>]
         [--multimap-threshold=<multimap-threshold>]
         [--overhang-threshold=<overhang-threshold>]
         [--reject-multimaps] [--best] [--conservative] [--recall]
         [--run-separation]
-        <species-one> <species-two> <samples-file> <output-dir>
+        <samples-file> <output-dir>
+        (<species> <species-star-info>)
+        (<species> <species-star-info>)
+        ...
 
 Options:
 {help_option_spec}
@@ -24,32 +22,26 @@ Options:
     {ver_option_description}
 {log_option_spec}
     {log_option_description}
-<species-one>
-    Name of first species.
-<species-two>
-    Name of second species.
 <samples-file>
     TSV file giving paths (relative to <reads-base-dir>) of raw RNA-seq read
     data files for each sample.
 <output-dir>
     Output directory into which Makefile will be written, and in which species
     separation will be performed.
+<species>
+    Name of species.
+<species-star-info>
+    Either a STAR index directory for the species, or a comma-separated list of
+    (i) a GTF annotation file and (ii) a directory containing genome FASTA
+    files for the species.
+<species-genome-fasta>
+    Directory containing genome FASTA files for species.
+<species-index>
+    STAR index directory for species.
 --reads-base-dir=<reads-base-dir>
     Base directory for raw RNA-seq read data files.
 -t <num-threads> --num-threads=<num-threads>
     Number of threads to use for parallel processing. [default: 1]
---s1-gtf=<species-one-gtf-file>
-    GTF annotation file for first species.
---s2-gtf=<species-two-gtf-file>
-    GTF annotation file for second species.
---s1-genome-fasta=<species-one-genome-fasta>
-    Directory containing genome FASTA files for first species.
---s2-genome-fasta=<species-two-genome-fasta>
-    Directory containing genome FASTA files for second species.
---s1-index=<species-one-star-index>
-    STAR index directory for first species.
---s2-index=<species-two-star-index>
-    STAR index directory for second species.
 --mismatch-threshold=<mismatch-threshold>
     Maximum percentage of bases allowed to be mismatches against the genome
     during filtering. For single-end reads, the total number of bases is the
@@ -88,7 +80,7 @@ Options:
     separation will be created but not run.
 
 Given a set of RNA-seq samples containing mixed-species read data, determine,
-where possible, from which of the two species each read originated. Mapped
+where possible, from which of the species each read originated. Mapped
 reads are written to per-sample and -species specific output BAM files.
 
 Species separation of mixed-species RNA-seq data is performed in a number of
@@ -111,7 +103,7 @@ by specifying the "--num-threads" option.
 
 e.g.:
 
-species_separator --reads-base-dir=/srv/data/rnaseq --s1-index=/srv/data/genome/mouse/STAR_Index --s2-index=/srv/data/genome/rat/STAR_Index --num-threads 4 --run-separation mouse rat samples.tsv my_results
+species_separator --reads-base-dir=/srv/data/rnaseq --num-threads 4 --run-separation samples.tsv my_results mouse /srv/data/genome/mouse/STAR_Index rat /srv/data/genome/rat/STAR_Index
 """
 
 import docopt
@@ -126,18 +118,12 @@ from . import process
 from .__init__ import __version__
 from datetime import datetime
 
-SPECIES_ONE = "<species-one>"
-SPECIES_TWO = "<species-two>"
 SAMPLES_FILE = "<samples-file>"
 OUTPUT_DIR = "<output-dir>"
+SPECIES = "<species>"
+SPECIES_STAR_INFO = "<species-star-info>"
 READS_BASE_DIR = "--reads-base-dir"
 NUM_THREADS = "--num-threads"
-SPECIES_ONE_GTF = "--s1-gtf"
-SPECIES_TWO_GTF = "--s2-gtf"
-SPECIES_ONE_GENOME_FASTA = "--s1-genome-fasta"
-SPECIES_TWO_GENOME_FASTA = "--s2-genome-fasta"
-SPECIES_ONE_INDEX = "--s1-index"
-SPECIES_TWO_INDEX = "--s2-index"
 MISMATCH_THRESHOLD = "--mismatch-threshold"
 MINMATCH_THRESHOLD = "--minmatch-threshold"
 MULTIMAP_THRESHOLD = "--multimap-threshold"
@@ -162,11 +148,6 @@ SORTED_READS_TARGET = "SORTED_READS"
 FILTERED_READS_TARGET = "FILTERED_READS"
 
 NUM_THREADS_VARIABLE = "NUM_THREADS"
-SPECIES_ONE_VARIABLE = "SPECIES_ONE"
-SPECIES_TWO_VARIABLE = "SPECIES_TWO"
-SPECIES_GTF_FILE_VARIABLE = "{species}_GTF"
-SPECIES_GENOME_FASTA_VARIABLE = "{species}_GENOME_FASTA"
-SPECIES_STAR_INDEX_VARIABLE = "{species}_GENOME_DIR"
 SAMPLES_VARIABLE = "SAMPLES"
 RAW_READS_DIRECTORY_VARIABLE = "RAW_READS_DIRECTORY"
 RAW_READS_LEFT_VARIABLE = "RAW_READS_FILES_1"
@@ -176,18 +157,12 @@ SINGLE_END_READS_TYPE = "single"
 PAIRED_END_READS_TYPE = "paired"
 
 EXECUTION_RECORD_ENTRIES = [
-    ["Species 1", SPECIES_ONE],
-    ["Species 2", SPECIES_TWO],
     ["Samples File", SAMPLES_FILE],
     ["Output Dir", OUTPUT_DIR],
+    ["Species", SPECIES],
+    ["Species STAR info", SPECIES_STAR_INFO],
     ["Reads Base Dir", READS_BASE_DIR],
     ["Number of Threads", NUM_THREADS],
-    ["Species 1 GTF", SPECIES_ONE_GTF],
-    ["Species 2 GTF", SPECIES_TWO_GTF],
-    ["Species 1 Genome FASTA", SPECIES_ONE_GENOME_FASTA],
-    ["Species 2 Genome FASTA", SPECIES_TWO_GENOME_FASTA],
-    ["Species 1 Index", SPECIES_ONE_INDEX],
-    ["Species 2 Index", SPECIES_TWO_INDEX],
     ["Mismatch Threshold", MISMATCH_THRESHOLD],
     ["Minmatch Threshold", MINMATCH_THRESHOLD],
     ["Multimap Threshold", MULTIMAP_THRESHOLD],
@@ -278,25 +253,32 @@ class SampleInfo(object):
             reads_file, "Could not open reads file")
 
 
-def _get_species_options(options, name_option, gtf_file_option,
-                         genome_fasta_option, star_index_option):
+def _get_species_options(options, species_index):
     """
     Return a dictionary containing command-line options for a species.
 
     options: dictionary containing all command-line options.
-    name_option: name of option specifying species name.
-    gtf_file_option: name of option specifying GTF annotation file for the
-    species.
-    genome_fasta_option: name of option specifying directory containing genome
-    FASTA files for the species.
-    star_index_option: name of option specifying STAR index directory for the
-    species.
+    species_index: which species to return options for
     """
-    species_options = {}
-    species_options[SPECIES_NAME] = options[name_option]
-    species_options[GTF_FILE] = options[gtf_file_option]
-    species_options[GENOME_FASTA] = options[genome_fasta_option]
-    species_options[STAR_INDEX] = options[star_index_option]
+
+    species_options = { SPECIES_NAME: options[SPECIES][species_index] }
+
+    star_infos = options[SPECIES_STAR_INFO][species_index].split(",")
+
+    if len(star_infos) == 1:
+        species_options[STAR_INDEX] = star_infos[0]
+        species_options[GTF_FILE] = None
+        species_options[GENOME_FASTA] = None
+    elif len(star_infos) == 2:
+        species_options[STAR_INDEX] = None
+        species_options[GTF_FILE] = star_infos[0]
+        species_options[GENOME_FASTA] = star_infos[1]
+    else:
+        raise schema.SchemaError(
+            None, "Should specify either a STAR index or both GTF file " +
+                  "and genome FASTA directory for species {species}.".
+                    format(species=species_options[SPECIES_NAME]))
+
     return species_options
 
 
@@ -321,19 +303,6 @@ def _validate_species_options(species, species_options):
         "STAR index directory for species {species} should exist".
         format(species=species),
         nullable=True)
-
-    if (species_options[GTF_FILE] is None) != \
-            (species_options[GENOME_FASTA] is None):
-        raise schema.SchemaError(None, "Should specify both GTF file and " +
-                                 "genome FASTA directory for species " +
-                                 "{species}.".format(species=species))
-
-    if (species_options[GTF_FILE] is None) == \
-            (species_options[STAR_INDEX] is None):
-        raise schema.SchemaError(None, "Should specify either GTF file " +
-                                 "or STAR index directory for species " +
-                                 "{species} (but not both).".
-                                 format(species=species))
 
 
 def _read_sample_info(options):
@@ -402,15 +371,9 @@ def _validate_command_line_options(options):
             options, MISMATCH_THRESHOLD, MINMATCH_THRESHOLD,
             MULTIMAP_THRESHOLD, OVERHANG_THRESHOLD)
 
-        species_one_options = _get_species_options(
-            options, SPECIES_ONE, SPECIES_ONE_GTF,
-            SPECIES_ONE_GENOME_FASTA, SPECIES_ONE_INDEX)
-        species_two_options = _get_species_options(
-            options, SPECIES_TWO, SPECIES_TWO_GTF,
-            SPECIES_TWO_GENOME_FASTA, SPECIES_TWO_INDEX)
-
-        _validate_species_options("one", species_one_options)
-        _validate_species_options("two", species_two_options)
+        for i, species in enumerate(options[SPECIES]):
+            species_options = _get_species_options(options, i)
+            _validate_species_options(species, species_options)
 
         sample_info = _read_sample_info(options)
         # TODO: validate that all samples consistently have either single- or
@@ -420,6 +383,33 @@ def _validate_command_line_options(options):
         return sample_info
     except schema.SchemaError as exc:
         exit("Exiting: " + exc.code)
+
+
+def _get_gtf_file_variable(species):
+    """
+    Return GTF file variable name for a species.
+
+    species: species identifier
+    """
+    return "{species}_GTF".format(species=species.upper())
+
+
+def _get_genome_fasta_variable(species):
+    """
+    Return genome FASTA variable name for a species.
+
+    species: species identifier
+    """
+    return "{species}_GENOME_FASTA_DIR".format(species=species.upper())
+
+
+def _get_star_index_variable(species):
+    """
+    Return STAR index variable name for a species.
+
+    species: species identifier
+    """
+    return "{species}_STAR_DIR".format(species=species.upper())
 
 
 def _write_species_variable_definitions(
@@ -432,23 +422,14 @@ def _write_species_variable_definitions(
     species: species number string
     species_options: dictionary of options specific to a particular species.
     """
-    writer.set_variable(
-        "{species}".format(species=species),
-        species_options[SPECIES_NAME])
-
     if species_options[GTF_FILE] is None:
         writer.set_variable(
-            "{species}_GENOME_DIR".format(species=species),
-            species_options[STAR_INDEX])
+            _get_star_index_variable(species), species_options[STAR_INDEX])
     else:
         writer.set_variable(
-            "{species}_GTF".format(species=species),
-            species_options[GTF_FILE])
+            _get_gtf_file_variable(species), species_options[GTF_FILE])
         writer.set_variable(
-            "{species}_GENOME_FASTA".format(species=species),
-            species_options[GENOME_FASTA])
-
-    writer.add_blank_line()
+            _get_genome_fasta_variable(species), species_options[GENOME_FASTA])
 
 
 def _write_variable_definitions(logger, writer, options, sample_info):
@@ -481,17 +462,12 @@ def _write_variable_definitions(logger, writer, options, sample_info):
 
     writer.add_blank_line()
 
-    species_one_options = _get_species_options(
-        options, SPECIES_ONE, SPECIES_ONE_GTF,
-        SPECIES_ONE_GENOME_FASTA, SPECIES_ONE_INDEX)
-    species_two_options = _get_species_options(
-        options, SPECIES_TWO, SPECIES_TWO_GTF,
-        SPECIES_TWO_GENOME_FASTA, SPECIES_TWO_INDEX)
+    for i, species in enumerate(options[SPECIES]):
+        species_options = _get_species_options(options, i)
+        _write_species_variable_definitions(
+            logger, writer, species, species_options)
 
-    _write_species_variable_definitions(
-        logger, writer, SPECIES_ONE_VARIABLE, species_one_options)
-    _write_species_variable_definitions(
-        logger, writer, SPECIES_TWO_VARIABLE, species_two_options)
+    writer.add_blank_line()
 
 
 def _write_target_variable_definitions(logger, writer):
@@ -547,10 +523,8 @@ def _write_filtered_reads_target(logger, writer, options):
             "For each sample, take the reads mapping to each genome and " +
             "filter them to their correct species of origin")
         writer.make_target_directory(FILTERED_READS_TARGET)
-        writer.add_command(
-            "filter_reads",
-            [writer.variable_val(SPECIES_ONE_VARIABLE),
-             writer.variable_val(SPECIES_TWO_VARIABLE),
+
+        writer.add_command("filter_reads", [
              "\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
              writer.variable_val(SORTED_READS_TARGET),
              writer.variable_val(FILTERED_READS_TARGET),
@@ -559,26 +533,27 @@ def _write_filtered_reads_target(logger, writer, options):
              options[MINMATCH_THRESHOLD],
              options[MULTIMAP_THRESHOLD],
              options[OVERHANG_THRESHOLD],
-             "--reject-multimaps" if options[REJECT_MULTIMAPS] else "\"\""])
+             "--reject-multimaps" if options[REJECT_MULTIMAPS] else "\"\"",
+             "{sl}".format(sl=" ".join(options[SPECIES]))])
 
 
-def _write_sorted_reads_target(logger, writer):
+def _write_sorted_reads_target(logger, writer, options):
     """
     Write target to sort reads by name to Makefile.
 
     logger: logging object
     writer: Makefile writer object
+    options: dictionary of command-line options
     """
     with writer.target_definition(
             SORTED_READS_TARGET, [MAPPED_READS_TARGET]):
         writer.add_comment(
             "For each sample, sort the mapped reads into read name order")
         writer.make_target_directory(SORTED_READS_TARGET)
+
         writer.add_command(
             "sort_reads",
-            ["\"{s1} {s2}\"".format(
-                s1=writer.variable_val(SPECIES_ONE_VARIABLE),
-                s2=writer.variable_val(SPECIES_TWO_VARIABLE)),
+            ["\"{sl}\"".format(sl=" ".join(options[SPECIES])),
              "\"{var}\"".format(
                  var=writer.variable_val(SAMPLES_VARIABLE)),
              writer.variable_val(NUM_THREADS_VARIABLE),
@@ -586,29 +561,29 @@ def _write_sorted_reads_target(logger, writer):
              writer.variable_val(SORTED_READS_TARGET)])
 
 
-def _write_mapped_reads_target(logger, writer, sample_info):
+def _write_mapped_reads_target(logger, writer, sample_info, options):
     """
     Write target to map reads to each species to Makefile.
 
     logger: logging object
     writer: Makefile writer object
     """
+
+    index_targets = ["{index}/{species}".format(
+                        index=writer.variable_val(STAR_INDICES_TARGET),
+                        species=species)
+                     for species in options[SPECIES]]
+
+    index_targets.append(writer.variable_val(COLLATE_RAW_READS_TARGET))
+
     with writer.target_definition(
-        MAPPED_READS_TARGET,
-        ["{index}/{s1}".format(index=writer.variable_val(STAR_INDICES_TARGET),
-                               s1=writer.variable_val(SPECIES_ONE_VARIABLE)),
-         "{index}/{s2}".format(index=writer.variable_val(STAR_INDICES_TARGET),
-                               s2=writer.variable_val(SPECIES_TWO_VARIABLE)),
-         writer.variable_val(COLLATE_RAW_READS_TARGET)],
-            raw_dependencies=True):
+            MAPPED_READS_TARGET, index_targets, raw_dependencies=True):
         writer.add_comment(
             "Map reads for each sample to each species' genome")
         writer.make_target_directory(MAPPED_READS_TARGET)
 
         map_reads_params = [
-            "\"{s1} {s2}\"".format(
-                s1=writer.variable_val(SPECIES_ONE_VARIABLE),
-                s2=writer.variable_val(SPECIES_TWO_VARIABLE)),
+            "\"{sl}\"".format(sl=" ".join(options[SPECIES])),
             "\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
             writer.variable_val(STAR_INDICES_TARGET),
             writer.variable_val(NUM_THREADS_VARIABLE),
@@ -673,7 +648,7 @@ def _write_collate_raw_reads_target(logger, writer, sample_info):
 
 
 def _write_species_main_star_index_target(
-        logger, writer, species_var, species_options):
+        logger, writer, species, species_options):
     """
     Write target to create or link to STAR index for a species to Makefile.
 
@@ -684,26 +659,22 @@ def _write_species_main_star_index_target(
     species
     """
     target = "{index}/{spec}".format(
-        index=writer.variable_val(STAR_INDICES_TARGET),
-        spec=writer.variable_val(species_var))
+        index=writer.variable_val(STAR_INDICES_TARGET), spec=species)
 
     with writer.target_definition(target, [], raw_target=True):
-        writer.make_target_directory(STAR_INDICES_TARGET)
-
         if species_options[GTF_FILE] is None:
+            writer.make_target_directory(STAR_INDICES_TARGET)
             writer.add_command(
                 "ln",
                 ["-s",
-                 writer.variable_val(
-                     SPECIES_STAR_INDEX_VARIABLE.format(species=species_var)),
+                 writer.variable_val(_get_star_index_variable(species)),
                  target])
         else:
+            writer.make_target_directory(target, raw_target=True)
             writer.add_command(
                 "build_star_index",
-                [writer.variable_val(
-                    SPECIES_GENOME_FASTA_VARIABLE.format(species=species_var)),
-                 writer.variable_val(
-                     SPECIES_GTF_FILE_VARIABLE.format(species=species_var)),
+                [writer.variable_val(_get_genome_fasta_variable(species)),
+                 writer.variable_val(_get_gtf_file_variable(species)),
                  writer.variable_val(NUM_THREADS_VARIABLE),
                  target])
 
@@ -716,17 +687,10 @@ def _write_main_star_index_targets(logger, writer, options):
     writer: Makefile writer object
     options: dictionary of command-line options
     """
-    species_one_options = _get_species_options(
-        options, SPECIES_ONE, SPECIES_ONE_GTF,
-        SPECIES_ONE_GENOME_FASTA, SPECIES_ONE_INDEX)
-    species_two_options = _get_species_options(
-        options, SPECIES_TWO, SPECIES_TWO_GTF,
-        SPECIES_TWO_GENOME_FASTA, SPECIES_TWO_INDEX)
-
-    _write_species_main_star_index_target(
-        logger, writer, SPECIES_ONE_VARIABLE, species_one_options)
-    _write_species_main_star_index_target(
-        logger, writer, SPECIES_TWO_VARIABLE, species_two_options)
+    for i, species in enumerate(options[SPECIES]):
+        species_options = _get_species_options(options, i)
+        _write_species_main_star_index_target(
+            logger, writer, species, species_options)
 
 
 def _write_clean_target(logger, writer):
@@ -759,8 +723,8 @@ def _write_makefile(logger, options, sample_info):
         _write_phony_targets(logger, writer)
         _write_all_target(logger, writer)
         _write_filtered_reads_target(logger, writer, options)
-        _write_sorted_reads_target(logger, writer)
-        _write_mapped_reads_target(logger, writer, sample_info)
+        _write_sorted_reads_target(logger, writer, options)
+        _write_mapped_reads_target(logger, writer, sample_info, options)
         #_write_masked_reads_target(logger, writer)
         _write_collate_raw_reads_target(logger, writer, sample_info)
         #_write_mask_star_index_targets(logger, writer, options)

@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 
+#import cProfile
+#import pstats
 import species_separator.filter_sample_reads as entry_point
 import sys
 
 entry_point.filter_sample_reads(sys.argv[1:])
+
+# Uncomment for profiling
+#cProfile.run('entry_point.filter_sample_reads(sys.argv[1:])', 'stats')
+#p = pstats.Stats('stats')
+#p.sort_stats('time').print_stats(20)
