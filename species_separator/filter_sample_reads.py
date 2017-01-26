@@ -3,10 +3,10 @@
 """Usage:
     filter_sample_reads
         [--log-level=<log-level>] [--reject-multimaps]
-        <species-one> <species-one-input-bam> <species-one-output-bam>
-        <species-two> <species-two-input-bam> <species-two-output-bam>
         <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
         <overhang-threshold>
+        (<species> <species-input-bam> <species-output-bam>)
+        (<species> <species-input-bam> <species-output-bam>) ...
 
 Options:
 {help_option_spec}
@@ -15,19 +15,12 @@ Options:
     {ver_option_description}
 {log_option_spec}
     {log_option_description}
-<species-one>
-    Name of first species.
-<species-one-input-bam>
-    BAM file containing reads mapped against first species' genome.
-<species-one-output-bam>
-    BAM file to which read mappings assigned to first species after filtering
-    will be written.
-<species-two>
-    Name of second species.
-<species-two-input-bam>
-    BAM file containing reads mapped against second species' genome.
-<species-two-output-bam>
-    BAM file to which read mappings assigned to second species after filtering
+<species>
+    Name of species.
+<species-input-bam>
+    BAM file containing reads mapped against species' genome.
+<species-output-bam>
+    BAM file to which read mappings assigned to species after filtering
     will be written.
 --mismatch-threshold=<mismatch-threshold>
     Maximum percentage of read bases allowed to be mismatches against the
@@ -44,10 +37,10 @@ Options:
     The minimum number of bases that are allowed on
     either side of an exon boundary for a read mapping to be accepted
 
-filter_sample_reads takes two BAM files as input, the results of mapping a set
-of mixed species RNA-seq reads against the two species' genomes, and
+filter_sample_reads takes a set of BAM files as input, the results of mapping a set
+of mixed species RNA-seq reads against a number of species' genomes, and
 determines, if possible, from which species each read originates. Disambiguated
-read mappings are written to two species-specific output BAM files.
+read mappings are written to species-specific output BAM files.
 
 In normal operation, the user should not need to execute this script by hand
 themselves.
@@ -65,12 +58,9 @@ from . import hits_checker
 from . import options as opt
 from .__init__ import __version__
 
-SPECIES_ONE = "<species-one>"
-SPECIES_ONE_INPUT_BAM = "<species-one-input-bam>"
-SPECIES_ONE_OUTPUT_BAM = "<species-one-output-bam>"
-SPECIES_TWO = "<species-two>"
-SPECIES_TWO_INPUT_BAM = "<species-two-input-bam>"
-SPECIES_TWO_OUTPUT_BAM = "<species-two-output-bam>"
+SPECIES = "<species>"
+SPECIES_INPUT_BAM = "<species-input-bam>"
+SPECIES_OUTPUT_BAM = "<species-output-bam>"
 MISMATCH_THRESHOLD = "<mismatch-threshold>"
 MINMATCH_THRESHOLD = "<minmatch-threshold>"
 MULTIMAP_THRESHOLD = "<multimap-threshold>"
@@ -104,12 +94,10 @@ def _validate_command_line_options(options):
     try:
         opt.validate_log_level(options)
 
-        opt.validate_file_option(
-            options[SPECIES_ONE_INPUT_BAM],
-            "Could not find input BAM file for species 1")
-        opt.validate_file_option(
-            options[SPECIES_TWO_INPUT_BAM],
-            "Could not find input BAM file for species 2")
+        for index, species in enumerate(options[SPECIES]):
+            opt.validate_file_option(
+                options[SPECIES_INPUT_BAM][index],
+                "Could not find input BAM file for species {i}".format(i=index))
 
         validate_threshold_options(options, MISMATCH_THRESHOLD,
                                    MINMATCH_THRESHOLD, MULTIMAP_THRESHOLD,
@@ -120,20 +108,32 @@ def _validate_command_line_options(options):
 
 
 # write filter stats to table in file
-def _write_stats(s1_stats, s2_stats, out_bam):
-    stats = [
-        s1_stats.hits_written, s1_stats.reads_written,
-        s1_stats.hits_rejected, s1_stats.reads_rejected,
-        s1_stats.hits_ambiguous, s1_stats.reads_ambiguous,
-        s2_stats.hits_written, s2_stats.reads_written,
-        s2_stats.hits_rejected, s2_stats.reads_rejected,
-        s2_stats.hits_ambiguous, s2_stats.reads_ambiguous
-    ]
+def _write_stats(filterers, out_bam):
+
+    stats = []
+
+    for filt in filterers:
+        fstats = filt.stats
+
+        stats += [fstats.hits_written, fstats.reads_written,
+                  fstats.hits_rejected, fstats.reads_rejected,
+                  fstats.hits_ambiguous, fstats.reads_ambiguous]
 
     out_file = os.path.join(
         os.path.dirname(out_bam), "filtering_result_summary.txt")
     with open(out_file, 'a') as outf:
         outf.write("\t".join([str(s) for s in stats]) + "\n")
+
+
+def _get_next_read_name(filterer):
+    read_name = None
+
+    try:
+        read_name = filterer.get_next_read_name()
+    except StopIteration:
+        pass
+
+    return read_name
 
 
 def _filter_sample_reads(logger, options):
@@ -144,58 +144,54 @@ def _filter_sample_reads(logger, options):
         options[MULTIMAP_THRESHOLD], options[REJECT_MULTIMAPS],
         options[OVERHANG_THRESHOLD], logger)
 
-    s1_filterer = filterer.Filterer(
-        1, options[SPECIES_ONE_INPUT_BAM], options[SPECIES_ONE_OUTPUT_BAM],
-        h_check, logger)
-    s2_filterer = filterer.Filterer(
-        2, options[SPECIES_TWO_INPUT_BAM], options[SPECIES_TWO_OUTPUT_BAM],
-        h_check, logger)
+    filterers = [filterer.Filterer(i + 1, options[SPECIES_INPUT_BAM][i],
+                                   options[SPECIES_OUTPUT_BAM][i], logger)
+                 for i, species in enumerate(options[SPECIES])]
 
-    s1_read_name = None
-    s2_read_name = None
+    all_filterers = filterers
 
     while True:
-        # Attempt to read all hits for the next read in each species' input BAM
-        # file
-        try:
-            s1_read_name = s1_filterer.get_next_read_name()
-        except StopIteration:
-            # If no more reads are available for species 1, all remaining
-            # reads in the input file for species 2 can be written to the
-            # output file for species 2, or discarded as ambiguous
-            s2_filterer.check_and_write_hits_for_remaining_reads()
+        # Retain only filterers which have hits for the remaining reads
+        filterers = [f for f in filterers if _get_next_read_name(f) is not None]
+
+        # If no filterers remain, we're done
+        if len(filterers) == 0:
             break
 
-        try:
-            s2_read_name = s2_filterer.get_next_read_name()
-        except StopIteration:
-            # If no more reads are available for species 2, all remaining
-            # reads in the input file for species 1 can be written to the
-            # output file for species 1, or discarded as ambiguous
-            s1_filterer.check_and_write_hits_for_remaining_reads()
+        # If only one filterer remains, all remaining reads in the input file
+        # for that species can be written to the output file for that species
+        # (or discarded as ambiguous, if necessary).
+        if len(filterers) == 1:
+            h_check.check_and_write_hits_for_remaining_reads(filterers[0])
             break
 
-        if s1_read_name == s2_read_name:
-            # Compare the read names; if they are the same, compare the hits
-            # for each species to determine which species to assign the read
-            # to.
-            s1_filterer.compare_and_write_hits(s2_filterer)
-        elif s1_read_name < s2_read_name:
-            # if species 1 read name < species 2 read name, there are no hits
-            # for the species 1 read in species 2; write the hits for this read
-            # to the output file for species 1, or discard as ambiguous
-            s1_filterer.check_and_write_hits_for_read()
-        else:
-            # if species 2 read name < species 1 read name, there are no hits
-            # for the species 2 read in species 1; write the hits for this read
-            # to the output file for species 2, or discard as ambiguous
-            s2_filterer.check_and_write_hits_for_read()
+        # Compare read names for the filterers, and find the set that have the
+        # "lowest" name
+        competing_filterers = [filterers[0]]
+        min_read_name = _get_next_read_name(filterers[0])
 
-    s1_filterer.log_stats()
-    s2_filterer.log_stats()
+        for cfilt in filterers[1:]:
+            read_name = _get_next_read_name(cfilt)
+            if read_name == min_read_name:
+                competing_filterers.append(cfilt)
+            elif read_name < min_read_name:
+                competing_filterers = [cfilt]
+                min_read_name = read_name
 
-    _write_stats(s1_filterer.stats, s2_filterer.stats,
-                 options[SPECIES_ONE_OUTPUT_BAM])
+        # If there's only one filterer for this read, write hits for that read
+        # to the output file for that species (or discard as ambiguous)
+        if len(competing_filterers) == 1:
+            h_check.check_and_write_hits_for_read(competing_filterers[0])
+            continue
+
+        # Otherwise compare the hits for each species to determine which
+        # species to assign the read to.
+        h_check.compare_and_write_hits(competing_filterers)
+
+    for filt in all_filterers:
+        filt.log_stats()
+
+    _write_stats(all_filterers, options[SPECIES_OUTPUT_BAM][0])
 
 
 def filter_sample_reads(args):

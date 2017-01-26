@@ -1,5 +1,5 @@
 References
 ==========
 
-* [STAR](https://github.com/alexdobin/STAR): Dobin et al., [_STAR: ultrafast universal RNA-seq aligner_](http://bioinformatics.oxfordjournals.org/content/29/1/15.full), Bioinformatics (2013).
-* [Sambamba](http://lomereiter.github.io/sambamba/): Tarasov et al., [_Sambamba: fast processing of NGS alignment formats_](http://bioinformatics.oxfordjournals.org/content/31/12/2032), Bioinformatics (2015).
+.. [STAR] Dobin et al., `STAR: ultrafast universal RNA-seq aligner <http://bioinformatics.oxfordjournals.org/content/29/1/15.full>`_, Bioinformatics (2013). `Software homepage <https://github.com/alexdobin/STAR>`_.
+.. [Sambamba] Tarasov et al., `Sambamba: fast processing of NGS alignment formats <http://bioinformatics.oxfordjournals.org/content/31/12/2032>`_, Bioinformatics (2015). `Software homepage <http://lomereiter.github.io/sambamba/>`_.

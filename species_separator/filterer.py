@@ -1,11 +1,10 @@
-from . import hits_checker
 from . import hits_info
 from . import samutils
 from . import separation_stats
 
 
 class Filterer(object):
-    def __init__(self, species_id, input_bam, output_bam, h_check, logger):
+    def __init__(self, species_id, input_bam, output_bam, logger):
         self.species_id = species_id
         self.stats = separation_stats.SeparationStats(species_id)
 
@@ -17,7 +16,6 @@ class Filterer(object):
         self.hits_for_read = None
         self.hits_info = None
         self.count = 0
-        self.hits_checker = h_check
         self.logger = logger
 
     def get_next_read_name(self):
@@ -29,52 +27,6 @@ class Filterer(object):
                     n=self.count, s=self.species_id))
 
         return self.hits_for_read[0].query_name
-
-    def compare_and_write_hits(self, other_filterer):
-        # Compare the hits for a particular read in each species and decide whether
-        # the read can be assigned to one species or another, or if it must be
-        # rejected as ambiguous
-        self._update_hits_info()
-        other_filterer._update_hits_info()
-
-        assignment = self.hits_checker.assign_hits(self.hits_info, other_filterer.hits_info)
-
-        if assignment == hits_checker.ASSIGNED_TO_SPECIES_ONE:
-            other_filterer._add_rejected_hits_to_stats()
-            self.check_and_write_hits_for_read()
-        elif assignment == hits_checker.ASSIGNED_TO_SPECIES_TWO:
-            self._add_rejected_hits_to_stats()
-            other_filterer.check_and_write_hits_for_read()
-        elif assignment == hits_checker.ASSIGNED_TO_NEITHER_REJECTED:
-            self._add_rejected_hits_to_stats()
-            other_filterer._add_rejected_hits_to_stats()
-        else:
-            self._add_ambiguous_hits_to_stats()
-            other_filterer._add_ambiguous_hits_to_stats()
-
-        self._clear_hits()
-        other_filterer._clear_hits()
-    
-    def check_and_write_hits_for_read(self):
-        if self.hits_info is None:
-            self._update_hits_info()
-
-        if self.hits_checker.check_hits(self.hits_info):
-            self._add_accepted_hits_to_stats()
-            self._write_hits()
-        else:
-            self._add_rejected_hits_to_stats()
-
-        self._clear_hits()
-
-    def check_and_write_hits_for_remaining_reads(self):
-        try:
-            while True:
-                if self.hits_for_read is None:
-                    self._get_next_read_hits()
-                self.check_and_write_hits_for_read()
-        except StopIteration:
-            pass
 
     def log_stats(self):
         self.logger.info(self.stats)

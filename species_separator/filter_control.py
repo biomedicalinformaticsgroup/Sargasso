@@ -3,8 +3,10 @@
 """Usage:
     filter_control
         [--log-level=<log-level>] [--reject-multimaps]
-        <block-dir> <output-dir> <sample-name> <species-one> <species-two>
-        <mismatch_threshold> <minmatch_threshold> <multimap_threshold> <overhang-threshold>
+        <block-dir> <output-dir> <sample-name>
+        <mismatch_threshold> <minmatch_threshold>
+        <multimap_threshold> <overhang-threshold>
+        (<species>) (<species>) ...
 
 Option:
 {help_option_spec}
@@ -19,10 +21,8 @@ Option:
     Directory into which species-separated reads will be written.
 <sample-name>
     Name of RNA-seq sample being processed.
-<species-one>
-    Name of first species.
-<species-two>
-    Name of second species.
+<species>
+    Name of species.
 <mismatch-threshold>
     Maximum percentage of read bases allowed to be mismatches against the
     genome during filtering.
@@ -35,15 +35,15 @@ Option:
     The minimum number of bases that are allowed on
     either side of an exon boundary for a read mapping to be accepted
 --reject-multimaps
-    If set, any read which multimaps to either species' genome will be rejected
-    and not be assigned to either species.
+    If set, any read which multimaps to any species' genome will be rejected
+    and not be assigned to any species.
 
-filter_control takes a directory containing pairs of BAM files as input, each
-pair being the result of mapping a set of mixed species RNA-seq reads against
-the two species' genomes. Each pair of BAM files is passed to an instance of
+filter_control takes a directory containing sets of BAM files as input, each
+set being the result of mapping a set of mixed species RNA-seq reads against
+a number of species' genomes. Each set of BAM files is passed to an instance of
 the script filter_sample_reads, running on a separate thread, which determines
 where possible from which species each read originates. Read mappings for each
-pair of input files are written to a pair of species-specific output BAM files
+pair of input files are written to a set of species-specific output BAM files
 in the specified output directory.
 
 In normal operation, the user should not need to execute this script by hand
@@ -65,8 +65,7 @@ from .__init__ import __version__
 BLOCK_DIR = "<block-dir>"
 OUTPUT_DIR = "<output-dir>"
 SAMPLE_NAME = "<sample-name>"
-SPECIES_ONE = "<species-one>"
-SPECIES_TWO = "<species-two>"
+SPECIES = "<species>"
 MISMATCH_THRESHOLD = "<mismatch_threshold>"
 MINMATCH_THRESHOLD = "<minmatch_threshold>"
 MULTIMAP_THRESHOLD = "<multimap_threshold>"
@@ -119,27 +118,25 @@ def _all_processes_finished(processes):
     return True
 
 
-def _get_block_file_dictionary(block_dir, sp1, sp2):
-    """
-    Return a dictionary mapping from species 1 to species 2 block files.
-
-    block_dir: Directory containing block files.
-    sp1: species one name
-    sp2: species two name
-    """
-    # get block files
+def _get_block_files(block_dir, sp1):
     is_block_file = lambda f: not os.path.isdir(os.path.join(block_dir, f))
     block_files = [f for f in os.listdir(block_dir) if is_block_file(f)]
-
-    block_file_dict = {}
+    block_files_out = []
 
     for block_file in sorted(block_files):
         sections = block_file.split(BLOCK_FILE_SEPARATOR)
         if sections[1] == sp1:
-            sections[1] = sp2
-            block_file_dict[block_file] = BLOCK_FILE_SEPARATOR.join(sections)
+            block_files_out.append(block_file)
 
-    return block_file_dict
+    return block_files_out
+
+
+def _get_input_path(block_dir, block_file, species):
+    sections = block_file.split(BLOCK_FILE_SEPARATOR)
+    sections[1] = species
+    block_file = BLOCK_FILE_SEPARATOR.join(sections)
+
+    return os.path.join(block_dir, block_file)
 
 
 def _run_processes(logger, options):
@@ -149,39 +146,34 @@ def _run_processes(logger, options):
     logger: logging object
     options: dictionary of command-line options
     """
-    # create dictionary mapping from species 1 to species 2 block files
-    block_file_dict = _get_block_file_dictionary(
-        options[BLOCK_DIR], options[SPECIES_ONE], options[SPECIES_TWO])
+    block_files = _get_block_files(options[BLOCK_DIR], options[SPECIES][0])
 
     # keep track of all processes
     all_processes = []
     proc_no = -1
 
-    get_input_path = lambda x: os.path.join(options[BLOCK_DIR], x)
-
     # initialise results file
-    _initialise_result_file(options[OUTPUT_DIR])
+    _initialise_result_file(options)
 
     # cycle through chunks
-    for sp1_file in block_file_dict.keys():
+    for block_file in block_files:
         proc_no += 1
 
-        # create input paths
-        sp1_in = get_input_path(sp1_file)
-        sp2_in = get_input_path(block_file_dict[sp1_file])
-
-        # create output paths
-        get_output_path = lambda x: os.path.join(
-            options[OUTPUT_DIR],
-            "_".join([options[SAMPLE_NAME], x, str(proc_no), "filtered.bam"]))
-        sp1_out = get_output_path(options[SPECIES_ONE])
-        sp2_out = get_output_path(options[SPECIES_TWO])
-
         commands = ["filter_sample_reads",
-                    options[SPECIES_ONE], sp1_in, os.path.abspath(sp1_out),
-                    options[SPECIES_TWO], sp2_in, os.path.abspath(sp2_out),
                     options[MISMATCH_THRESHOLD], options[MINMATCH_THRESHOLD],
                     options[MULTIMAP_THRESHOLD], options[OVERHANG_THRESHOLD]]
+
+        for species in options[SPECIES]:
+            sp_in = _get_input_path(options[BLOCK_DIR], block_file, species)
+
+            get_output_path = lambda x: os.path.join(
+                options[OUTPUT_DIR],
+                "_".join([options[SAMPLE_NAME], x,
+                         str(proc_no), "filtered.bam"]))
+
+            sp_out = get_output_path(species)
+
+            commands += [species, sp_in, os.path.abspath(sp_out)]
 
         if options[REJECT_MULTIMAPS]:
             commands.append("--reject-multimaps")
@@ -197,22 +189,24 @@ def _run_processes(logger, options):
     logger.info("Filtering Complete")
 
 
-def _initialise_result_file(out_dir):
+def _initialise_result_file(options):
     """
     Initialise results summary file.
 
     out_dir: Directory into which filtered BAM files will be written.
     """
-    cols = [
-        "Filtered-Hits-S1", "Filtered-Reads-S1",
-        "Rejected-Hits-S1", "Rejected-Reads-S1",
-        "Ambiguous-Hits-S1", "Ambiguous-Reads-S1",
-        "Filtered-Hits-S2", "Filtered-Reads-S2",
-        "Rejected-Hits-S2", "Rejected-Reads-S2",
-        "Ambiguous-Hits-S2", "Ambiguous-Reads-S2"
-    ]
+    cols = []
 
-    out_file = os.path.join(out_dir, "filtering_result_summary.txt")
+    for index, species in enumerate(options[SPECIES]):
+        species_text = "S" + str(index)
+
+        cols += [
+            "Filtered-Hits-" + species_text, "Filtered-Reads-" + species_text,
+            "Rejected-Hits-" + species_text, "Rejected-Reads-" + species_text,
+            "Ambiguous-Hits-" + species_text, "Ambiguous-Reads-" + species_text
+        ]
+
+    out_file = os.path.join(options[OUTPUT_DIR], "filtering_result_summary.txt")
     with open(out_file, 'w') as outf:
         outf.write("\t".join(cols) + "\n")
 

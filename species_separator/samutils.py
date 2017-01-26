@@ -37,7 +37,7 @@ def get_alignment_scores(hit):
 
 
 def get_cigar(hit):
-    return hit.cigarstring
+    return hit.cigartuples
 
 
 def hits_generator(samfile):
@@ -45,19 +45,16 @@ def hits_generator(samfile):
     current_hits = []
 
     for hit in all_hits(samfile):
+        current_hit_name = hit.query_name
 
         if last_hit_name is None:
-            last_hit_name = hit.query_name
+            last_hit_name = current_hit_name
 
-        if hit.query_name < last_hit_name:
-            # TODO: throw an exception if hits are out of read name order, and
-            # handle this gracefully
-            pass
-        elif hit.query_name == last_hit_name:
+        if current_hit_name == last_hit_name:
             current_hits.append(hit)
         else:
             yield current_hits
-            last_hit_name = hit.query_name
+            last_hit_name = current_hit_name
             current_hits = [hit]
 
     yield current_hits
