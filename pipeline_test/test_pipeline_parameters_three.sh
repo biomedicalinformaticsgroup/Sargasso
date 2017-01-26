@@ -45,6 +45,11 @@ else
     REJECT_MULTIMAPS=""
 fi
 
+if [[ ! "${RUN_STAR}" == "yes" ]]; then
+    MOUSE_STAR_INDEX=dummy_star_index
+    RAT_STAR_INDEX=dummy_star_index
+fi
+
 species_separator --reads-base-dir="/" -t ${NUM_THREADS} --mismatch-threshold=${MISMATCH_THRESHOLD} --minmatch-threshold=${MINMATCH_THRESHOLD} --multimap-threshold=${MULTIMAP_THRESHOLD} ${REJECT_MULTIMAPS} ${SAMPLES_FILE} ${SSS_DIR} mouse ${MOUSE_STAR_INDEX} rat ${RAT_STAR_INDEX} human ${HUMAN_STAR_INDEX}
 
 if [[ ! "${RUN_STAR}" == "yes" ]]; then
