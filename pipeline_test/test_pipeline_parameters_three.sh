@@ -2,7 +2,7 @@
 
 set -o nounset
 set -o errexit
-set -o xtrace
+#set -o xtrace
 
 source common.sh
 

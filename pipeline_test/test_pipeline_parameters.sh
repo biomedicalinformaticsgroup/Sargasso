@@ -2,7 +2,7 @@
 
 set -o nounset
 set -o errexit
-set -o xtrace
+#set -o xtrace
 
 source common.sh
 
@@ -53,8 +53,7 @@ if [[ ! "${RUN_STAR}" == "yes" ]]; then
     cp ${PRESORTED_READS_DIR}/*.bam ${SSS_SORTED_DIR}
 fi
 
-#(cd ${SSS_DIR}; make >${LOG_FILE} 2>&1) 
-(cd ${SSS_DIR}; make V=1) 
+(cd ${SSS_DIR}; make >${LOG_FILE} 2>&1) 
 
 MOUSE_INFO_EXPECTED=$(expected_results 1 ${MOUSE_FILTERED_HITS_EXPECTED} ${MOUSE_FILTERED_READS_EXPECTED} ${MOUSE_REJECTED_HITS_EXPECTED} ${MOUSE_REJECTED_READS_EXPECTED} ${AMBIGUOUS_HITS_EXPECTED} ${AMBIGUOUS_READS_EXPECTED})
 
