@@ -8,7 +8,8 @@
         [--minmatch-threshold=<minmatch-threshold>]
         [--multimap-threshold=<multimap-threshold>]
         [--overhang-threshold=<overhang-threshold>]
-        [--reject-multimaps] [--best] [--conservative] [--recall]
+        [--reject-multimaps]
+        [--best] [--conservative] [--recall] [--permissive]
         [--run-separation]
         <samples-file> <output-dir>
         (<species> <species-star-info>)
@@ -75,6 +76,11 @@ Options:
     specificity.  Note that specifying this option overrides the values of the
     mismatch-threshold, minmatch-threshold and multimap-threshold options. In
     addition, reject-multimaps is turned off.
+--permissive
+    Adopt a filtering strategy where sensitivity is maximised. Note that
+    specifying this option overrides the values of the mismatch-threshold,
+    minmatch-threshold, multimap-threshold and overhang-threshold options. In
+    addition, reject-multimaps is turned off.
 --run-separation
     If specified, species separation will be run; otherwise scripts to perform
     separation will be created but not run.
@@ -132,6 +138,7 @@ REJECT_MULTIMAPS = "--reject-multimaps"
 OPTIMAL_STRATEGY = "--best"
 CONSERVATIVE_STRATEGY = "--conservative"
 RECALL_STRATEGY = "--recall"
+PERMISSIVE_STRATEGY = "--permissive"
 RUN_SEPARATION = "--run-separation"
 
 SPECIES_NAME = "species-name"
@@ -365,6 +372,12 @@ def _validate_command_line_options(options):
             options[MISMATCH_THRESHOLD] = 2
             options[MINMATCH_THRESHOLD] = 10
             options[MULTIMAP_THRESHOLD] = 999999
+            options[REJECT_MULTIMAPS] = False
+        elif options[PERMISSIVE_STRATEGY]:
+            options[MISMATCH_THRESHOLD] = 25
+            options[MINMATCH_THRESHOLD] = 25
+            options[MULTIMAP_THRESHOLD] = 999999
+            options[OVERHANG_THRESHOLD] = 0
             options[REJECT_MULTIMAPS] = False
 
         filter_sample_reads.validate_threshold_options(
