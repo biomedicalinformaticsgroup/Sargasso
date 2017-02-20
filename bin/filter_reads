@@ -196,10 +196,10 @@ function cleanup_intermediate_files() {
 
 function calculate_filtering_summary() {
     SAMPLE=$1
+    FIRST_SAMPLE=$2
 
     HEADER=""
     TOTALS=()
-    FIRST_SAMPLE=1
     TMP_SUMMARY_FILE="${OUTPUT_DIR}"/filtering_result_summary.txt
     OVERALL_SUMMARY_FILE="${OUTPUT_DIR}"/overall_filtering_summary.txt
 
@@ -221,7 +221,6 @@ function calculate_filtering_summary() {
     if [ ${FIRST_SAMPLE} -eq 1 ]
     then
         echo -e "Sample,${HEADER[*]}" > "${OVERALL_SUMMARY_FILE}"
-        FIRST_SAMPLE=0
     fi
 
     echo -e "${SAMPLE},${TOTALS[*]}" >> "${OVERALL_SUMMARY_FILE}"
@@ -234,10 +233,17 @@ function calculate_filtering_summary() {
 
 mkdir -p $BLOCK_DIR
 
+first_sample=1
+
 for sample in ${SAMPLES}; do
     create_per_thread_input_files ${sample}
     filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${MISMATCH_THRESHOLD} ${MINMATCH_THRESHOLD} ${MULTIMAP_THRESHOLD} ${REJECT_MULTIMAPS} ${OVERHANG_THRESHOLD} ${SPECIES[*]}
     merge_per_thread_filtered_files ${sample}
     cleanup_intermediate_files ${sample}
-    calculate_filtering_summary ${sample}
+    calculate_filtering_summary ${sample} ${first_sample}
+
+    if [ ${first_sample} -eq 1 ]
+    then
+        first_sample=0
+    fi
 done
