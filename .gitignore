@@ -1,8 +1,10 @@
 *.pyc
 species_separator.egg-info/*
 results/*
+Mouseonly_results/*
 pipeline_test/results/*
 *.Rproj*
 .RData
 .Rhistory
 tmp
+paper_analysis/*
