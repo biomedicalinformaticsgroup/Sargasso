@@ -1,15 +1,15 @@
 from setuptools import setup
 
-import species_separator
+import sargasso
 
 setup(
-    name="species_separator",
-    version=species_separator.__version__,
+    name="sargasso",
+    version=sargasso.__version__,
     url='https://github.com/statbio/Sargasso',
     license='MIT License',
     author='Owen Dando',
     author_email='owen.dando@ed.ac.uk',
-    packages=['species_separator'],
+    packages=['sargasso'],
     install_requires=[
         'docopt==0.6.2',
         'pysam==0.8.2.1',

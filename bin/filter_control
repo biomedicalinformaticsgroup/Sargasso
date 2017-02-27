@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import species_separator.filter_control as entry_point
+import sargasso.filter_control as entry_point
 import sys
 
 entry_point.filter_control(sys.argv[1:])

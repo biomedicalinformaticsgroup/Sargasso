@@ -1,5 +1,5 @@
 *.pyc
-species_separator.egg-info/*
+sargasso.egg-info/*
 results/*
 Mouseonly_results/*
 pipeline_test/results/*
