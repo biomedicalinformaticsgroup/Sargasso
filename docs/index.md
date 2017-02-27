@@ -1,4 +1,4 @@
-*Sargasso* is a tool to separate mixed-species RNA-seq reads according to their species of origin.
+*Sargasso*<sup>*</sup> is a tool to separate mixed-species RNA-seq reads according to their species of origin.
 
 [RNA-sequencing](http://en.wikipedia.org/wiki/RNA-Seq) has become an important technique in cellular biology for characterising and quantifying the [transcriptomes](http://en.wikipedia.org/wiki/Transcriptome) of particular species, and for analysing the [differential expression](https://en.wikipedia.org/wiki/RNA-Seq#Differential_expression_and_absolute_quantification_of_transcripts) of genes and transcripts. However, a number of recent experimental techniques produce RNA-seq data originating from a mixture of species. Previously, researchers have developed ad-hoc solutions to separate such RNA-seq reads into species-specific sets; *Sargasso* is an efficient, reliable tool to perform this task, achieving high specificity and sensitivity even for closely-related species, while requiring minimal setup and intervention by the user.
 
@@ -12,3 +12,5 @@ For further details, please see below:
 4. [Usage reference](usage_reference.md)
 5. [Support scripts](support_scripts.md)
 6. [References](references.md)
+
+<sup>* **S**argasso **A**ssigns **R**eads to **G**enomes **A**ccording to **S**pecies-**S**pecific **O**rigin</sup>
