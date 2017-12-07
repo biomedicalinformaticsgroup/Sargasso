@@ -198,7 +198,7 @@ def _initialise_result_file(options):
     cols = []
 
     for index, species in enumerate(options[SPECIES]):
-        species_text = "S" + str(index)
+        species_text = str(species)
 
         cols += [
             "Filtered-Hits-" + species_text, "Filtered-Reads-" + species_text,
