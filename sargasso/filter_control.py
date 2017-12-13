@@ -201,7 +201,7 @@ def _initialise_result_file(options):
         species_text = str(species)
 
         cols += [
-            "Filtered-Hits-" + species_text, "Filtered-Reads-" + species_text,
+            "Assigned-Hits-" + species_text, "Assigned-Reads-" + species_text,
             "Rejected-Hits-" + species_text, "Rejected-Reads-" + species_text,
             "Ambiguous-Hits-" + species_text, "Ambiguous-Reads-" + species_text
         ]
