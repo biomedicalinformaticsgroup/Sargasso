@@ -28,5 +28,6 @@ pip install git+https://github.com/statbio/sargasso.git
 Changelog
 =========
 
+* 1.1.1 (14/12/2017): Minor improvements to interpretability of results.
 * 1.1 (26/01/2017): Filtering of RNA-seq data from more than two species.
 * 1.0 (16/12/2016): First full release
