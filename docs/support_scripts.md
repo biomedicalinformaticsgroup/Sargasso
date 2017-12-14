@@ -113,7 +113,7 @@ Usage:
 * ``<overhang-threshold>`` (_integer_): The minimum number of bases that are allowed on either side of an exon boundary for a read mapping to be accepted.
 * ``<species>`` (_text parameter_): Name of nth species.
 * ``<species-input-bam>`` (_file path_): BAM file containing reads mapped against the nth species' genome.
-* ``<species-output-bam>` (_file path_): BAM file to which read mappings assigned to the nth species after filtering will be written.
+* ``<species-output-bam>`` (_file path_): BAM file to which read mappings assigned to the nth species after filtering will be written.
 
 map_reads (Bash)
 ----------------
@@ -131,7 +131,7 @@ For each sample, map raw RNA-seq reads to each species' genome. ``map_reads`` is
 * ``<star-indices-dir>`` (_file path_): Directory containing ``STAR`` index directories for each species (or links to index directories).
 * ``<num-threads>`` (_integer_): Number of threads to be used by ``STAR`` during read mapping.
 * ``<input-dir>`` (_file path_): Directory containing per-sample directories, each of which contains links to the input raw RNA-seq read files for that sample.
-* ``<output-dir>` (_file path_): Directory into which to write BAM files containing read mappings.
+* ``<output-dir>`` (_file path_): Directory into which to write BAM files containing read mappings.
 * ``<reads-type>`` (_text parameter_): Either "single" for single-end reads, or "paired" for paired-end reads.
 
 sort_reads (Bash)
