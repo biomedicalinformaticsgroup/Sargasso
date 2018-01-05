@@ -11,6 +11,7 @@
         [--reject-multimaps]
         [--best] [--conservative] [--recall] [--permissive]
         [--run-separation]
+        [--delete-intermediate]
         <samples-file> <output-dir>
         (<species> <species-star-info>)
         (<species> <species-star-info>)
@@ -84,6 +85,8 @@ Options:
 --run-separation
     If specified, species separation will be run; otherwise scripts to perform
     separation will be created but not run.
+--delete-intermediate
+    Deletes the raw mapped BAMs and the sorted BAMs to free up space.
 
 Given a set of RNA-seq samples containing mixed-species read data, determine,
 where possible, from which of the species each read originated. Mapped
@@ -140,6 +143,7 @@ CONSERVATIVE_STRATEGY = "--conservative"
 RECALL_STRATEGY = "--recall"
 PERMISSIVE_STRATEGY = "--permissive"
 RUN_SEPARATION = "--run-separation"
+DELETE_INTERMEDIATE = "--delete-intermediate"
 
 SPECIES_NAME = "species-name"
 GTF_FILE = "gtf-file"
@@ -179,6 +183,7 @@ EXECUTION_RECORD_ENTRIES = [
     ["Conservative Strategy", CONSERVATIVE_STRATEGY],
     ["Recall Strategy", RECALL_STRATEGY],
     ["Run Separation", RUN_SEPARATION],
+    ["Delete Intermediate" , DELETE_INTERMEDIATE],
 ]
 
 
@@ -549,6 +554,9 @@ def _write_filtered_reads_target(logger, writer, options):
              "--reject-multimaps" if options[REJECT_MULTIMAPS] else "\"\"",
              "{sl}".format(sl=" ".join(options[SPECIES]))])
 
+        if options[DELETE_INTERMEDIATE]:
+            writer.remove_target_directory(SORTED_READS_TARGET)
+
 
 def _write_sorted_reads_target(logger, writer, options):
     """
@@ -572,6 +580,9 @@ def _write_sorted_reads_target(logger, writer, options):
              writer.variable_val(NUM_THREADS_VARIABLE),
              writer.variable_val(MAPPED_READS_TARGET),
              writer.variable_val(SORTED_READS_TARGET)])
+
+        if options[DELETE_INTERMEDIATE]:
+            writer.remove_target_directory(MAPPED_READS_TARGET)
 
 
 def _write_mapped_reads_target(logger, writer, sample_info, options):
