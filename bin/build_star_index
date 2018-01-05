@@ -8,6 +8,7 @@ SEQUENCE_FASTA_DIR=$1
 GTF_FILE=$2
 NUM_THREADS=$3
 INDEX_DIR=$4
+STAR_EXECUTABLE=$5
 
 function list_files {
     local DELIMITER=$1
@@ -18,4 +19,4 @@ function list_files {
     echo ${LIST%$DELIMITER}    
 }
 
-STAR --runThreadN ${NUM_THREADS} --runMode genomeGenerate --genomeDir ${INDEX_DIR} --genomeFastaFiles $(list_files ' ' ${SEQUENCE_FASTA_DIR}/*.fa) --sjdbGTFfile ${GTF_FILE} --sjdbOverhang 100
+${STAR_EXECUTABLE} --runThreadN ${NUM_THREADS} --runMode genomeGenerate --genomeDir ${INDEX_DIR} --genomeFastaFiles $(list_files ' ' ${SEQUENCE_FASTA_DIR}/*.fa) --sjdbGTFfile ${GTF_FILE} --sjdbOverhang 100

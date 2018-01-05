@@ -11,6 +11,7 @@
         [--reject-multimaps]
         [--best] [--conservative] [--recall] [--permissive]
         [--run-separation]
+        [--star-executable=<star-executable>]
         <samples-file> <output-dir>
         (<species> <species-star-info>)
         (<species> <species-star-info>)
@@ -84,6 +85,9 @@ Options:
 --run-separation
     If specified, species separation will be run; otherwise scripts to perform
     separation will be created but not run.
+--star-executable=<star-executable>
+    Specify STAR executable path. Use this to specify the version of STAR [default: STAR].
+
 
 Given a set of RNA-seq samples containing mixed-species read data, determine,
 where possible, from which of the species each read originated. Mapped
@@ -140,6 +144,7 @@ CONSERVATIVE_STRATEGY = "--conservative"
 RECALL_STRATEGY = "--recall"
 PERMISSIVE_STRATEGY = "--permissive"
 RUN_SEPARATION = "--run-separation"
+STAR_EXECUTABLE = "--star-executable"
 
 SPECIES_NAME = "species-name"
 GTF_FILE = "gtf-file"
@@ -155,6 +160,7 @@ SORTED_READS_TARGET = "SORTED_READS"
 FILTERED_READS_TARGET = "FILTERED_READS"
 
 NUM_THREADS_VARIABLE = "NUM_THREADS"
+STAR_EXECUTABLE_VARIABLE = "STAR_EXECUTABLE"
 SAMPLES_VARIABLE = "SAMPLES"
 RAW_READS_DIRECTORY_VARIABLE = "RAW_READS_DIRECTORY"
 RAW_READS_LEFT_VARIABLE = "RAW_READS_FILES_1"
@@ -179,6 +185,7 @@ EXECUTION_RECORD_ENTRIES = [
     ["Conservative Strategy", CONSERVATIVE_STRATEGY],
     ["Recall Strategy", RECALL_STRATEGY],
     ["Run Separation", RUN_SEPARATION],
+    ["Star Executable Path", STAR_EXECUTABLE],
 ]
 
 
@@ -358,6 +365,7 @@ def _validate_command_line_options(options):
             options[OUTPUT_DIR], "Output directory should not exist",
             should_exist=False)
 
+
         if options[OPTIMAL_STRATEGY]:
             options[MISMATCH_THRESHOLD] = 1
             options[MINMATCH_THRESHOLD] = 2
@@ -455,6 +463,9 @@ def _write_variable_definitions(logger, writer, options, sample_info):
     sample_info: object encapsulating samples and their accompanying read files
     """
     writer.set_variable(NUM_THREADS_VARIABLE, options[NUM_THREADS])
+    writer.add_blank_line()
+
+    writer.set_variable(STAR_EXECUTABLE_VARIABLE, options[STAR_EXECUTABLE])
     writer.add_blank_line()
 
     sample_names = sample_info.get_sample_names()
@@ -607,6 +618,8 @@ def _write_mapped_reads_target(logger, writer, sample_info, options):
             PAIRED_END_READS_TYPE if sample_info.paired_end_reads()
             else SINGLE_END_READS_TYPE)
 
+        map_reads_params.append(options[STAR_EXECUTABLE])
+
         writer.add_command("map_reads", map_reads_params)
 
 
@@ -661,7 +674,7 @@ def _write_collate_raw_reads_target(logger, writer, sample_info):
 
 
 def _write_species_main_star_index_target(
-        logger, writer, species, species_options):
+        logger, writer, species, species_options,star_executable):
     """
     Write target to create or link to STAR index for a species to Makefile.
 
@@ -689,7 +702,7 @@ def _write_species_main_star_index_target(
                 [writer.variable_val(_get_genome_fasta_variable(species)),
                  writer.variable_val(_get_gtf_file_variable(species)),
                  writer.variable_val(NUM_THREADS_VARIABLE),
-                 target])
+                 target,star_executable])
 
 
 def _write_main_star_index_targets(logger, writer, options):
@@ -703,7 +716,7 @@ def _write_main_star_index_targets(logger, writer, options):
     for i, species in enumerate(options[SPECIES]):
         species_options = _get_species_options(options, i)
         _write_species_main_star_index_target(
-            logger, writer, species, species_options)
+            logger, writer, species, species_options,options[STAR_EXECUTABLE])
 
 
 def _write_clean_target(logger, writer):
