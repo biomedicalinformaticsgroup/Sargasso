@@ -13,6 +13,7 @@
         [--run-separation]
         [--delete-intermediate]
         [--star-executable=<star-executable>]
+        [--sambamba-sort-tmp-dir=<sambamba-sort-tmp-dir>]
         <samples-file> <output-dir>
         (<species> <species-star-info>)
         (<species> <species-star-info>)
@@ -90,6 +91,8 @@ Options:
     Deletes the raw mapped BAMs and the sorted BAMs to free up space.
 --star-executable=<star-executable>
     Specify STAR executable path. Use this to specify the version of STAR [default: STAR].
+--sambamba-sort-tmp-dir=<sambamba-sort-tmp-dir>
+    Specify sambamba sort tmp folder path [default: /tmp].
 
 Given a set of RNA-seq samples containing mixed-species read data, determine,
 where possible, from which of the species each read originated. Mapped
@@ -148,6 +151,7 @@ PERMISSIVE_STRATEGY = "--permissive"
 RUN_SEPARATION = "--run-separation"
 DELETE_INTERMEDIATE = "--delete-intermediate"
 STAR_EXECUTABLE = "--star-executable"
+SAMBAMBA_SORT_TMP_DIR = "--sambamba-sort-tmp-dir"
 
 SPECIES_NAME = "species-name"
 GTF_FILE = "gtf-file"
@@ -164,6 +168,7 @@ FILTERED_READS_TARGET = "FILTERED_READS"
 
 NUM_THREADS_VARIABLE = "NUM_THREADS"
 STAR_EXECUTABLE_VARIABLE = "STAR_EXECUTABLE"
+SAMBAMBA_SORT_TMP_DIR_VARIABLE = "SAMBAMBA_SORT_TMP_DIR"
 SAMPLES_VARIABLE = "SAMPLES"
 RAW_READS_DIRECTORY_VARIABLE = "RAW_READS_DIRECTORY"
 RAW_READS_LEFT_VARIABLE = "RAW_READS_FILES_1"
@@ -190,6 +195,7 @@ EXECUTION_RECORD_ENTRIES = [
     ["Run Separation", RUN_SEPARATION],
     ["Delete Intermediate" , DELETE_INTERMEDIATE],
     ["Star Executable Path", STAR_EXECUTABLE],
+    ["Sambamba Sort Tmp Dir", SAMBAMBA_SORT_TMP_DIR],
 ]
 
 
@@ -472,6 +478,9 @@ def _write_variable_definitions(logger, writer, options, sample_info):
     writer.set_variable(STAR_EXECUTABLE_VARIABLE, options[STAR_EXECUTABLE])
     writer.add_blank_line()
 
+    writer.set_variable(SAMBAMBA_SORT_TMP_DIR_VARIABLE,options[SAMBAMBA_SORT_TMP_DIR])
+    writer.add_blank_line()
+
     sample_names = sample_info.get_sample_names()
     writer.set_variable(SAMPLES_VARIABLE, " ".join(sample_names))
     writer.set_variable(
@@ -589,7 +598,8 @@ def _write_sorted_reads_target(logger, writer, options):
                  var=writer.variable_val(SAMPLES_VARIABLE)),
              writer.variable_val(NUM_THREADS_VARIABLE),
              writer.variable_val(MAPPED_READS_TARGET),
-             writer.variable_val(SORTED_READS_TARGET)])
+             writer.variable_val(SORTED_READS_TARGET),
+             writer.variable_val(SAMBAMBA_SORT_TMP_DIR_VARIABLE)])
 
         if options[DELETE_INTERMEDIATE]:
             writer.remove_target_directory(MAPPED_READS_TARGET)
