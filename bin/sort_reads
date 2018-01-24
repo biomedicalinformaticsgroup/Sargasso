@@ -9,10 +9,11 @@ SAMPLES=$2
 NUM_THREADS=$3
 INPUT_DIR=$4
 OUTPUT_DIR=$5
+TMP_DIR=$6
 
 for species in ${SPECIES}; do
     for sample in ${SAMPLES}; do
         sample_bam=${sample}.${species}.bam
-        sambamba sort -t ${NUM_THREADS} -n -o ${OUTPUT_DIR}/${sample_bam} ${INPUT_DIR}/${sample_bam}
+        sambamba sort --tmpdir ${TMP_DIR} -t ${NUM_THREADS} -n -o ${OUTPUT_DIR}/${sample_bam} ${INPUT_DIR}/${sample_bam}
     done
 done
