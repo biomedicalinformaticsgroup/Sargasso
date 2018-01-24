@@ -17,10 +17,10 @@ def get_read_length(hit):
     return hit.query_length
 
 
-def get_total_length(hit):
-    total_length = hit.query_length
-    if hit.is_paired:
-        total_length *= 2
+def get_total_length(primary_hits):
+    total_length = 0
+    for hit in primary_hits:
+        total_length += hit.query_length
     return total_length
 
 
@@ -38,6 +38,9 @@ def get_alignment_scores(hit):
 
 def get_cigar(hit):
     return hit.cigartuples
+
+def is_primary(hit):
+    return not hit.is_secondary
 
 
 def hits_generator(samfile):

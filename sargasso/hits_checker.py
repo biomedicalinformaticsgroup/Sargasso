@@ -82,7 +82,7 @@ class HitsChecker:
         # check that the hits for a read are - in themselves - satisfactory to
         # be assigned to a species.
         return hits_info.get_multimaps() <= self.multimap_thresh and \
-            hits_info.get_max_mismatches() <= \
+            hits_info.get_primary_mismatches() <= \
             round(self.mismatch_thresh * hits_info.get_total_length()) and \
             self._check_cigars(hits_info) != CIGAR_FAIL
 
@@ -133,12 +133,12 @@ class HitsChecker:
         if multimaps > self.multimap_thresh:
             violated = True
 
-        mismatches = hits_info.get_min_mismatches()
-
+        mismatches = hits_info.get_primary_mismatches()
         if mismatches > round(self.mismatch_thresh *
                               hits_info.get_total_length()):
             violated = True
 
+        cirgars = hits_info.get_primary_cigars()
         cigar_check = self._check_cigars(hits_info)
         if cigar_check == CIGAR_FAIL:
             violated = True
@@ -147,35 +147,60 @@ class HitsChecker:
             index, violated, multimaps, mismatches, cigar_check)
 
     def _check_cigars(self, hits_info):
-        read_length = hits_info.get_read_length()
+        #total read lenth
+        read_length=hits_info.get_total_length()
+
         min_match = read_length - round(self.minmatch_thresh * read_length)
+
+        cigars = hits_info.get_primary_cigars()
 
         # when allowing other params, this is no longer a t/f scenario;
         # e.g. when clipping is allowed a cigar without clipping should score
         # better than one with even though both are allowed
-        graded_response = CIGAR_GOOD
+        # graded_response = CIGAR_GOOD
 
-        for cigar in hits_info.get_cigars():
-            graded_response = self._check_cigar(
-                cigar, graded_response, min_match, read_length)
-            if graded_response == CIGAR_FAIL:
-                return graded_response
+        graded_response = self._check_cigar(cigars, min_match, read_length)
+
+        # for cigar in cigar:
+        #     graded_response = self._check_cigar(
+        #         cigar, graded_response, min_match, read_length)
+        #     if graded_response == CIGAR_FAIL:
+        #         return graded_response
 
         return graded_response
 
 
-    def _check_cigar(self, cigar, current_response, min_match, length):
-        graded_response = current_response
+    # def _check_cigar(self, cigar, current_response, min_match, length):
+    #     graded_response = current_response
+    #
+    #     num_matches = self._get_cigar_total_match_length(cigar)
+    #     if num_matches < min_match:
+    #         return CIGAR_FAIL
+    #     elif num_matches < length:
+    #         graded_response = CIGAR_LESS_GOOD
+    #
+    #     if self._get_cigar_contains_intron(cigar) and \
+    #             not self._check_min_contiguous_match(cigar):
+    #         return CIGAR_FAIL
+    #
+    #     return graded_response
 
-        num_matches = self._get_cigar_total_match_length(cigar)
+    def _check_cigar(self, cigars, min_match, length):
+        graded_response = CIGAR_GOOD
+
+        num_matches = 0;
+        for cigar in cigars:
+            num_matches += self._get_cigar_total_match_length(cigar)
+
         if num_matches < min_match:
             return CIGAR_FAIL
         elif num_matches < length:
             graded_response = CIGAR_LESS_GOOD
 
-        if self._get_cigar_contains_intron(cigar) and \
-                not self._check_min_contiguous_match(cigar):
-            return CIGAR_FAIL
+        for cigar in cigars:
+            if self._get_cigar_contains_intron(cigar) and \
+                    not self._check_min_contiguous_match(cigar):
+                return CIGAR_FAIL
 
         return graded_response
 
