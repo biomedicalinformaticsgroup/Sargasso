@@ -82,7 +82,7 @@ class HitsChecker:
         # check that the hits for a read are - in themselves - satisfactory to
         # be assigned to a species.
         return hits_info.get_multimaps() <= self.multimap_thresh and \
-            hits_info.get_max_mismatches() <= \
+            hits_info.get_min_mismatches() <= \
             round(self.mismatch_thresh * hits_info.get_total_length()) and \
             self._check_cigars(hits_info) != CIGAR_FAIL
 
