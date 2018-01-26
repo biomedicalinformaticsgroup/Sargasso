@@ -8,7 +8,10 @@ CIGAR_LESS_GOOD = 1
 CIGAR_FAIL = 2
 
 CIGAR_OP_MATCH = 0  # From pysam
+CIGAR_OP_REF_INSERTION = 1  # From pysam
+CIGAR_OP_REF_DELETION = 2  # From pysam
 CIGAR_OP_REF_SKIP = 3  # From pysam
+
 
 ThresholdData = namedtuple(
     'ThresholdData',
@@ -138,7 +141,6 @@ class HitsChecker:
                               hits_info.get_total_length()):
             violated = True
 
-        cirgars = hits_info.get_primary_cigars()
         cigar_check = self._check_cigars(hits_info)
         if cigar_check == CIGAR_FAIL:
             violated = True
@@ -201,12 +203,29 @@ class HitsChecker:
             if self._get_cigar_contains_intron(cigar) and \
                     not self._check_min_contiguous_match(cigar):
                 return CIGAR_FAIL
+            if self._get_cigar_contains_insertion(cigar) or \
+                    self._get_cigar_contains_deletion(cigar):
+                return CIGAR_FAIL
 
         return graded_response
 
     def _get_cigar_contains_intron(self, cigar):
         for operation, length in cigar:
             if operation == CIGAR_OP_REF_SKIP:
+                return True
+
+        return False
+
+    def _get_cigar_contains_insertion(self, cigar):
+        for operation, length in cigar:
+            if operation == CIGAR_OP_REF_INSERTION:
+                return True
+
+        return False
+
+    def _get_cigar_contains_deletion(self, cigar):
+        for operation, length in cigar:
+            if operation == CIGAR_OP_REF_DELETION:
                 return True
 
         return False
