@@ -205,7 +205,7 @@ class HitsChecker:
                 return CIGAR_FAIL
             if self._get_cigar_contains_insertion(cigar) or \
                     self._get_cigar_contains_deletion(cigar):
-                return CIGAR_FAIL
+                return CIGAR_LESS_GOOD
 
         return graded_response
 
