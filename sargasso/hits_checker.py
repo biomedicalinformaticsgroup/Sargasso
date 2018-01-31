@@ -200,9 +200,9 @@ class HitsChecker:
             graded_response = CIGAR_LESS_GOOD
 
         for cigar in cigars:
-            if self._get_cigar_contains_intron(cigar) and \
-                    not self._check_min_contiguous_match(cigar):
-                return CIGAR_FAIL
+            # if self._get_cigar_contains_intron(cigar) and \
+            #         not self._check_min_contiguous_match(cigar):
+            #     return CIGAR_FAIL
             if self._get_cigar_contains_insertion(cigar) or \
                     self._get_cigar_contains_deletion(cigar):
                 return CIGAR_LESS_GOOD
