@@ -30,22 +30,23 @@ class HitsInfo:
 
 
     def get_primary_cigars(self):
-        if self.primary_cigars is None:
-            self.primary_cigars = {}
-            for hit in self.get_primary_hits():
-                self.primary_cigars[hit] = samutils.get_cigar(hit)
-        return self.primary_cigars.values()
+            if self.primary_cigars is None:
+                self.primary_cigars = [samutils.get_cigar(h) for h in self.get_primary_hits()]
+            return self.primary_cigars
 
     def get_primary_hits(self):
         if self.primary_hits is None:
-            self.primary_hits = []
-            is_paried = self.hits[0].is_paired
+            first_hit = None
             for hit in self.hits:
                 if samutils.is_primary(hit):
-                    self.primary_hits.append(hit)
-                    #to save some interation if we find all the primary hits
-                    #before reaching the end of the list
-                    if not is_paried or len(self.primary_hits) == 2:
+                    if hit.is_paired:
+                        if first_hit is None:
+                            first_hit = hit
+                        else:
+                            self.primary_hits = [first_hit, hit]
+                            return self.primary_hits
+                    else:
+                        self.primary_hits = [hit]
                         return self.primary_hits
         return self.primary_hits
 
