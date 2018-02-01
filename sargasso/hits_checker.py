@@ -163,29 +163,7 @@ class HitsChecker:
 
         graded_response = self._check_cigar(cigars, min_match, read_length)
 
-        # for cigar in cigar:
-        #     graded_response = self._check_cigar(
-        #         cigar, graded_response, min_match, read_length)
-        #     if graded_response == CIGAR_FAIL:
-        #         return graded_response
-
         return graded_response
-
-
-    # def _check_cigar(self, cigar, current_response, min_match, length):
-    #     graded_response = current_response
-    #
-    #     num_matches = self._get_cigar_total_match_length(cigar)
-    #     if num_matches < min_match:
-    #         return CIGAR_FAIL
-    #     elif num_matches < length:
-    #         graded_response = CIGAR_LESS_GOOD
-    #
-    #     if self._get_cigar_contains_intron(cigar) and \
-    #             not self._check_min_contiguous_match(cigar):
-    #         return CIGAR_FAIL
-    #
-    #     return graded_response
 
     def _check_cigar(self, cigars, min_match, length):
         graded_response = CIGAR_GOOD
@@ -200,12 +178,9 @@ class HitsChecker:
             graded_response = CIGAR_LESS_GOOD
 
         for cigar in cigars:
-            # if self._get_cigar_contains_intron(cigar) and \
-            #         not self._check_min_contiguous_match(cigar):
-            #     return CIGAR_FAIL
             if self._get_cigar_contains_insertion(cigar) or \
                     self._get_cigar_contains_deletion(cigar):
-                return CIGAR_LESS_GOOD
+                graded_response = CIGAR_LESS_GOOD
 
         return graded_response
 
