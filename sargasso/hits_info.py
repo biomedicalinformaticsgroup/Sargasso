@@ -48,6 +48,7 @@ class HitsInfo:
                     else:
                         self.primary_hits = [hit]
                         return self.primary_hits
+            self.primary_hits = [first_hit]
         return self.primary_hits
 
 
