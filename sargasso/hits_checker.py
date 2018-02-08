@@ -148,61 +148,24 @@ class HitsChecker:
             index, violated, multimaps, mismatches, cigar_check)
 
     def _check_cigars(self, hits_info):
-        #total read lenth
-        read_length=hits_info.get_total_length()
-
-        min_match = read_length - round(self.minmatch_thresh * read_length)
+        total_length = hits_info.get_total_length()
+        min_match = total_length - round(self.minmatch_thresh * total_length)
 
         cigars = hits_info.get_primary_cigars()
-
-        # when allowing other params, this is no longer a t/f scenario;
-        # e.g. when clipping is allowed a cigar without clipping should score
-        # better than one with even though both are allowed
-        # graded_response = CIGAR_GOOD
-
-        graded_response = self._check_cigar(cigars, min_match, read_length)
-
-        return graded_response
-
-    def _check_cigar(self, cigars, min_match, length):
-        graded_response = CIGAR_GOOD
+        response = CIGAR_GOOD
 
         num_matches = 0;
         for cigar in cigars:
-            num_matches += self._get_cigar_total_match_length(cigar)
+            for operation, length in cigar:
+                if operation == CIGAR_OP_MATCH:
+                    num_matches += length
+                elif operation == CIGAR_OP_REF_INSERTION or \
+                        operation == CIGAR_OP_REF_DELETION:
+                    response = CIGAR_LESS_GOOD
 
         if num_matches < min_match:
             return CIGAR_FAIL
-        elif num_matches < length:
-            graded_response = CIGAR_LESS_GOOD
+        elif num_matches < total_length:
+            return CIGAR_LESS_GOOD
 
-        for cigar in cigars:
-            if self._get_cigar_contains_insertion(cigar) or \
-                    self._get_cigar_contains_deletion(cigar):
-                graded_response = CIGAR_LESS_GOOD
-
-        return graded_response
-
-    def _get_cigar_contains_insertion(self, cigar):
-        for operation, length in cigar:
-            if operation == CIGAR_OP_REF_INSERTION:
-                return True
-
-        return False
-
-    def _get_cigar_contains_deletion(self, cigar):
-        for operation, length in cigar:
-            if operation == CIGAR_OP_REF_DELETION:
-                return True
-
-        return False
-
-
-    def _get_cigar_total_match_length(self, cigar):
-        total_match = 0
-
-        for operation, length in cigar:
-            if operation == CIGAR_OP_MATCH:
-                total_match += length
-
-        return total_match
+        return response
