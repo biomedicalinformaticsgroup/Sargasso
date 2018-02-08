@@ -28,6 +28,11 @@ pip install git+https://github.com/statbio/sargasso.git
 Changelog
 =========
 
+* 1.2 (xx/xx/2018): 
+    - Improvements to species read assignment logic gives better precision and recall.
+    - Added --delete-intermediate option to delete intermediate BAM files.
+    - Added --star-executable option to allow different versions of STAR to be used.
+    - Added --sambamba-sort-tmp-dir option to specifiy a different temporary directory for 'sambamba sort'.
 * 1.1.2 (14/12/2017): Minor improvements to interpretability of results.
 * 1.1.1 (02/03/2017): Add "permissive" filtering strategy.
 * 1.1 (26/01/2017): Filtering of RNA-seq data from more than two species.
