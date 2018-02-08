@@ -40,7 +40,8 @@ class HitsChecker:
         for f in filterers:
             f._update_hits_info()
 
-        threshold_data = [self._check_thresholds(i, f) for i, f in enumerate(filterers)]
+        threshold_data = [self._check_thresholds(i, f) for i, f
+                          in enumerate(filterers)]
         assignee = self._assign_hits(threshold_data)
 
         if assignee == REJECTED:
