@@ -11,6 +11,9 @@ The main ``species_separator`` script has a number of command line options to al
         [--multimap-threshold=<multimap-threshold>]
         [--reject-multimaps] [--best] [--conservative] [--recall]
         [--run-separation]
+        [--delete-intermediate]
+        [--star-executable=<star-executable>]
+        [--sambamba-sort-tmp-dir=<sambamba-sort-tmp-dir>]
         <samples-file> <output-dir>
         (<species> <species-star-info>)
         (<species> <species-star-info>)
@@ -56,3 +59,6 @@ These are optional parameters concerning the running of the pipeline.
 * ``-t <num-threads> --num-threads=<num-threads>`` (_integer_): Number of threads to use for parallel processing (default: 1).
 * ``--run-separation`` (_flag_): If specified, species separation will be run; otherwise scripts to perform separation will be created but not run. If the option ``--run-separation`` is not specified, a Makefile is written to the given output directory, via which all stages of species separation can be run under the user's control. If ``--run-separation`` is specified, however, the Makefile is both written and executed, and all stages of species separation are performed automatically.
 * ``--log-level=<log-level>`` (_text parameter_): Sets the minimum severity level at which log messages will be output (one of "debug", "info", "warning", "error" or "critical").
+* ``--delete-intermediate`` (_flag_): If specified, intermediate BAM files (contain raw mapped and sorted reads) will be deleted.
+* ``--star-executable=<star-executable>`` (_text parameter_): Specifies the path to the STAR executable; this can be used to run Sargasso with a particular version of STAR (default ``STAR``).
+* ``--sambamba-sort-tmp-dir=<sambamba-sort-tmp-dir>`` (_text parameter_): Specify the temporary directory to be used by 'sambamba sort' (default: ``/tmp``).

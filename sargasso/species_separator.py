@@ -85,9 +85,10 @@ Options:
 --delete-intermediate
     Deletes the raw mapped BAMs and the sorted BAMs to free up space.
 --star-executable=<star-executable>
-    Specify STAR executable path. Use this to specify the version of STAR [default: STAR].
+    Specify STAR executable path. Use this to run Sargasso with a particular
+    version of STAR [default: STAR].
 --sambamba-sort-tmp-dir=<sambamba-sort-tmp-dir>
-    Specify sambamba sort tmp folder path [default: /tmp].
+    Specify 'sambamba sort' temporary folder path [default: /tmp].
 
 Given a set of RNA-seq samples containing mixed-species read data, determine,
 where possible, from which of the species each read originated. Mapped
