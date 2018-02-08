@@ -46,8 +46,7 @@ Usage:
     filter_control
         [--log-level=<log-level>] [--reject-multimaps]
         <block-dir> <output-dir> <sample-name> 
-        <mismatch-threshold> <minmatch-threshold> 
-        <multimap-threshold> <overhang-threshold>
+        <mismatch-threshold> <minmatch-threshold> <multimap-threshold> 
         (<species>) (<species>) ...
 
 Takes as input a directory containing sets of BAM files, each set being the result of mapping a set of mixed species RNA-seq reads against each species' genome (in normal operation, all pairs of BAM files will correspond to a single sample, having been split in pieces for efficiency of filtering). Each set of BAM files is passed to an instance of the script ``filter_sample_reads``, running on a separate thread, which writes filtered read mappings to a set of species-specific output BAM files. 
@@ -62,7 +61,6 @@ Takes as input a directory containing sets of BAM files, each set being the resu
 * ``<mismatch-threshold>`` (_float_): Maximum percentage of read bases allowed to be mismatches against the genome during filtering.
 * ``<minmatch-threshold>`` (_float_): Maximum percentage of read length allowed to not be mapped during filtering.
 * ``<multimap-threshold>`` (_integer_): Maximum number of multi-mappings allowed during filtering.
-* ``<overhang-threshold>`` (_integer_): The minimum number of bases that are allowed on either side of an exon boundary for a read mapping to be accepted.
 * ``<species>`` (_text parameter_): Name of nth species.
 
 filter_reads (Bash)
@@ -73,7 +71,7 @@ Usage:
     filter_reads
         <input-dir> <output-dir> <num-threads>
         <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
-        <overhang-threshold> <reject-multimaps>
+        <reject-multimaps>
         (<species>) (<species>) ...
 
 For each sample, take the RNA-seq reads mapping to each genome, and assign them to their correct species of origin. ``filter_reads`` is called by the species separation Makefile.
@@ -85,7 +83,6 @@ For each sample, take the RNA-seq reads mapping to each genome, and assign them 
 * ``<mismatch-threshold>`` (_float_): Maximum percentage of read bases allowed to be mismatches against the genome during filtering.
 * ``<minmatch-threshold>`` (_float_): Maximum percentage of read length allowed to not be mapped during filtering.
 * ``<multimap-threshold>`` (_integer_): Maximum number of multi-mappings allowed during filtering.
-* ``<overhang-threshold>`` (_integer_): The minimum number of bases that are allowed on either side of an exon boundary for a read mapping to be accepted.
 * ``<reject-multimaps>`` (_text parameter_): If set to "--reject-multimaps", any read which multimaps to any species' genome will be rejected and not be assigned to any species.
 * ``<species>`` (_text parameter_): Name of nth species.
 
@@ -97,7 +94,6 @@ Usage:
     filter_sample_reads
         [--log-level=<log-level>] [--reject-multimaps]
         <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
-        <overhang-threshold>
         (<species> <species-input-bam> <species-output-bam>)
         (<species> <species-input-bam> <species-output-bam>) ...
 
@@ -110,7 +106,6 @@ Usage:
 * ``<mismatch-threshold>`` (_float_): Maximum percentage of read bases allowed to be mismatches against the genome during filtering.
 * ``<minmatch-threshold>`` (_float_): Maximum percentage of read length allowed to not be mapped during filtering.
 * ``<multimap-threshold>`` (_integer_): Maximum number of multi-mappings allowed during filtering.
-* ``<overhang-threshold>`` (_integer_): The minimum number of bases that are allowed on either side of an exon boundary for a read mapping to be accepted.
 * ``<species>`` (_text parameter_): Name of nth species.
 * ``<species-input-bam>`` (_file path_): BAM file containing reads mapped against the nth species' genome.
 * ``<species-output-bam>`` (_file path_): BAM file to which read mappings assigned to the nth species after filtering will be written.

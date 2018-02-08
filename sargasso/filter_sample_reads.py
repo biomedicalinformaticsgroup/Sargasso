@@ -4,7 +4,6 @@
     filter_sample_reads
         [--log-level=<log-level>] [--reject-multimaps]
         <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
-        <overhang-threshold>
         (<species> <species-input-bam> <species-output-bam>)
         (<species> <species-input-bam> <species-output-bam>) ...
 
@@ -33,9 +32,6 @@ Options:
 --reject-multimaps
     If set, any read which multimaps to *either* species' genome will be
     rejected and not be assigned to either species.
-<overhang-threshold>
-    The minimum number of bases that are allowed on
-    either side of an exon boundary for a read mapping to be accepted
 
 filter_sample_reads takes a set of BAM files as input, the results of mapping a set
 of mixed species RNA-seq reads against a number of species' genomes, and
@@ -65,12 +61,10 @@ MISMATCH_THRESHOLD = "<mismatch-threshold>"
 MINMATCH_THRESHOLD = "<minmatch-threshold>"
 MULTIMAP_THRESHOLD = "<multimap-threshold>"
 REJECT_MULTIMAPS = "--reject-multimaps"
-OVERHANG_THRESHOLD = "<overhang-threshold>"
 
 
 def validate_threshold_options(
-        options, mismatch_opt_name, minmatch_opt_name, multimap_opt_name,
-        overhang_opt_name):
+        options, mismatch_opt_name, minmatch_opt_name, multimap_opt_name):
 
     options[mismatch_opt_name] = opt.validate_float_option(
         options[mismatch_opt_name],
@@ -84,10 +78,6 @@ def validate_threshold_options(
         options[multimap_opt_name],
         "Maximum number of multiple mappings must be a positive integer",
         1, True)
-    options[overhang_opt_name] = opt.validate_int_option(
-        options[overhang_opt_name],
-        "Minimum overhang threshold must be an integer 0 or greater",
-        0, True)
 
 
 def _validate_command_line_options(options):
@@ -99,9 +89,8 @@ def _validate_command_line_options(options):
                 options[SPECIES_INPUT_BAM][index],
                 "Could not find input BAM file for species {i}".format(i=index))
 
-        validate_threshold_options(options, MISMATCH_THRESHOLD,
-                                   MINMATCH_THRESHOLD, MULTIMAP_THRESHOLD,
-                                   OVERHANG_THRESHOLD)
+        validate_threshold_options(
+            options, MISMATCH_THRESHOLD, MINMATCH_THRESHOLD, MULTIMAP_THRESHOLD)
 
     except schema.SchemaError as exc:
         exit(exc.code)
@@ -141,8 +130,7 @@ def _filter_sample_reads(logger, options):
 
     h_check = hits_checker.HitsChecker(
         options[MISMATCH_THRESHOLD], options[MINMATCH_THRESHOLD],
-        options[MULTIMAP_THRESHOLD], options[REJECT_MULTIMAPS],
-        options[OVERHANG_THRESHOLD], logger)
+        options[MULTIMAP_THRESHOLD], options[REJECT_MULTIMAPS], logger)
 
     filterers = [filterer.Filterer(i + 1, options[SPECIES_INPUT_BAM][i],
                                    options[SPECIES_OUTPUT_BAM][i], logger)

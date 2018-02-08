@@ -7,7 +7,6 @@
         [--mismatch-threshold=<mismatch-threshold>]
         [--minmatch-threshold=<minmatch-threshold>]
         [--multimap-threshold=<multimap-threshold>]
-        [--overhang-threshold=<overhang-threshold>]
         [--reject-multimaps]
         [--best] [--conservative] [--recall] [--permissive]
         [--run-separation]
@@ -56,10 +55,6 @@ Options:
     single- and paired-end cases [default: 0].
 --multimap-threshold=<multimap-threshold>
     Maximum number of multiple mappings allowed during filtering [default: 1].
---overhang-threshold=<overhang-threshold>
-    If set, allows specification of the minimum number of bases that are
-    allowed on either side of an exon boundary for a read mapping to be
-    accepted [default: 5].
 --reject-multimaps
     If set, any read which multimaps to either species' genome will be rejected
     and not be assigned to either species.
@@ -82,8 +77,8 @@ Options:
 --permissive
     Adopt a filtering strategy where sensitivity is maximised. Note that
     specifying this option overrides the values of the mismatch-threshold,
-    minmatch-threshold, multimap-threshold and overhang-threshold options. In
-    addition, reject-multimaps is turned off.
+    minmatch-threshold and multimap-threshold options. In addition,
+    reject-multimaps is turned off.
 --run-separation
     If specified, species separation will be run; otherwise scripts to perform
     separation will be created but not run.
@@ -142,7 +137,6 @@ NUM_THREADS = "--num-threads"
 MISMATCH_THRESHOLD = "--mismatch-threshold"
 MINMATCH_THRESHOLD = "--minmatch-threshold"
 MULTIMAP_THRESHOLD = "--multimap-threshold"
-OVERHANG_THRESHOLD = "--overhang-threshold"
 REJECT_MULTIMAPS = "--reject-multimaps"
 OPTIMAL_STRATEGY = "--best"
 CONSERVATIVE_STRATEGY = "--conservative"
@@ -187,7 +181,6 @@ EXECUTION_RECORD_ENTRIES = [
     ["Mismatch Threshold", MISMATCH_THRESHOLD],
     ["Minmatch Threshold", MINMATCH_THRESHOLD],
     ["Multimap Threshold", MULTIMAP_THRESHOLD],
-    ["Overhang Threshold", OVERHANG_THRESHOLD],
     ["Reject Multimaps", REJECT_MULTIMAPS],
     ["Optimal Strategy", OPTIMAL_STRATEGY],
     ["Conservative Strategy", CONSERVATIVE_STRATEGY],
@@ -395,12 +388,11 @@ def _validate_command_line_options(options):
             options[MISMATCH_THRESHOLD] = 25
             options[MINMATCH_THRESHOLD] = 25
             options[MULTIMAP_THRESHOLD] = 999999
-            options[OVERHANG_THRESHOLD] = 0
             options[REJECT_MULTIMAPS] = False
 
         filter_sample_reads.validate_threshold_options(
             options, MISMATCH_THRESHOLD, MINMATCH_THRESHOLD,
-            MULTIMAP_THRESHOLD, OVERHANG_THRESHOLD)
+            MULTIMAP_THRESHOLD)
 
         for i, species in enumerate(options[SPECIES]):
             species_options = _get_species_options(options, i)
@@ -569,7 +561,6 @@ def _write_filtered_reads_target(logger, writer, options):
              options[MISMATCH_THRESHOLD],
              options[MINMATCH_THRESHOLD],
              options[MULTIMAP_THRESHOLD],
-             options[OVERHANG_THRESHOLD],
              "--reject-multimaps" if options[REJECT_MULTIMAPS] else "\"\"",
              "{sl}".format(sl=" ".join(options[SPECIES]))])
 

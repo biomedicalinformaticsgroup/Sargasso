@@ -20,13 +20,12 @@ ThresholdData = namedtuple(
 
 class HitsChecker:
     def __init__(self, mismatch_thresh, minmatch_thresh, multimap_thresh,
-                 reject_multimaps, overhang_threshold, logger):
+                 reject_multimaps, logger):
         self.mismatch_thresh = mismatch_thresh / 100.0
         self.minmatch_thresh = minmatch_thresh / 100.0
         self.multimap_thresh = multimap_thresh
         self._assign_hits = self._assign_hits_reject_multimaps \
             if reject_multimaps else self._assign_hits_standard
-        self.overhang_threshold = overhang_threshold
 
         logger.debug(("PARAMS: mismatch - {mism}, minmatch - {minm}, " +
                       "multimap - {mult}").format(
@@ -184,13 +183,6 @@ class HitsChecker:
 
         return graded_response
 
-    def _get_cigar_contains_intron(self, cigar):
-        for operation, length in cigar:
-            if operation == CIGAR_OP_REF_SKIP:
-                return True
-
-        return False
-
     def _get_cigar_contains_insertion(self, cigar):
         for operation, length in cigar:
             if operation == CIGAR_OP_REF_INSERTION:
@@ -214,12 +206,3 @@ class HitsChecker:
                 total_match += length
 
         return total_match
-
-
-    def _check_min_contiguous_match(self, cigar):
-        for operation, length in cigar:
-            if operation == CIGAR_OP_MATCH and \
-                    length < self.overhang_threshold:
-                return False
-
-        return True

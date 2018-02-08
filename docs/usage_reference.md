@@ -9,7 +9,6 @@ The main ``species_separator`` script has a number of command line options to al
         [--mismatch-threshold=<mismatch-threshold>]
         [--minmatch-threshold=<minmatch-threshold>]
         [--multimap-threshold=<multimap-threshold>]
-        [--overhang-threshold=<overhang-threshold>]
         [--reject-multimaps] [--best] [--conservative] [--recall]
         [--run-separation]
         <samples-file> <output-dir>
@@ -44,7 +43,6 @@ These parameters are used to specify criteria that affect how reads are assigned
 * ``--mismatch-threshold=<mismatch-threshold>`` (_float_): Maximum percentage of read bases allowed to be mismatches against the genome during filtering (default: 0).
 * ``--minmatch-threshold=<minmatch-threshold>`` (_float_): Maximum percentage of read length allowed to not be mapped during filtering (default: 0).
 * ``--multimap-threshold=<multimap-threshold>`` (_integer_): Maximum number of multiple mappings allowed during filtering (default: 1).
-* ``--overhang-threshold=<overhang-threshold>`` (_integer_): Specifies the minimum number of bases that are required on either side of an exon boundary for a read mapping to be accepted (default: 5).
 * ``--reject-multimaps`` (_flag_): If set, any read which multimaps to any species' genome will be rejected and not be assigned to any species.
 * ``--best`` (_flag_): Adopt a filtering strategy that provides an excellent balance between sensitivity and specificity. Note that specifying this option overrides the values of the ``--mismatch-threshold``, ``--minmatch-threshold`` and ``--multimap-threshold`` options. In addition, ``--reject-multimaps`` is turned off.
 * ``--conservative`` (_flag_): Adopt a filtering strategy where minimising the number of reads mis-assigned to the wrong species takes foremost priority. Note that specifying this option overrides the values of the ``--mismatch-threshold``, ``--minmatch-threshold`` and ``--multimap-threshold options``. In addition, ``--reject-multimaps`` is turned on.

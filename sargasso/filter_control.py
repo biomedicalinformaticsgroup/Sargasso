@@ -4,8 +4,7 @@
     filter_control
         [--log-level=<log-level>] [--reject-multimaps]
         <block-dir> <output-dir> <sample-name>
-        <mismatch_threshold> <minmatch_threshold>
-        <multimap_threshold> <overhang-threshold>
+        <mismatch_threshold> <minmatch_threshold> <multimap_threshold>
         (<species>) (<species>) ...
 
 Option:
@@ -31,9 +30,6 @@ Option:
     filtering.
 <multimap_threshold>
     Maximum number of multiple mappings allowed during filtering.
-<overhang-threshold>
-    The minimum number of bases that are allowed on
-    either side of an exon boundary for a read mapping to be accepted
 --reject-multimaps
     If set, any read which multimaps to any species' genome will be rejected
     and not be assigned to any species.
@@ -70,7 +66,6 @@ MISMATCH_THRESHOLD = "<mismatch_threshold>"
 MINMATCH_THRESHOLD = "<minmatch_threshold>"
 MULTIMAP_THRESHOLD = "<multimap_threshold>"
 REJECT_MULTIMAPS = "--reject-multimaps"
-OVERHANG_THRESHOLD = "<overhang-threshold>"
 
 BLOCK_FILE_SEPARATOR = "___"
 
@@ -161,7 +156,7 @@ def _run_processes(logger, options):
 
         commands = ["filter_sample_reads",
                     options[MISMATCH_THRESHOLD], options[MINMATCH_THRESHOLD],
-                    options[MULTIMAP_THRESHOLD], options[OVERHANG_THRESHOLD]]
+                    options[MULTIMAP_THRESHOLD]]
 
         for species in options[SPECIES]:
             sp_in = _get_input_path(options[BLOCK_DIR], block_file, species)
