@@ -24,9 +24,6 @@ class HitsInfo:
     def get_primary_cigars(self):
         return self.primary_cigars
 
-    def get_primary_hits(self):
-        return self.primary_hits
-
     def _get_primary_hits(self):
         first_hit = None
         for hit in self.hits:
