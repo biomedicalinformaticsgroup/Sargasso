@@ -71,9 +71,10 @@ for species in ${SPECIES}; do
         sample_reads_2_dir=${sample_dir}/reads_2
 
         if [[ "${READS_TYPE}" == "single" ]]; then
-            star_se_reads ${sample} ${species} ${STAR_INDICES_DIR}/${species} ${NUM_THREADS} $(listFiles ${sample_reads_1_dir}/*) ${OUTPUT_DIR} ${STAR_EXECUTABLE}
+            star_se_reads ${sample} ${species} ${STAR_INDICES_DIR}/${species} ${NUM_THREADS} $(listFiles ${sample_reads_1_dir}/*) ${OUTPUT_DIR} ${STAR_EXECUTABLE} &
         else
-            star_pe_reads ${sample} ${species} ${STAR_INDICES_DIR}/${species} ${NUM_THREADS} $(listFiles ${sample_reads_1_dir}/*) $(listFiles ${sample_reads_2_dir}/*) ${OUTPUT_DIR} ${STAR_EXECUTABLE}
+            star_pe_reads ${sample} ${species} ${STAR_INDICES_DIR}/${species} ${NUM_THREADS} $(listFiles ${sample_reads_1_dir}/*) $(listFiles ${sample_reads_2_dir}/*) ${OUTPUT_DIR} ${STAR_EXECUTABLE} &
         fi
     done
+    wait
 done
