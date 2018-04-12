@@ -83,9 +83,9 @@ for species in ${SPECIES}; do
         fi
 #        WAIT_FOR_PIDS="${WAIT_FOR_PIDS} $!"
 #        CORE_USING=$((${CORES_USING}+${NUM_THREADS}))
-        wait
-    done
 
+    done
+    wait
 #    if [ "$(($CORES_USING))" -gt "${ALLOW_CORES}" ]; then
 #        echo "Using ${CORES_USING}...wait..."
 #        wait ${WAIT_FOR_PIDS}
