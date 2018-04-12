@@ -64,10 +64,11 @@ OUTPUT_DIR=$6
 READS_TYPE=$7
 STAR_EXECUTABLE=$8
 
-MAX_CORES=$(cat /proc/cpuinfo | grep processor | wc -l)
-ALLOW_CORES=$(($MAX_CORES/2))
-
-CORES_USING=0
+#MAX_CORES=$(cat /proc/cpuinfo | grep processor | wc -l)
+#ALLOW_CORES=$(($MAX_CORES/2))
+#WAIT_FOR_PIDS=""
+NUM_THREADS=2
+#CORES_USING=0
 for species in ${SPECIES}; do
     for sample in ${SAMPLES}; do
 
@@ -80,12 +81,15 @@ for species in ${SPECIES}; do
         else
             star_pe_reads ${sample} ${species} ${STAR_INDICES_DIR}/${species} ${NUM_THREADS} $(listFiles ${sample_reads_1_dir}/*) $(listFiles ${sample_reads_2_dir}/*) ${OUTPUT_DIR} ${STAR_EXECUTABLE} &
         fi
-        CORE_USING=$(($CORE_USING+${NUM_THREADS}))
+#        WAIT_FOR_PIDS="${WAIT_FOR_PIDS} $!"
+#        CORE_USING=$((${CORES_USING}+${NUM_THREADS}))
+        wait
     done
 
-    if [ "$(($CORES_USING))" -gt "${ALLOW_CORES}" ]; then
-        echo "Using ${CORES_USING}...wait..."
-        wait
-        CORES_USING=0
-    fi
+#    if [ "$(($CORES_USING))" -gt "${ALLOW_CORES}" ]; then
+#        echo "Using ${CORES_USING}...wait..."
+#        wait ${WAIT_FOR_PIDS}
+#        WAIT_FOR_PIDS=""
+#        CORES_USING=0
+#    fi
 done
