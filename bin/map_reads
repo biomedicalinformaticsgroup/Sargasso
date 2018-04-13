@@ -68,7 +68,7 @@ MAX_MEM=$(cat /proc/meminfo | grep 'MemTotal'| awk '{print int($2/(1024^2))}')
 ALLOW_MEM=$(echo ${MAX_MEM} | awk '{print int($1 * 0.8)}')
 MAX_CORES=$(cat /proc/cpuinfo | grep processor | wc -l)
 ALLOW_CORES=$(echo ${MAX_CORES} | awk '{print int($1 * 0.8)}')
-WAIT_FOR_PIDS=""
+#WAIT_FOR_PIDS=""
 #NUM_THREADS=2
 CORES_USING=0
 MEM_USING=0
@@ -84,16 +84,17 @@ for species in ${SPECIES}; do
         else
             star_pe_reads ${sample} ${species} ${STAR_INDICES_DIR}/${species} ${NUM_THREADS} $(listFiles ${sample_reads_1_dir}/*) $(listFiles ${sample_reads_2_dir}/*) ${OUTPUT_DIR} ${STAR_EXECUTABLE} &
         fi
-        WAIT_FOR_PIDS="${WAIT_FOR_PIDS} $!"
+#        WAIT_FOR_PIDS="${WAIT_FOR_PIDS} $!"
         CORE_USING=$((${CORES_USING}+${NUM_THREADS}))
         MEM_USING=$((${MEM_USING}+30))
+
+        if [ "$(($CORES_USING))" -gt "${ALLOW_CORES}"  ] || [ "${MEM_USING}" -gt "${ALLOW_MEM}" ] ; then
+
+            echo "server busy, waiting for jobs: $(jobs -p) "
+            wait $(jobs -p)
+            CORES_USING=0
+            MEM_USING=0
+        fi
     done
-#    wait
-    if [ "$(($CORES_USING))" -gt "${ALLOW_CORES}"  ] || [ "${MEM_USING}" -gt "${ALLOW_MEM}" ] ; then
-        echo "server busy, waiting for jobs: ${WAIT_FOR_PIDS} "
-        wait ${WAIT_FOR_PIDS}
-        WAIT_FOR_PIDS=""
-        CORES_USING=0
-        MEM_USING=0
-    fi
 done
+wait $(jobs -p)
