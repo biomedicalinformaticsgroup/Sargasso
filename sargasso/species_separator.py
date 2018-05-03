@@ -605,8 +605,9 @@ def _write_sorted_reads_target(logger, writer, options):
              writer.variable_val(NUM_THREADS_PRE_SAMPLE_VARIABLE),
              writer.variable_val(MAPPED_READS_TARGET),
              writer.variable_val(SORTED_READS_TARGET),
-             writer.variable_val(SAMBAMBA_SORT_TMP_DIR_VARIABLE)],
-             writer.variable_val(NUM_TOTAL_THREADS_VARIABLE))
+             writer.variable_val(SAMBAMBA_SORT_TMP_DIR_VARIABLE),
+             writer.variable_val(NUM_TOTAL_THREADS_VARIABLE)]
+             )
 
 
         if options[DELETE_INTERMEDIATE]:
