@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+set -o nounset
+set -o errexit
+set -o xtrace
+
+. common_functions
+
+SPECIES=$1
+SAMPLES=$2
+THREADS_PRE_SAMPLE=$3
+INPUT_DIR=$4
+OUTPUT_DIR=$5
+TMP_DIR=$6
+TOTAL_THREADS=$7
+
+
+
+THREAD_USING=0
+MEM_USING=0
+
+
+for species in ${SPECIES}; do
+    for sample in ${SAMPLES}; do
+    checkBusy
+    sample_bam=${sample}.${species}.bam
+    sambamba sort --tmpdir ${TMP_DIR} -t ${THREADS_PRE_SAMPLE} -n -o ${OUTPUT_DIR}/${sample_bam} ${INPUT_DIR}/${sample_bam} &
+
+    #echo "running for ${sample}..." && sleep 2s &
+    THREAD_USING=$((${THREAD_USING}+${THREADS_PRE_SAMPLE}))
+    MEM_USING=$((${MEM_USING}+30))
+
+    done
+done
+echo "server busy, ${THREAD_USING} cores/ ${MEM_USING} memory using... waiting for jobs: $(jobs -p) "
+wait $(jobs -p)
