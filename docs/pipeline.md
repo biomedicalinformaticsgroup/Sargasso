@@ -71,4 +71,4 @@ Efficiency
 
 In order that the *Sargasso* pipeline operates efficiently, multiple cores can be used wherever possible. Both the ``STAR`` read aligner and the ``sambamba`` alignment processing tool are multi-threaded, and multiple cores are used during species assignment by splitting the input alignment files in chunks and executing filtering in parallel.
 
-The number of cores available at all stages of the pipeline is specified by the ``--num-threads`` command-line option to the ``species_separator`` script.
+The number of cores available at all stages of the pipeline is specified by the ``--num-threads-pre-sample`` and the ``--num-total-threads``  command-line options to the ``species_separator`` script.
