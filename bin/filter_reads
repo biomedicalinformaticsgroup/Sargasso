@@ -240,7 +240,7 @@ function calculate_filtering_summary() {
         echo -e "Sample,${HEADER[*]}" > "${OVERALL_SUMMARY_FILE}"
     fi
 
-    echo -e "${gSAMPLE},${TOTALS[*]}" > "${TMP_SUMMARY_FILE}"
+    echo -e "${SAMPLE},${TOTALS[*]}" > "${TMP_SUMMARY_FILE}"
     IFS=$' \t\n'
 }
 
