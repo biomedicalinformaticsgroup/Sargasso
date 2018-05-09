@@ -24,5 +24,6 @@ setup(
         'bin/map_reads',
         'bin/sort_reads',
         'bin/species_separator',
+        'bin/common_functions',
     ]
 )

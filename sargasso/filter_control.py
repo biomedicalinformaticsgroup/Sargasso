@@ -154,7 +154,8 @@ def _run_processes(logger, options):
     for block_file in block_files:
         proc_no += 1
 
-        commands = ["filter_sample_reads",
+        commands = ["filter_sample_reads", "--filter-stats-file",
+                    os.path.join(options[OUTPUT_DIR], "_".join((options[SAMPLE_NAME],"filtering_result_summary.txt"))),
                     options[MISMATCH_THRESHOLD], options[MINMATCH_THRESHOLD],
                     options[MULTIMAP_THRESHOLD]]
 
@@ -201,7 +202,7 @@ def _initialise_result_file(options):
             "Ambiguous-Hits-" + species_text, "Ambiguous-Reads-" + species_text
         ]
 
-    out_file = os.path.join(options[OUTPUT_DIR], "filtering_result_summary.txt")
+    out_file = os.path.join(options[OUTPUT_DIR],  "_".join((options[SAMPLE_NAME],"filtering_result_summary.txt")))
     with open(out_file, 'w') as outf:
         outf.write("\t".join(cols) + "\n")
 

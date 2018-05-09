@@ -2,7 +2,7 @@
 
 """Usage:
     filter_sample_reads
-        [--log-level=<log-level>] [--reject-multimaps]
+        [--log-level=<log-level>] [--reject-multimaps] [--filter-stats-file=<filter-stats-file>]
         <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
         (<species> <species-input-bam> <species-output-bam>)
         (<species> <species-input-bam> <species-output-bam>) ...
@@ -32,6 +32,8 @@ Options:
 --reject-multimaps
     If set, any read which multimaps to *either* species' genome will be
     rejected and not be assigned to either species.
+--filter-stats-file=<filter-stats-file>
+    The file to store the filter stats
 
 filter_sample_reads takes a set of BAM files as input, the results of mapping a set
 of mixed species RNA-seq reads against a number of species' genomes, and
@@ -60,6 +62,7 @@ SPECIES_OUTPUT_BAM = "<species-output-bam>"
 MISMATCH_THRESHOLD = "<mismatch-threshold>"
 MINMATCH_THRESHOLD = "<minmatch-threshold>"
 MULTIMAP_THRESHOLD = "<multimap-threshold>"
+FILTER_STATS_FILE = "--filter-stats-file"
 REJECT_MULTIMAPS = "--reject-multimaps"
 
 
@@ -97,7 +100,7 @@ def _validate_command_line_options(options):
 
 
 # write filter stats to table in file
-def _write_stats(filterers, out_bam):
+def _write_stats(filterers, filter_stats_file):
 
     stats = []
 
@@ -108,8 +111,7 @@ def _write_stats(filterers, out_bam):
                   fstats.hits_rejected, fstats.reads_rejected,
                   fstats.hits_ambiguous, fstats.reads_ambiguous]
 
-    out_file = os.path.join(
-        os.path.dirname(out_bam), "filtering_result_summary.txt")
+    out_file = filter_stats_file
     with open(out_file, 'a') as outf:
         outf.write("\t".join([str(s) for s in stats]) + "\n")
 
@@ -179,7 +181,7 @@ def _filter_sample_reads(logger, options):
     for filt in all_filterers:
         filt.log_stats()
 
-    _write_stats(all_filterers, options[SPECIES_OUTPUT_BAM][0])
+    _write_stats(all_filterers, options[FILTER_STATS_FILE])
 
 
 def filter_sample_reads(args):

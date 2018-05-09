@@ -9,7 +9,7 @@ build_star_index (Bash)
 Usage:
 
     build_star_index
-        <sequence-fasta-files> <gtf-file> <num-threads> <index-dir>
+        <sequence-fasta-files> <gtf-file> <num-total-threads> <index-dir>
 
 Build [``STAR``](references.md) indices for a species' genome. ``build_star_index`` is called from the species separation Makefile.
 
@@ -17,7 +17,7 @@ Options:
 
 * ``<sequence-fasta-files>`` (_list of file paths_): Space-separated list of genome FASTA files.
 * ``<gtf-file>`` (_file path_): Path to GTF file containing transcript annotations.
-* ``<num-threads>`` (_integer_): Number of threads to be used for genome generation.
+* ``<num-total-threads>`` (_integer_): Number of threads to be used for genome generation.
 * ``<index-dir>`` (_file path_): Path to directory where genome index files will be stored.
 
 collate_raw_reads (Bash)
@@ -69,9 +69,9 @@ filter_reads (Bash)
 Usage:
 
     filter_reads
-        <input-dir> <output-dir> <num-threads>
+        <input-dir> <output-dir> <num-threads-pre-sample>
         <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
-        <reject-multimaps>
+        <reject-multimaps> <num-total-threads>
         (<species>) (<species>) ...
 
 For each sample, take the RNA-seq reads mapping to each genome, and assign them to their correct species of origin. ``filter_reads`` is called by the species separation Makefile.
@@ -79,11 +79,12 @@ For each sample, take the RNA-seq reads mapping to each genome, and assign them 
 * ``<samples>`` (_text parameter_): Space-separated list of sample names.
 * ``<input-dir>`` (_file path_): Directory containing, for each sample and each species, name-sorted BAM files containing read mappings for that sample's RNA-seq reads to the species' genome reference.
 * ``<output-dir>`` (_file path_): Directory into which species-separated BAM files are to be written.
-* ``<num-threads>`` (_integer_): Number of threads to be used during species separation.
+* ``<num-threads-pre-sample>`` (_integer_): Number of threads to be used for each sample during species separation.
 * ``<mismatch-threshold>`` (_float_): Maximum percentage of read bases allowed to be mismatches against the genome during filtering.
 * ``<minmatch-threshold>`` (_float_): Maximum percentage of read length allowed to not be mapped during filtering.
 * ``<multimap-threshold>`` (_integer_): Maximum number of multi-mappings allowed during filtering.
 * ``<reject-multimaps>`` (_text parameter_): If set to "--reject-multimaps", any read which multimaps to any species' genome will be rejected and not be assigned to any species.
+* ``<num-total-threads>`` (_integer_): Number of total threads to be used during species separation.
 * ``<species>`` (_text parameter_): Name of nth species.
 
 filter_sample_reads (Python)
@@ -92,7 +93,7 @@ filter_sample_reads (Python)
 Usage:
 
     filter_sample_reads
-        [--log-level=<log-level>] [--reject-multimaps]
+        [--log-level=<log-level>] [--filter-stats-file] [--reject-multimaps] 
         <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
         (<species> <species-input-bam> <species-output-bam>)
         (<species> <species-input-bam> <species-output-bam>) ...
@@ -102,6 +103,7 @@ Usage:
 ``filter_sample_reads`` is called by the script ``filter_control``.
 
 * ``--log-level=<log-level>`` (_text parameter_): Sets the minimum severity level at which log messages will be output (one of "debug", "info", "warning", "error" or "criticial").
+* ``--filter-stats-file=<filter-stats-file>`` (_text parameter_): The file to store the filter stats.
 * ``--reject-multimaps`` (_flag_): If set, any read which multimaps to either species' genome will be rejected and not be assigned to either species.
 * ``<mismatch-threshold>`` (_float_): Maximum percentage of read bases allowed to be mismatches against the genome during filtering.
 * ``<minmatch-threshold>`` (_float_): Maximum percentage of read length allowed to not be mapped during filtering.
@@ -116,18 +118,20 @@ map_reads (Bash)
 Usage:
 
     map_reads
-        <species> <samples> <star-indices-dir> <num-threads>
-        <input-dir> <output-dir> <reads-type>
+        <species> <samples> <star-indices-dir> <num-threads-pre-sample>
+        <input-dir> <output-dir> <reads-type> <star_executable> <total_threads>
 
 For each sample, map raw RNA-seq reads to each species' genome. ``map_reads`` is called by the species separation Makefile.
 
 * ``<species>`` (_text parameter_): Space-separated list of species names.
 * ``<samples>`` (_text parameter_): Space-separated list of sample names.
 * ``<star-indices-dir>`` (_file path_): Directory containing ``STAR`` index directories for each species (or links to index directories).
-* ``<num-threads>`` (_integer_): Number of threads to be used by ``STAR`` during read mapping.
+* ``<num-threads-pre-sample>`` (_integer_): Number of threads pre sample to be used by ``STAR`` during read mapping.
 * ``<input-dir>`` (_file path_): Directory containing per-sample directories, each of which contains links to the input raw RNA-seq read files for that sample.
 * ``<output-dir>`` (_file path_): Directory into which to write BAM files containing read mappings.
 * ``<reads-type>`` (_text parameter_): Either "single" for single-end reads, or "paired" for paired-end reads.
+* ``<star_executable>`` (_text parameter_): specify STAR executable path. Use this to run Sargasso with a particular version of STAR.
+* ``<total_threads>`` (_integer_): Maximum number of threads to use for parallel processing.
 
 sort_reads (Bash)
 -----------------
@@ -135,12 +139,14 @@ sort_reads (Bash)
 Usage:
 
     sort_reads
-        <species> <samples> <num-threads> <input-dir> <output-dir>
+        <species> <samples> <threads_pre_sample> <input-dir> <output-dir> <sambamba-tmp-dir> <total-threads>
 
 For each sample, sort mapped reads for each species into name order. ``sort_reads`` is called by the species separation Makefile.
 
 * ``<species>`` (_text parameter_): Space-separated list of species names.
 * ``<samples>`` (_text parameter_): Space-separated list of sample names.
-* ``<num-threads>`` (_integer_): Number of threads to be used by ``sambamba`` [Sambamba]_ during read sorting.
+* ``<threads_pre_sample>`` (_integer_): Number of threads to be used for each sample by ``sambamba`` [Sambamba]_ during read sorting.
 * ``<input-dir>`` (_file path_): Directory containing BAM files containing read mappings for each sample and species.
 * ``<output-dir>`` (_file path_): Directory into which to write name-ordered BAM files containing read mappings.
+* ``<sambamba-tmp-dir>`` (_file path_): Directory into which to write name-ordered BAM files containing read mappings.
+* ``<total_threads>`` (_integer_): Number of maximum threads to be used.

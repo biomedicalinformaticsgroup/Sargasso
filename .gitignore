@@ -8,3 +8,5 @@ pipeline_test/results/*
 .Rhistory
 tmp
 paper_analysis/*
+dev
+.gitignore
