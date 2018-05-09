@@ -87,13 +87,11 @@ for species in ${SPECIES}; do
         else
             star_pe_reads ${sample} ${species} ${STAR_INDICES_DIR}/${species} ${THREADS_PRE_SAMPLE} $(listFiles ${sample_reads_1_dir}/*) $(listFiles ${sample_reads_2_dir}/*) ${OUTPUT_DIR} ${STAR_EXECUTABLE} &
         fi
-#        echo "running for ${sample}..." && sleep 2s &
         THREAD_USING=$((${THREAD_USING}+${THREADS_PRE_SAMPLE}))
         MEM_USING=$((${MEM_USING}+30))
 
     done
 done
-echo "server busy, ${THREAD_USING} cores/ ${MEM_USING} memory using... waiting for jobs: $(jobs -p) "
 wait $(jobs -p)
 
 
