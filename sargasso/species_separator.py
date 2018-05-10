@@ -373,6 +373,10 @@ def _validate_command_line_options(options):
             options[NUM_TOTAL_THREADS],
             "Number of total threads must be a positive integer",
             min_val=1, nullable=True)
+        opt.validate_threads_value(options[NUM_THREADS_PRE_SAMPLE],
+                                   options[NUM_TOTAL_THREADS],
+                                   "Number of total threads must be greater or equal "
+                                   "to than number of threads pre sample ")
         opt.validate_file_option(
             options[SAMPLES_FILE], "Could not open samples definition file")
         opt.validate_dir_option(

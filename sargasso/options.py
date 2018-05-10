@@ -211,6 +211,15 @@ def check_boolean_value(option_string):
     else:
         raise Exception("Can't convert '{o}' to bool.".format(o=option_string))
 
+def validate_threads_value(num_threads_pre_sample,num_total_threads,msg):
+    msg = "{msg}: num_threads_pre_sample-'{val}', " \
+          "num_total_threads-'{val2}'".format(msg=msg,
+                                              val=num_threads_pre_sample,
+                                              val2=num_total_threads)
+    validator = And(validator, lambda x: x >= 0)
+    return Schema(validator, error=msg).validate(int(num_total_threads)-int(num_threads_pre_sample))
+
+
 
 def _nullable_validator(validator):
     return Or(validator, None)
