@@ -212,6 +212,11 @@ def check_boolean_value(option_string):
         raise Exception("Can't convert '{o}' to bool.".format(o=option_string))
 
 def validate_threads_value(num_threads_pre_sample,num_total_threads,msg):
+    """
+    Validates that the NUM_THREADS_PRE_SAMPLE is smaller or equal to
+    NUM_TOTAL_THREADS.
+
+    """
     msg = "{msg}: num_threads_pre_sample-'{val}', " \
           "num_total_threads-'{val2}'".format(msg=msg,
                                               val=num_threads_pre_sample,
