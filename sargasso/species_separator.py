@@ -376,7 +376,7 @@ def _validate_command_line_options(options):
         opt.validate_threads_value(options[NUM_THREADS_PRE_SAMPLE],
                                    options[NUM_TOTAL_THREADS],
                                    "Number of total threads must be greater or equal "
-                                   "to than number of threads pre sample ")
+                                   "to the number of threads pre sample ")
         opt.validate_file_option(
             options[SAMPLES_FILE], "Could not open samples definition file")
         opt.validate_dir_option(
