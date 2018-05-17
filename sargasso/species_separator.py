@@ -379,7 +379,7 @@ def _validate_command_line_options(options):
                 "Number of total threads ({tot}) must be greater or equal " +
                 "to number of threads per sample ({per}).").format(
                     tot=options[NUM_TOTAL_THREADS],
-                    per=options[NUM_THREADS_PER_SAMPLE])
+                    per=options[NUM_THREADS_PER_SAMPLE]))
 
         opt.validate_file_option(
             options[SAMPLES_FILE], "Could not open samples definition file")
