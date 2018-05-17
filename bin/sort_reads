@@ -8,7 +8,7 @@ set -o xtrace
 
 SPECIES=$1
 SAMPLES=$2
-THREADS_PRE_SAMPLE=$3
+THREADS_PER_SAMPLE=$3
 INPUT_DIR=$4
 OUTPUT_DIR=$5
 TMP_DIR=$6
@@ -24,9 +24,9 @@ for species in ${SPECIES}; do
     for sample in ${SAMPLES}; do
     checkBusy
     sample_bam=${sample}.${species}.bam
-    sambamba sort --tmpdir ${TMP_DIR} -t ${THREADS_PRE_SAMPLE} -n -o ${OUTPUT_DIR}/${sample_bam} ${INPUT_DIR}/${sample_bam} &
+    sambamba sort --tmpdir ${TMP_DIR} -t ${THREADS_PER_SAMPLE} -n -o ${OUTPUT_DIR}/${sample_bam} ${INPUT_DIR}/${sample_bam} &
 
-    THREAD_USING=$((${THREAD_USING}+${THREADS_PRE_SAMPLE}))
+    THREAD_USING=$((${THREAD_USING}+${THREADS_PER_SAMPLE}))
     MEM_USING=$((${MEM_USING}+30))
 
     done
