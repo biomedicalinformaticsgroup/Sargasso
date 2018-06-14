@@ -18,7 +18,7 @@ function star_se_reads {
     SAMPLE=$1
     SPECIES=$2
     INDEX_DIR=$3
-    THREADS_PRE_SAMPLE=$4
+    THREADS_PER_SAMPLE=$4
     READ_FILES=$5
     OUTPUT_DIR=$6
     STAR_EXECUTABLE=$7
@@ -27,7 +27,7 @@ function star_se_reads {
     STAR_TMP=${OUTPUT_DIR}/${ID}.tmp
     mkdir $STAR_TMP
 
-    ${STAR_EXECUTABLE} --runThreadN ${THREADS_PRE_SAMPLE} --genomeDir ${INDEX_DIR} --readFilesIn ${READ_FILES} --outFileNamePrefix ${STAR_TMP}/star --outSAMstrandField intronMotif --outSAMtype BAM Unsorted --readFilesCommand zcat --outFilterMultimapScoreRange 0 --outFilterMultimapNmax 10000
+    ${STAR_EXECUTABLE} --runThreadN ${THREADS_PER_SAMPLE} --genomeDir ${INDEX_DIR} --readFilesIn ${READ_FILES} --outFileNamePrefix ${STAR_TMP}/star --outSAMstrandField intronMotif --outSAMtype BAM Unsorted --readFilesCommand zcat --outFilterMultimapScoreRange 0 --outFilterMultimapNmax 10000
 
     mv $STAR_TMP/starAligned.out.bam ${OUTPUT_DIR}/${ID}.bam
     mv $STAR_TMP/starLog.final.out ${OUTPUT_DIR}/${ID}.log.out
@@ -39,7 +39,7 @@ function star_pe_reads {
     SAMPLE=$1
     SPECIES=$2
     INDEX_DIR=$3
-    THREADS_PRE_SAMPLE=$4
+    THREADS_PER_SAMPLE=$4
     READ_1_FILES=$5
     READ_2_FILES=$6
     OUTPUT_DIR=$7
@@ -49,7 +49,7 @@ function star_pe_reads {
     STAR_TMP=${OUTPUT_DIR}/${ID}.tmp
     mkdir $STAR_TMP
 
-    ${STAR_EXECUTABLE} --runThreadN ${THREADS_PRE_SAMPLE} --genomeDir ${INDEX_DIR} --readFilesIn ${READ_1_FILES} ${READ_2_FILES} --outFileNamePrefix ${STAR_TMP}/star --outSAMstrandField intronMotif --outSAMtype BAM Unsorted --readFilesCommand zcat --outFilterMultimapScoreRange 0 --outFilterMultimapNmax 10000
+    ${STAR_EXECUTABLE} --runThreadN ${THREADS_PER_SAMPLE} --genomeDir ${INDEX_DIR} --readFilesIn ${READ_1_FILES} ${READ_2_FILES} --outFileNamePrefix ${STAR_TMP}/star --outSAMstrandField intronMotif --outSAMtype BAM Unsorted --readFilesCommand zcat --outFilterMultimapScoreRange 0 --outFilterMultimapNmax 10000
 
     mv $STAR_TMP/starAligned.out.bam ${OUTPUT_DIR}/${ID}.bam
     mv $STAR_TMP/starLog.final.out ${OUTPUT_DIR}/${ID}.log.out
@@ -62,7 +62,7 @@ function star_pe_reads {
 SPECIES=$1
 SAMPLES=$2
 STAR_INDICES_DIR=$3
-THREADS_PRE_SAMPLE=$4
+THREADS_PER_SAMPLE=$4
 INPUT_DIR=$5
 OUTPUT_DIR=$6
 READS_TYPE=$7
@@ -83,11 +83,11 @@ for species in ${SPECIES}; do
         sample_reads_2_dir=${sample_dir}/reads_2
 
         if [[ "${READS_TYPE}" == "single" ]]; then
-            star_se_reads ${sample} ${species} ${STAR_INDICES_DIR}/${species} ${THREADS_PRE_SAMPLE} $(listFiles ${sample_reads_1_dir}/*) ${OUTPUT_DIR} ${STAR_EXECUTABLE} &
+            star_se_reads ${sample} ${species} ${STAR_INDICES_DIR}/${species} ${THREADS_PER_SAMPLE} $(listFiles ${sample_reads_1_dir}/*) ${OUTPUT_DIR} ${STAR_EXECUTABLE} &
         else
-            star_pe_reads ${sample} ${species} ${STAR_INDICES_DIR}/${species} ${THREADS_PRE_SAMPLE} $(listFiles ${sample_reads_1_dir}/*) $(listFiles ${sample_reads_2_dir}/*) ${OUTPUT_DIR} ${STAR_EXECUTABLE} &
+            star_pe_reads ${sample} ${species} ${STAR_INDICES_DIR}/${species} ${THREADS_PER_SAMPLE} $(listFiles ${sample_reads_1_dir}/*) $(listFiles ${sample_reads_2_dir}/*) ${OUTPUT_DIR} ${STAR_EXECUTABLE} &
         fi
-        THREAD_USING=$((${THREAD_USING}+${THREADS_PRE_SAMPLE}))
+        THREAD_USING=$((${THREAD_USING}+${THREADS_PER_SAMPLE}))
         MEM_USING=$((${MEM_USING}+30))
 
     done

@@ -165,7 +165,7 @@ MAPPED_READS_TARGET = "MAPPED_READS"
 SORTED_READS_TARGET = "SORTED_READS"
 FILTERED_READS_TARGET = "FILTERED_READS"
 
-NUM_THREADS_PRE_SAMPLE_VARIABLE = "NUM_THREADS_PRE_SAMPLE"
+NUM_THREADS_PER_SAMPLE_VARIABLE = "NUM_THREADS_PER_SAMPLE"
 NUM_TOTAL_THREADS_VARIABLE = "NUM_TOTAL_THREADS"
 STAR_EXECUTABLE_VARIABLE = "STAR_EXECUTABLE"
 SAMBAMBA_SORT_TMP_DIR_VARIABLE = "SAMBAMBA_SORT_TMP_DIR"
@@ -183,7 +183,7 @@ EXECUTION_RECORD_ENTRIES = [
     ["Species", SPECIES],
     ["Species STAR info", SPECIES_STAR_INFO],
     ["Reads Base Dir", READS_BASE_DIR],
-    ["Number of Threads Pre Sample", NUM_THREADS_PRE_SAMPLE],
+    ["Number of Threads Pre Sample", NUM_THREADS_PER_SAMPLE],
     ["Number of Total Threads", NUM_TOTAL_THREADS],
     ["Mismatch Threshold", MISMATCH_THRESHOLD],
     ["Minmatch Threshold", MINMATCH_THRESHOLD],
@@ -365,18 +365,22 @@ def _validate_command_line_options(options):
         opt.validate_dir_option(
             options[READS_BASE_DIR], "Reads base directory does not exist",
             nullable=True)
-        options[NUM_THREADS_PRE_SAMPLE] = opt.validate_int_option(
-            options[NUM_THREADS_PRE_SAMPLE],
-            "Number of threads pre sample must be a positive integer",
+        options[NUM_THREADS_PER_SAMPLE] = opt.validate_int_option(
+            options[NUM_THREADS_PER_SAMPLE],
+            "Number of threads per sample must be a positive integer",
             min_val=1, nullable=True)
         options[NUM_TOTAL_THREADS] = opt.validate_int_option(
             options[NUM_TOTAL_THREADS],
             "Number of total threads must be a positive integer",
             min_val=1, nullable=True)
-        opt.validate_threads_value(options[NUM_THREADS_PRE_SAMPLE],
-                                   options[NUM_TOTAL_THREADS],
-                                   "Number of total threads must be greater or equal "
-                                   "to the number of threads pre sample ")
+
+        if options[NUM_THREADS_PER_SAMPLE] > options[NUM_TOTAL_THREADS]:
+            raise schema.SchemaError((
+                "Number of total threads ({tot}) must be greater or equal " +
+                "to number of threads per sample ({per}).").format(
+                    tot=options[NUM_TOTAL_THREADS],
+                    per=options[NUM_THREADS_PER_SAMPLE]))
+
         opt.validate_file_option(
             options[SAMPLES_FILE], "Could not open samples definition file")
         opt.validate_dir_option(
@@ -479,7 +483,7 @@ def _write_variable_definitions(logger, writer, options, sample_info):
     options: dictionary of command-line options
     sample_info: object encapsulating samples and their accompanying read files
     """
-    writer.set_variable(NUM_THREADS_PRE_SAMPLE_VARIABLE, options[NUM_THREADS_PRE_SAMPLE])
+    writer.set_variable(NUM_THREADS_PER_SAMPLE_VARIABLE, options[NUM_THREADS_PER_SAMPLE])
     writer.add_blank_line()
 
     writer.set_variable(NUM_TOTAL_THREADS_VARIABLE, options[NUM_TOTAL_THREADS])
@@ -575,7 +579,7 @@ def _write_filtered_reads_target(logger, writer, options):
              "\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
              writer.variable_val(SORTED_READS_TARGET),
              writer.variable_val(FILTERED_READS_TARGET),
-             writer.variable_val(NUM_THREADS_PRE_SAMPLE_VARIABLE),
+             writer.variable_val(NUM_THREADS_PER_SAMPLE_VARIABLE),
              options[MISMATCH_THRESHOLD],
              options[MINMATCH_THRESHOLD],
              options[MULTIMAP_THRESHOLD],
@@ -606,7 +610,7 @@ def _write_sorted_reads_target(logger, writer, options):
             ["\"{sl}\"".format(sl=" ".join(options[SPECIES])),
              "\"{var}\"".format(
                  var=writer.variable_val(SAMPLES_VARIABLE)),
-             writer.variable_val(NUM_THREADS_PRE_SAMPLE_VARIABLE),
+             writer.variable_val(NUM_THREADS_PER_SAMPLE_VARIABLE),
              writer.variable_val(MAPPED_READS_TARGET),
              writer.variable_val(SORTED_READS_TARGET),
              writer.variable_val(SAMBAMBA_SORT_TMP_DIR_VARIABLE),
@@ -643,7 +647,7 @@ def _write_mapped_reads_target(logger, writer, sample_info, options):
             "\"{sl}\"".format(sl=" ".join(options[SPECIES])),
             "\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
             writer.variable_val(STAR_INDICES_TARGET),
-            writer.variable_val(NUM_THREADS_PRE_SAMPLE_VARIABLE),
+            writer.variable_val(NUM_THREADS_PER_SAMPLE_VARIABLE),
             writer.variable_val(COLLATE_RAW_READS_TARGET),
             writer.variable_val(MAPPED_READS_TARGET)]
 

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 MAX_MEM=$(cat /proc/meminfo | grep 'MemTotal'| awk '{print int($2/(1024^2))}')
 ALLOW_MEM=$(echo ${MAX_MEM} | awk '{print int($1 * 0.8)}')
 MAX_CORES=$(cat /proc/cpuinfo | grep processor | wc -l)
@@ -10,7 +9,7 @@ MEM_USING=0
 
 function isBusy {
     if [ "$(($THREAD_USING))" -ge "${TOTAL_THREADS}"  ] || [ "${MEM_USING}" -ge "${ALLOW_MEM}" ] \
-     || [ "$((${THREAD_USING}+${THREADS_PRE_SAMPLE}))"  -e "${TOTAL_THREADS}"  ]; then
+     || [ "$((${THREAD_USING}+${THREADS_PER_SAMPLE}))"  -e "${TOTAL_THREADS}"  ]; then
         echo "yes"
     else
         echo "no"
