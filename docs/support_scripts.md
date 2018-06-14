@@ -69,7 +69,7 @@ filter_reads (Bash)
 Usage:
 
     filter_reads
-        <input-dir> <output-dir> <num-threads-pre-sample>
+        <input-dir> <output-dir> <num-threads-per-sample>
         <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
         <reject-multimaps> <num-total-threads>
         (<species>) (<species>) ...
@@ -79,7 +79,7 @@ For each sample, take the RNA-seq reads mapping to each genome, and assign them 
 * ``<samples>`` (_text parameter_): Space-separated list of sample names.
 * ``<input-dir>`` (_file path_): Directory containing, for each sample and each species, name-sorted BAM files containing read mappings for that sample's RNA-seq reads to the species' genome reference.
 * ``<output-dir>`` (_file path_): Directory into which species-separated BAM files are to be written.
-* ``<num-threads-pre-sample>`` (_integer_): Number of threads to be used for each sample during species separation.
+* ``<num-threads-per-sample>`` (_integer_): Number of threads to be used for each sample during species separation.
 * ``<mismatch-threshold>`` (_float_): Maximum percentage of read bases allowed to be mismatches against the genome during filtering.
 * ``<minmatch-threshold>`` (_float_): Maximum percentage of read length allowed to not be mapped during filtering.
 * ``<multimap-threshold>`` (_integer_): Maximum number of multi-mappings allowed during filtering.
@@ -118,7 +118,7 @@ map_reads (Bash)
 Usage:
 
     map_reads
-        <species> <samples> <star-indices-dir> <num-threads-pre-sample>
+        <species> <samples> <star-indices-dir> <num-threads-per-sample>
         <input-dir> <output-dir> <reads-type> <star_executable> <total_threads>
 
 For each sample, map raw RNA-seq reads to each species' genome. ``map_reads`` is called by the species separation Makefile.
@@ -126,7 +126,7 @@ For each sample, map raw RNA-seq reads to each species' genome. ``map_reads`` is
 * ``<species>`` (_text parameter_): Space-separated list of species names.
 * ``<samples>`` (_text parameter_): Space-separated list of sample names.
 * ``<star-indices-dir>`` (_file path_): Directory containing ``STAR`` index directories for each species (or links to index directories).
-* ``<num-threads-pre-sample>`` (_integer_): Number of threads pre sample to be used by ``STAR`` during read mapping.
+* ``<num-threads-per-sample>`` (_integer_): Number of threads pre sample to be used by ``STAR`` during read mapping.
 * ``<input-dir>`` (_file path_): Directory containing per-sample directories, each of which contains links to the input raw RNA-seq read files for that sample.
 * ``<output-dir>`` (_file path_): Directory into which to write BAM files containing read mappings.
 * ``<reads-type>`` (_text parameter_): Either "single" for single-end reads, or "paired" for paired-end reads.

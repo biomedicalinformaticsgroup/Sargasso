@@ -3,7 +3,7 @@
 """Usage:
     species_separator
         [--log-level=<log-level>]
-        [--reads-base-dir=<reads-base-dir>] [--num-threads-pre-sample=<num-threads-pre-sample>]
+        [--reads-base-dir=<reads-base-dir>] [--num-threads-per-sample=<num-threads-per-sample>]
         [--mismatch-threshold=<mismatch-threshold>]
         [--minmatch-threshold=<minmatch-threshold>]
         [--multimap-threshold=<multimap-threshold>]
@@ -44,7 +44,7 @@ Options:
     STAR index directory for species.
 --reads-base-dir=<reads-base-dir>
     Base directory for raw RNA-seq read data files.
--t <num-threads-pre-sample> --num-threads-pre-sample=<num-threads-pre-sample>
+-t <num-threads-per-sample> --num-threads-per-sample=<num-threads-per-sample>
     Number of threads to use for each sample for parallel processing. [default: 1]
 --num-total-threads=<num-total-threads>
     Number of threads to use for parallel processing. [default: 1]
@@ -113,11 +113,11 @@ Makefile is both written and executed, and all stages of species separation are
 performed automatically.
 
 n.b. Many stages of species separation can be executed across multiple threads
-by specifying the "--num-threads-pre-sample" and the "--num-total-threads" options.
+by specifying the "--num-threads-per-sample" and the "--num-total-threads" options.
 
 e.g.:
 
-species_separator --reads-base-dir=/srv/data/rnaseq --num-threads-pre-sample 4 --num-total-threads 16 --run-separation samples.tsv my_results mouse /srv/data/genome/mouse/STAR_Index rat /srv/data/genome/rat/STAR_Index
+species_separator --reads-base-dir=/srv/data/rnaseq --num-threads-per-sample 4 --num-total-threads 16 --run-separation samples.tsv my_results mouse /srv/data/genome/mouse/STAR_Index rat /srv/data/genome/rat/STAR_Index
 """
 
 import docopt
@@ -137,7 +137,7 @@ OUTPUT_DIR = "<output-dir>"
 SPECIES = "<species>"
 SPECIES_STAR_INFO = "<species-star-info>"
 READS_BASE_DIR = "--reads-base-dir"
-NUM_THREADS_PRE_SAMPLE = "--num-threads-pre-sample"
+NUM_THREADS_PRE_SAMPLE = "--num-threads-per-sample"
 NUM_TOTAL_THREADS = "--num-total-threads"
 MISMATCH_THRESHOLD = "--mismatch-threshold"
 MINMATCH_THRESHOLD = "--minmatch-threshold"

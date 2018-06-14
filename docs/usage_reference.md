@@ -5,7 +5,7 @@ The main ``species_separator`` script has a number of command line options to al
 
     species_separator
         [--log-level=<log-level>]
-        [--reads-base-dir=<reads-base-dir>] [--num-threads-pre-sample=<num-threads-pre-sample>]
+        [--reads-base-dir=<reads-base-dir>] [--num-threads-per-sample=<num-threads-per-sample>]
         [--num-total-threads=<num-total-threads>]
         [--mismatch-threshold=<mismatch-threshold>]
         [--minmatch-threshold=<minmatch-threshold>]
@@ -57,7 +57,7 @@ Performance
 
 These are optional parameters concerning the running of the pipeline.
 
-* ``-t <num-threads-pre-sample> --num-threads-pre-sample=<num-threads-pre-sample>`` (_integer_): Number of threads to use for each sample for parallel processing (default: 1).
+* ``-t <num-threads-per-sample> --num-threads-per-sample=<num-threads-per-sample>`` (_integer_): Number of threads to use for each sample for parallel processing (default: 1).
 * ``--num-total-threads=<num-total-threads>`` (_integer_): Maximum number of threads to use for parallel processing (default: 1).
 * ``--run-separation`` (_flag_): If specified, species separation will be run; otherwise scripts to perform separation will be created but not run. If the option ``--run-separation`` is not specified, a Makefile is written to the given output directory, via which all stages of species separation can be run under the user's control. If ``--run-separation`` is specified, however, the Makefile is both written and executed, and all stages of species separation are performed automatically.
 * ``--log-level=<log-level>`` (_text parameter_): Sets the minimum severity level at which log messages will be output (one of "debug", "info", "warning", "error" or "critical").
