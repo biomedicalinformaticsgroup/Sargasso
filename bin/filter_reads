@@ -4,18 +4,28 @@ set -o nounset
 set -o errexit
 set -o xtrace
 
+. common_functions
+
 SAMPLES=$1
 INPUT_DIR=$2
 OUTPUT_DIR=$3
-THREADS=$4 #How many chunks to split the read files into
+THREADS_PER_SAMPLE=$4 #How many chunks to split the read files into
 MISMATCH_THRESHOLD=$5
 MINMATCH_THRESHOLD=$6
 MULTIMAP_THRESHOLD=$7
 REJECT_MULTIMAPS=$8
-SPECIES=( "${@:9}" )
+TOTAL_THREADS=$9
+SPECIES=( "${@:10}" )
 
 NUM_SPECIES=${#SPECIES[@]}
-BLOCK_DIR=${OUTPUT_DIR}/Blocks
+
+
+
+THREAD_USING=0
+MEM_USING=0
+
+
+
 
 ##### FUNCTIONS
 
@@ -43,8 +53,16 @@ function get_output_filtered_file() {
     echo "${OUTPUT_DIR}"/"${SAMPLE}"_"${SPECIES[index]}"_filtered.bam
 }
 
+function mf (){
+C=$1
+echo ${C}
+C=2
+echo ${C}
+}
+
 function create_per_thread_input_files() {
     SAMPLE=$1
+
 
     sorted_reads_prefix="${INPUT_DIR}/${SAMPLE}"
     species_bams=()
@@ -55,7 +73,7 @@ function create_per_thread_input_files() {
         index=$((${index} + 1))
     done
 
-    if [ "${THREADS}" -eq "1" ]
+    if [ "${THREADS_PER_SAMPLE}" -eq "1" ]
     then
         index=0
         while [ ${index} -lt ${NUM_SPECIES} ]; do
@@ -70,7 +88,7 @@ function create_per_thread_input_files() {
         # the mapped reads file
         index=0
         while [ ${index} -lt ${NUM_SPECIES} ]; do
-            read_no[${index}]=$(sambamba view -c -t ${THREADS} ${species_bams[index]})
+            read_no[${index}]=$(sambamba view -c -t ${THREADS_PER_SAMPLE} ${species_bams[index]})
             index=$((${index} + 1))
         done
 
@@ -87,7 +105,7 @@ function create_per_thread_input_files() {
             index=$((${index} + 1))
         done
 
-        block_size=$(( largest_read_no / THREADS ))
+        block_size=$(( largest_read_no / THREADS_PER_SAMPLE ))
 
         # Calculate the line indexes to extract the start/end ids of the blocks
         block_indices=()
@@ -95,29 +113,29 @@ function create_per_thread_input_files() {
 
         block_indices["0"]="${current_index}"
 
-        for index in $( seq 1 $(( THREADS - 1 )) )
+        for index in $( seq 1 $(( THREADS_PER_SAMPLE - 1 )) )
         do
             current_index=$(( current_index + block_size ))
             block_indices["${index}"]="${current_index}"
         done
 
-        block_indices["${THREADS}"]="${largest_read_no}"
-           
+        block_indices["${THREADS_PER_SAMPLE}"]="${largest_read_no}"
+
         # fetch the ids from the largest file & store in array
         sed_command=""
 
-        for i in $(seq $(( THREADS + 1)) )
+        for i in $(seq $(( THREADS_PER_SAMPLE + 1)) )
         do
             j=$(( i - 1))
             sed_command="${sed_command} ${block_indices[${j}]}p;"
         done
 
-        block_read_ids=($( sambamba view -t "${THREADS}" "${sorted_reads_prefix}"."${largest_read_no_species}".bam | sed -n "${sed_command}" | awk '{print $1}' ))
+        block_read_ids=($( sambamba view -t "${THREADS_PER_SAMPLE}" "${sorted_reads_prefix}"."${largest_read_no_species}".bam | sed -n "${sed_command}" | awk '{print $1}' ))
 
         # extract blocks for each species
-        for i in $(seq "${THREADS}" )
+        for i in $(seq "${THREADS_PER_SAMPLE}" )
         do
-            if [ "$i" -ne "${THREADS}" ]
+            if [ "$i" -ne "${THREADS_PER_SAMPLE}" ]
             then
                 op="<"
             else
@@ -129,7 +147,7 @@ function create_per_thread_input_files() {
             while [ ${index} -lt ${NUM_SPECIES} ]; do
                 filter="read_name >= '${block_read_ids[$(( i - 1 ))]}' and read_name ${op} '${block_read_ids[${i}]}'"
                 block_file=$(get_block_file ${SAMPLE} ${SPECIES[index]} ${i})
-                sambamba view --filter "${filter}" ${species_bams[index]} -o ${block_file} -l 1 -h
+                sambamba view -t 1 --filter "${filter}" ${species_bams[index]} -o ${block_file} -l 1 -h
                 index=$((${index} + 1))
             done
             ) &
@@ -142,7 +160,7 @@ function create_per_thread_input_files() {
 function merge_per_thread_filtered_files() {
     SAMPLE=$1
 
-    if [ "${THREADS}" -eq "1" ]
+    if [ "${THREADS_PER_SAMPLE}" -eq "1" ]
     then
         index=0
         while [ ${index} -lt ${NUM_SPECIES} ]; do
@@ -156,7 +174,7 @@ function merge_per_thread_filtered_files() {
         index=0
         while [ ${index} -lt ${NUM_SPECIES} ]; do
             pt_files=()
-            for i in $(seq 0 1 $((${THREADS}-1)));
+            for i in $(seq 0 1 $((${THREADS_PER_SAMPLE}-1)));
             do
                 pt_files[${i}]=$(get_per_thread_filtered_file ${SAMPLE} ${SPECIES[index]} ${i})
             done
@@ -172,7 +190,7 @@ function merge_per_thread_filtered_files() {
 function cleanup_intermediate_files() {
     SAMPLE=$1
 
-    for i in $(seq "${THREADS}" )
+    for i in $(seq "${THREADS_PER_SAMPLE}" )
     do
         index=0
         while [ ${index} -lt ${NUM_SPECIES} ]; do
@@ -182,7 +200,7 @@ function cleanup_intermediate_files() {
 
         one_less=$((${i} - 1))
 
-        if [ "${THREADS}" -ne "1" ]
+        if [ "${THREADS_PER_SAMPLE}" -ne "1" ]
         then
             index=0
             while [ ${index} -lt ${NUM_SPECIES} ]; do
@@ -195,11 +213,10 @@ function cleanup_intermediate_files() {
 
 function calculate_filtering_summary() {
     SAMPLE=$1
-    FIRST_SAMPLE=$2
 
     HEADER=""
     TOTALS=()
-    TMP_SUMMARY_FILE="${OUTPUT_DIR}"/filtering_result_summary.txt
+    TMP_SUMMARY_FILE="${OUTPUT_DIR}"/${SAMPLE}_filtering_result_summary.txt
     OVERALL_SUMMARY_FILE="${OUTPUT_DIR}"/overall_filtering_summary.txt
 
     while IFS='' read -r line || [[ -n "$line" ]]; 
@@ -217,32 +234,50 @@ function calculate_filtering_summary() {
     done < "${TMP_SUMMARY_FILE}"
 
     IFS=","
-    if [ ${FIRST_SAMPLE} -eq 1 ]
+
+    if [ ! -f ${OVERALL_SUMMARY_FILE} ]
     then
         echo -e "Sample,${HEADER[*]}" > "${OVERALL_SUMMARY_FILE}"
     fi
 
-    echo -e "${SAMPLE},${TOTALS[*]}" >> "${OVERALL_SUMMARY_FILE}"
+    echo -e "${SAMPLE},${TOTALS[*]}" > "${TMP_SUMMARY_FILE}"
     IFS=$' \t\n'
+}
 
+function merge_filtering_summary() {
+    SAMPLE=$1
+    TMP_SUMMARY_FILE="${OUTPUT_DIR}"/${SAMPLE}_filtering_result_summary.txt
+    OVERALL_SUMMARY_FILE="${OUTPUT_DIR}"/overall_filtering_summary.txt
+    cat ${TMP_SUMMARY_FILE} >> ${OVERALL_SUMMARY_FILE}
     rm ${TMP_SUMMARY_FILE}
 }
 
-#####
-
-mkdir -p $BLOCK_DIR
-
-first_sample=1
-
-for sample in ${SAMPLES}; do
+function do_filter_reads() {
+    BLOCK_DIR=${OUTPUT_DIR}/Blocks_${sample}
+    mkdir -p $BLOCK_DIR
     create_per_thread_input_files ${sample}
     filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${MISMATCH_THRESHOLD} ${MINMATCH_THRESHOLD} ${MULTIMAP_THRESHOLD} ${REJECT_MULTIMAPS} ${SPECIES[*]}
     merge_per_thread_filtered_files ${sample}
     cleanup_intermediate_files ${sample}
-    calculate_filtering_summary ${sample} ${first_sample}
+    calculate_filtering_summary ${sample}
+}
 
-    if [ ${first_sample} -eq 1 ]
-    then
-        first_sample=0
-    fi
+
+
+#####
+
+
+for sample in ${SAMPLES}; do
+    checkBusy
+    do_filter_reads &
+    THREAD_USING=$((${THREAD_USING}+${THREADS_PER_SAMPLE}))
+    MEM_USING=$((${MEM_USING}+30))
 done
+wait $(jobs -p)
+
+##merge results
+for sample in ${SAMPLES}; do
+    merge_filtering_summary ${sample}
+done
+
+

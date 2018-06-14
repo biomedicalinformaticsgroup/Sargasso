@@ -3,7 +3,7 @@
 """Usage:
     species_separator
         [--log-level=<log-level>]
-        [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>]
+        [--reads-base-dir=<reads-base-dir>] [--num-threads-per-sample=<num-threads-per-sample>]
         [--mismatch-threshold=<mismatch-threshold>]
         [--minmatch-threshold=<minmatch-threshold>]
         [--multimap-threshold=<multimap-threshold>]
@@ -13,6 +13,7 @@
         [--delete-intermediate]
         [--star-executable=<star-executable>]
         [--sambamba-sort-tmp-dir=<sambamba-sort-tmp-dir>]
+        [--num-total-threads=<num-total-threads>]
         <samples-file> <output-dir>
         (<species> <species-star-info>)
         (<species> <species-star-info>)
@@ -43,7 +44,9 @@ Options:
     STAR index directory for species.
 --reads-base-dir=<reads-base-dir>
     Base directory for raw RNA-seq read data files.
--t <num-threads> --num-threads=<num-threads>
+-t <num-threads-per-sample> --num-threads-per-sample=<num-threads-per-sample>
+    Number of threads to use for each sample for parallel processing. [default: 1]
+--num-total-threads=<num-total-threads>
     Number of threads to use for parallel processing. [default: 1]
 --mismatch-threshold=<mismatch-threshold>
     Maximum percentage of bases allowed to be mismatches against the genome
@@ -110,11 +113,11 @@ Makefile is both written and executed, and all stages of species separation are
 performed automatically.
 
 n.b. Many stages of species separation can be executed across multiple threads
-by specifying the "--num-threads" option.
+by specifying the "--num-threads-per-sample" and the "--num-total-threads" options.
 
 e.g.:
 
-species_separator --reads-base-dir=/srv/data/rnaseq --num-threads 4 --run-separation samples.tsv my_results mouse /srv/data/genome/mouse/STAR_Index rat /srv/data/genome/rat/STAR_Index
+species_separator --reads-base-dir=/srv/data/rnaseq --num-threads-per-sample 4 --num-total-threads 16 --run-separation samples.tsv my_results mouse /srv/data/genome/mouse/STAR_Index rat /srv/data/genome/rat/STAR_Index
 """
 
 import docopt
@@ -134,7 +137,8 @@ OUTPUT_DIR = "<output-dir>"
 SPECIES = "<species>"
 SPECIES_STAR_INFO = "<species-star-info>"
 READS_BASE_DIR = "--reads-base-dir"
-NUM_THREADS = "--num-threads"
+NUM_THREADS_PER_SAMPLE = "--num-threads-per-sample"
+NUM_TOTAL_THREADS = "--num-total-threads"
 MISMATCH_THRESHOLD = "--mismatch-threshold"
 MINMATCH_THRESHOLD = "--minmatch-threshold"
 MULTIMAP_THRESHOLD = "--multimap-threshold"
@@ -161,7 +165,8 @@ MAPPED_READS_TARGET = "MAPPED_READS"
 SORTED_READS_TARGET = "SORTED_READS"
 FILTERED_READS_TARGET = "FILTERED_READS"
 
-NUM_THREADS_VARIABLE = "NUM_THREADS"
+NUM_THREADS_PER_SAMPLE_VARIABLE = "NUM_THREADS_PER_SAMPLE"
+NUM_TOTAL_THREADS_VARIABLE = "NUM_TOTAL_THREADS"
 STAR_EXECUTABLE_VARIABLE = "STAR_EXECUTABLE"
 SAMBAMBA_SORT_TMP_DIR_VARIABLE = "SAMBAMBA_SORT_TMP_DIR"
 SAMPLES_VARIABLE = "SAMPLES"
@@ -178,7 +183,8 @@ EXECUTION_RECORD_ENTRIES = [
     ["Species", SPECIES],
     ["Species STAR info", SPECIES_STAR_INFO],
     ["Reads Base Dir", READS_BASE_DIR],
-    ["Number of Threads", NUM_THREADS],
+    ["Number of Threads Pre Sample", NUM_THREADS_PER_SAMPLE],
+    ["Number of Total Threads", NUM_TOTAL_THREADS],
     ["Mismatch Threshold", MISMATCH_THRESHOLD],
     ["Minmatch Threshold", MINMATCH_THRESHOLD],
     ["Multimap Threshold", MULTIMAP_THRESHOLD],
@@ -359,10 +365,22 @@ def _validate_command_line_options(options):
         opt.validate_dir_option(
             options[READS_BASE_DIR], "Reads base directory does not exist",
             nullable=True)
-        options[NUM_THREADS] = opt.validate_int_option(
-            options[NUM_THREADS],
-            "Number of threads must be a positive integer",
+        options[NUM_THREADS_PER_SAMPLE] = opt.validate_int_option(
+            options[NUM_THREADS_PER_SAMPLE],
+            "Number of threads per sample must be a positive integer",
             min_val=1, nullable=True)
+        options[NUM_TOTAL_THREADS] = opt.validate_int_option(
+            options[NUM_TOTAL_THREADS],
+            "Number of total threads must be a positive integer",
+            min_val=1, nullable=True)
+
+        if options[NUM_THREADS_PER_SAMPLE] > options[NUM_TOTAL_THREADS]:
+            raise schema.SchemaError((
+                "Number of total threads ({tot}) must be greater or equal " +
+                "to number of threads per sample ({per}).").format(
+                    tot=options[NUM_TOTAL_THREADS],
+                    per=options[NUM_THREADS_PER_SAMPLE]))
+
         opt.validate_file_option(
             options[SAMPLES_FILE], "Could not open samples definition file")
         opt.validate_dir_option(
@@ -465,7 +483,10 @@ def _write_variable_definitions(logger, writer, options, sample_info):
     options: dictionary of command-line options
     sample_info: object encapsulating samples and their accompanying read files
     """
-    writer.set_variable(NUM_THREADS_VARIABLE, options[NUM_THREADS])
+    writer.set_variable(NUM_THREADS_PER_SAMPLE_VARIABLE, options[NUM_THREADS_PER_SAMPLE])
+    writer.add_blank_line()
+
+    writer.set_variable(NUM_TOTAL_THREADS_VARIABLE, options[NUM_TOTAL_THREADS])
     writer.add_blank_line()
 
     writer.set_variable(STAR_EXECUTABLE_VARIABLE, options[STAR_EXECUTABLE])
@@ -558,11 +579,12 @@ def _write_filtered_reads_target(logger, writer, options):
              "\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
              writer.variable_val(SORTED_READS_TARGET),
              writer.variable_val(FILTERED_READS_TARGET),
-             writer.variable_val(NUM_THREADS_VARIABLE),
+             writer.variable_val(NUM_THREADS_PER_SAMPLE_VARIABLE),
              options[MISMATCH_THRESHOLD],
              options[MINMATCH_THRESHOLD],
              options[MULTIMAP_THRESHOLD],
              "--reject-multimaps" if options[REJECT_MULTIMAPS] else "\"\"",
+             writer.variable_val(NUM_TOTAL_THREADS_VARIABLE),
              "{sl}".format(sl=" ".join(options[SPECIES]))])
 
         if options[DELETE_INTERMEDIATE]:
@@ -588,10 +610,13 @@ def _write_sorted_reads_target(logger, writer, options):
             ["\"{sl}\"".format(sl=" ".join(options[SPECIES])),
              "\"{var}\"".format(
                  var=writer.variable_val(SAMPLES_VARIABLE)),
-             writer.variable_val(NUM_THREADS_VARIABLE),
+             writer.variable_val(NUM_THREADS_PER_SAMPLE_VARIABLE),
              writer.variable_val(MAPPED_READS_TARGET),
              writer.variable_val(SORTED_READS_TARGET),
-             writer.variable_val(SAMBAMBA_SORT_TMP_DIR_VARIABLE)])
+             writer.variable_val(SAMBAMBA_SORT_TMP_DIR_VARIABLE),
+             writer.variable_val(NUM_TOTAL_THREADS_VARIABLE)]
+             )
+
 
         if options[DELETE_INTERMEDIATE]:
             writer.remove_target_directory(MAPPED_READS_TARGET)
@@ -622,7 +647,7 @@ def _write_mapped_reads_target(logger, writer, sample_info, options):
             "\"{sl}\"".format(sl=" ".join(options[SPECIES])),
             "\"{var}\"".format(var=writer.variable_val(SAMPLES_VARIABLE)),
             writer.variable_val(STAR_INDICES_TARGET),
-            writer.variable_val(NUM_THREADS_VARIABLE),
+            writer.variable_val(NUM_THREADS_PER_SAMPLE_VARIABLE),
             writer.variable_val(COLLATE_RAW_READS_TARGET),
             writer.variable_val(MAPPED_READS_TARGET)]
 
@@ -631,6 +656,8 @@ def _write_mapped_reads_target(logger, writer, sample_info, options):
             else SINGLE_END_READS_TYPE)
 
         map_reads_params.append(options[STAR_EXECUTABLE])
+
+        map_reads_params.append(writer.variable_val(NUM_TOTAL_THREADS_VARIABLE))
 
         writer.add_command("map_reads", map_reads_params)
 
@@ -713,7 +740,7 @@ def _write_species_main_star_index_target(
                 "build_star_index",
                 [writer.variable_val(_get_genome_fasta_variable(species)),
                  writer.variable_val(_get_gtf_file_variable(species)),
-                 writer.variable_val(NUM_THREADS_VARIABLE),
+                 writer.variable_val(NUM_TOTAL_THREADS_VARIABLE),
                  target,star_executable])
 
 

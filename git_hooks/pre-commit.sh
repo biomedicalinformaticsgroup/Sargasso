@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Adapted from http://codeinthehole.com/writing/tips-for-using-a-git-pre-commit-hook/
+# Adapted from http://codeinthehole.com/writing/tips-for-using-a-git-per-commit-hook/
 
 git stash -q --keep-index
 (cd pipeline_test; ./run_test.sh)

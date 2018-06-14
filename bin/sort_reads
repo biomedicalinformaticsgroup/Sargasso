@@ -4,16 +4,31 @@ set -o nounset
 set -o errexit
 set -o xtrace
 
+. common_functions
+
 SPECIES=$1
 SAMPLES=$2
-NUM_THREADS=$3
+THREADS_PER_SAMPLE=$3
 INPUT_DIR=$4
 OUTPUT_DIR=$5
 TMP_DIR=$6
+TOTAL_THREADS=$7
+
+
+
+THREAD_USING=0
+MEM_USING=0
+
 
 for species in ${SPECIES}; do
     for sample in ${SAMPLES}; do
-        sample_bam=${sample}.${species}.bam
-        sambamba sort --tmpdir ${TMP_DIR} -t ${NUM_THREADS} -n -o ${OUTPUT_DIR}/${sample_bam} ${INPUT_DIR}/${sample_bam}
+    checkBusy
+    sample_bam=${sample}.${species}.bam
+    sambamba sort --tmpdir ${TMP_DIR} -t ${THREADS_PER_SAMPLE} -n -o ${OUTPUT_DIR}/${sample_bam} ${INPUT_DIR}/${sample_bam} &
+
+    THREAD_USING=$((${THREAD_USING}+${THREADS_PER_SAMPLE}))
+    MEM_USING=$((${MEM_USING}+30))
+
     done
 done
+wait $(jobs -p)
