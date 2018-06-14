@@ -9,7 +9,7 @@ MEM_USING=0
 
 function isBusy {
     if [ "$(($THREAD_USING))" -ge "${TOTAL_THREADS}"  ] || [ "${MEM_USING}" -ge "${ALLOW_MEM}" ] \
-     || [ "$((${THREAD_USING}+${THREADS_PER_SAMPLE}))"  -e "${TOTAL_THREADS}"  ]; then
+     || [ "$((${THREAD_USING}+${THREADS_PER_SAMPLE}))"  -eq "${TOTAL_THREADS}"  ]; then
         echo "yes"
     else
         echo "no"
