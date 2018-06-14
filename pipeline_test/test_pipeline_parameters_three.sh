@@ -51,7 +51,7 @@ if [[ ! "${RUN_STAR}" == "yes" ]]; then
     HUMAN_STAR_INDEX=dummy_star_index
 fi
 
-species_separator --reads-base-dir="/" -t ${NUM_THREADS_PRE_SAMPLE} --num-total-threads ${NUM_TOTAL_THREADS} --mismatch-threshold=${MISMATCH_THRESHOLD} --minmatch-threshold=${MINMATCH_THRESHOLD} --multimap-threshold=${MULTIMAP_THRESHOLD} ${REJECT_MULTIMAPS} ${SAMPLES_FILE} ${SSS_DIR} mouse ${MOUSE_STAR_INDEX} rat ${RAT_STAR_INDEX} human ${HUMAN_STAR_INDEX}
+species_separator --reads-base-dir="/" -t ${NUM_THREADS_PER_SAMPLE} --num-total-threads ${NUM_TOTAL_THREADS} --mismatch-threshold=${MISMATCH_THRESHOLD} --minmatch-threshold=${MINMATCH_THRESHOLD} --multimap-threshold=${MULTIMAP_THRESHOLD} ${REJECT_MULTIMAPS} ${SAMPLES_FILE} ${SSS_DIR} mouse ${MOUSE_STAR_INDEX} rat ${RAT_STAR_INDEX} human ${HUMAN_STAR_INDEX}
 
 if [[ ! "${RUN_STAR}" == "yes" ]]; then
     mkdir -p ${SSS_DIR}/star_indices/mouse
