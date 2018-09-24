@@ -1,7 +1,7 @@
 import os
 import os.path
 import schema
-from . import parameter_defination as pd
+from . import constants
 
 
 from . import file_writer as fw
@@ -34,7 +34,7 @@ class rnaseq_makefile_writer(makefile_writer):
         sample_info: object encapsulating samples and their accompanying read files
         """
         with fw.writing_to_file(
-                fw.MakefileWriter, options[pd.OUTPUT_DIR], "Makefile") as writer:
+                fw.MakefileWriter, options[constants.OUTPUT_DIR], "Makefile") as writer:
             self._write_variable_definitions(logger, writer, options, sample_info)
             self._write_target_variable_definitions(logger, writer)
             self._write_phony_targets(logger, writer)

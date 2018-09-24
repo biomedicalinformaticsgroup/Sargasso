@@ -59,11 +59,19 @@ def separate_species(args):
     #                         version="species_separator v" + __version__)
 
 
-    separator= ss.SeparatorManager(args[0],args).get_separator()
+    separator = ss.SeparatorManager(args[0],args).get_separator()
     separator.run()
 
+    # todo remove debug code
+    print("--------------------------")
+    print("make file content:")
+    print("--------------------------")
 
-    print(11111111)
+    with open('/home/xinhe/Projects/Sargasso/results/anothertest4/Makefile', 'r') as fin:
+        print fin.read()
+    print("--------------------------")
+
+    print('done')
     exit(1)
     # Validate command-line options
     sample_info = _validate_command_line_options(options)

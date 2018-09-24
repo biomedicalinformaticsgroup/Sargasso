@@ -240,7 +240,8 @@ for sample in ${SAMPLES}; do
     create_per_thread_input_files ${sample}
     filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${MISMATCH_THRESHOLD} ${MINMATCH_THRESHOLD} ${MULTIMAP_THRESHOLD} ${REJECT_MULTIMAPS} ${SPECIES[*]}
     merge_per_thread_filtered_files ${sample}
-    cleanup_intermediate_files ${sample}
+    # todo remove comment
+    # cleanup_intermediate_files ${sample}
     calculate_filtering_summary ${sample} ${first_sample}
 
     if [ ${first_sample} -eq 1 ]
