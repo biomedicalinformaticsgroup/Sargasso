@@ -4,7 +4,7 @@ from .__init__ import __version__
 import schema
 import os
 import docopt
-from . import parameter_defination as pd
+from . import constants
 from . import filter_sample_reads
 
 class Validator(object):
@@ -35,45 +35,46 @@ class RnaseqValidator(Validator):
         try:
             opt.validate_log_level(options)
             opt.validate_dir_option(
-                options[pd.READS_BASE_DIR], "Reads base directory does not exist",
+                options[constants.READS_BASE_DIR], "Reads base directory does not exist",
                 nullable=True)
-            options[pd.NUM_THREADS] = opt.validate_int_option(
-                options[pd.NUM_THREADS],
+            options[constants.NUM_THREADS] = opt.validate_int_option(
+                options[constants.NUM_THREADS],
                 "Number of threads must be a positive integer",
                 min_val=1, nullable=True)
             opt.validate_file_option(
-                options[pd.SAMPLES_FILE], "Could not open samples definition file")
-            opt.validate_dir_option(
-                options[pd.OUTPUT_DIR], "Output directory should not exist",
-                should_exist=False)
+                options[constants.SAMPLES_FILE], "Could not open samples definition file")
+            # debug remove comment in prod
+            # opt.validate_dir_option(
+            #     options[constants.OUTPUT_DIR], "Output directory should not exist",
+            #     should_exist=False)
 
 
-            if options[pd.OPTIMAL_STRATEGY]:
-                options[pd.MISMATCH_THRESHOLD] = 1
-                options[pd.MINMATCH_THRESHOLD] = 2
-                options[pd.MULTIMAP_THRESHOLD] = 999999
-                options[pd.REJECT_MULTIMAPS] = False
-            elif options[pd.CONSERVATIVE_STRATEGY]:
-                options[pd.MISMATCH_THRESHOLD] = 0
-                options[pd.MINMATCH_THRESHOLD] = 0
-                options[pd.MULTIMAP_THRESHOLD] = 1
-                options[pd.REJECT_MULTIMAPS] = True
-            elif options[pd.RECALL_STRATEGY]:
-                options[pd.MISMATCH_THRESHOLD] = 2
-                options[pd.MINMATCH_THRESHOLD] = 10
-                options[pd.MULTIMAP_THRESHOLD] = 999999
-                options[pd.REJECT_MULTIMAPS] = False
-            elif options[pd.PERMISSIVE_STRATEGY]:
-                options[pd.MISMATCH_THRESHOLD] = 25
-                options[pd.MINMATCH_THRESHOLD] = 25
-                options[pd.MULTIMAP_THRESHOLD] = 999999
-                options[pd.REJECT_MULTIMAPS] = False
+            if options[constants.OPTIMAL_STRATEGY]:
+                options[constants.MISMATCH_THRESHOLD] = 1
+                options[constants.MINMATCH_THRESHOLD] = 2
+                options[constants.MULTIMAP_THRESHOLD] = 999999
+                options[constants.REJECT_MULTIMAPS] = False
+            elif options[constants.CONSERVATIVE_STRATEGY]:
+                options[constants.MISMATCH_THRESHOLD] = 0
+                options[constants.MINMATCH_THRESHOLD] = 0
+                options[constants.MULTIMAP_THRESHOLD] = 1
+                options[constants.REJECT_MULTIMAPS] = True
+            elif options[constants.RECALL_STRATEGY]:
+                options[constants.MISMATCH_THRESHOLD] = 2
+                options[constants.MINMATCH_THRESHOLD] = 10
+                options[constants.MULTIMAP_THRESHOLD] = 999999
+                options[constants.REJECT_MULTIMAPS] = False
+            elif options[constants.PERMISSIVE_STRATEGY]:
+                options[constants.MISMATCH_THRESHOLD] = 25
+                options[constants.MINMATCH_THRESHOLD] = 25
+                options[constants.MULTIMAP_THRESHOLD] = 999999
+                options[constants.REJECT_MULTIMAPS] = False
 
             filter_sample_reads.validate_threshold_options(
-                options, pd.MISMATCH_THRESHOLD, pd.MINMATCH_THRESHOLD,
-                pd.MULTIMAP_THRESHOLD)
+                options, constants.MISMATCH_THRESHOLD, constants.MINMATCH_THRESHOLD,
+                constants.MULTIMAP_THRESHOLD)
 
-            for i, species in enumerate(options[pd.SPECIES]):
+            for i, species in enumerate(options[constants.SPECIES]):
                 species_options = self._get_species_options(options, i)
                 self._validate_species_options(species, species_options)
 
@@ -94,23 +95,23 @@ class RnaseqValidator(Validator):
         species_index: which species to return options for
         """
 
-        species_options = { pd.SPECIES_NAME: options[pd.SPECIES][species_index] }
+        species_options = { constants.SPECIES_NAME: options[constants.SPECIES][species_index] }
 
-        star_infos = options[pd.SPECIES_STAR_INFO][species_index].split(",")
+        star_infos = options[constants.SPECIES_STAR_INFO][species_index].split(",")
 
         if len(star_infos) == 1:
-            species_options[pd.STAR_INDEX] = star_infos[0]
-            species_options[pd.GTF_FILE] = None
-            species_options[pd.GENOME_FASTA] = None
+            species_options[constants.STAR_INDEX] = star_infos[0]
+            species_options[constants.GTF_FILE] = None
+            species_options[constants.GENOME_FASTA] = None
         elif len(star_infos) == 2:
-            species_options[pd.STAR_INDEX] = None
-            species_options[pd.GTF_FILE] = star_infos[0]
-            species_options[pd.GENOME_FASTA] = star_infos[1]
+            species_options[constants.STAR_INDEX] = None
+            species_options[constants.GTF_FILE] = star_infos[0]
+            species_options[constants.GENOME_FASTA] = star_infos[1]
         else:
             raise schema.SchemaError(
                 None, "Should specify either a STAR index or both GTF file " +
                       "and genome FASTA directory for species {species}.".
-                      format(species=species_options[pd.SPECIES_NAME]))
+                      format(species=species_options[constants.SPECIES_NAME]))
 
         return species_options
 
@@ -121,16 +122,16 @@ class RnaseqValidator(Validator):
         species_options: dictionary of options specific to a particular species.
         """
         opt.validate_file_option(
-            species_options[pd.GTF_FILE],
+            species_options[constants.GTF_FILE],
             "Could not open species {species} GTF file".format(species=species),
             nullable=True)
         opt.validate_dir_option(
-            species_options[pd.GENOME_FASTA],
+            species_options[constants.GENOME_FASTA],
             "Genome FASTA directory for species {species} should exist".
                 format(species=species),
             nullable=True)
         opt.validate_dir_option(
-            species_options[pd.STAR_INDEX],
+            species_options[constants.STAR_INDEX],
             "STAR index directory for species {species} should exist".
                 format(species=species),
             nullable=True)
@@ -140,9 +141,9 @@ class RnaseqValidator(Validator):
         Return an object encapsulating samples and their accompanying read files.
         options: dictionary of command-line options
         """
-        sample_info = SampleInfo(options[pd.READS_BASE_DIR])
+        sample_info = SampleInfo(options[constants.READS_BASE_DIR])
 
-        for line in open(options[pd.SAMPLES_FILE], 'r'):
+        for line in open(options[constants.SAMPLES_FILE], 'r'):
             sample_data = line.split()
 
             if len(sample_data) < 2 or len(sample_data) > 3:
