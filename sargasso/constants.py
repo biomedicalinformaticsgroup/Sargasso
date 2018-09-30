@@ -63,5 +63,3 @@ EXECUTION_RECORD_ENTRIES = [
     ["Sambamba Sort Tmp Dir", SAMBAMBA_SORT_TMP_DIR],
 ]
 
-
-

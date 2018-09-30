@@ -5,9 +5,9 @@ from . import process
 import schema
 from . import constants
 from .__init__ import __version__
-from . import parameter_validator as pv
 from . import file_writer as fw
 from datetime import datetime
+from . import log
 
 
 
@@ -25,8 +25,7 @@ class Separator(object):
     def __init__(self,data_type, args):
         self.args = args
         self.data_type = data_type
-        self.validator = pv.ValidatorManager(self.data_type, args).get_validator()
-
+        self.parser = utilities.Manager.get_parser_manager(data_type,args)
 
      # Write Makefile to output directory
     def _write_makefile(self,logger, options, sample_info):
@@ -48,13 +47,14 @@ class Separator(object):
 
     def run(self):
 
-        options = self.validator.parse_command_line_options(self.args,self.DOC)
+
+        options = self.parser.parse_command_line_options(self.args,self.DOC)
 
         # Validate command-line options
-        sample_info = self.validator.validate_command_line_options(options)
+        sample_info = self.parser.validate_command_line_options(options)
 
         # Set up logger
-        logger = opt.get_logger_for_options(options)
+        logger = utilities.Manager.get_log_manager(options)
 
         # Create output directory
         #os.mkdir(options[constants.OUTPUT_DIR])
@@ -71,6 +71,17 @@ class Separator(object):
 
         print(options)
         return(0)
+
+    def _get_logger_for_options(options):
+        """
+        Return a Logger instance with a command-line specified severity threshold.
+
+        Return a Logger instance with severity threshold specified by the command
+        line option log.LOG_LEVEL. Log messages will be written to standard out.
+        options: Dictionary mapping from command-line option strings to option
+        values.
+        """
+        return log.get_logger(sys.stderr, options[constants._LOG_LEVEL_OPTION])
 
 
 
@@ -615,14 +626,14 @@ class SeparatorManager(object):
     def __init__(self,data_type,args):
         self.args = args
         self.data_type = data_type
-        self.separator = self.creat_separator(data_type, args)
 
     def creat_separator(self,data_type,args):
         separator = self.SEPARATORS[data_type]
+        # makefilewriter = mfw.MakefileWriterManager(data_type, args).get_parser()
         return separator(data_type,args)
 
     def get_separator(self):
-        return self.separator
+        return self.creat_separator(self.data_type, self.args)
 
 
 
