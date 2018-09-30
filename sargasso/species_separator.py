@@ -42,9 +42,9 @@ import os
 import os.path
 import schema
 
-from . import options as opt
+# from . import options as opt
 from .__init__ import __version__
-from . import separators as ss
+from . import classes as cls
 
 
 def separate_species(args):
@@ -59,7 +59,7 @@ def separate_species(args):
     #                         version="species_separator v" + __version__)
 
 
-    separator = ss.SeparatorManager(args[0],args).get_separator()
+    separator = cls.SeparatorManager(args[0],args).get()
     separator.run()
 
     # todo remove debug code

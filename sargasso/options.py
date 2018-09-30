@@ -216,17 +216,6 @@ def _nullable_validator(validator):
     return Or(validator, None)
 
 
-def get_logger_for_options(options):
-    """
-    Return a Logger instance with a command-line specified severity threshold.
-
-    Return a Logger instance with severity threshold specified by the command
-    line option log.LOG_LEVEL. Log messages will be written to standard out.
-    options: Dictionary mapping from command-line option strings to option
-    values.
-    """
-    return log.get_logger(sys.stderr, options[_LOG_LEVEL_OPTION])
-
 
 def validate_log_level(options):
     """
