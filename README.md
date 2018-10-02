@@ -25,6 +25,13 @@ Then install the *Sargasso* package and its Python package dependencies into the
 pip install git+https://github.com/statbio/sargasso.git
 ```
 
+Citation
+========
+
+If you make use of *Sargasso* please cite [our protocol paper](https://www.nature.com/articles/s41596-018-0029-2):
+
+* Qiu *et al.*, "Mixed-species RNA-seq for elucidation of non-cell-autonomous control of gene transcription", *Nature Protocols* **13**, 2176–2199 (2018).
+
 Changelog
 =========
 
