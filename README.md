@@ -35,6 +35,7 @@ If you make use of *Sargasso* please cite [our protocol paper](https://www.natur
 Changelog
 =========
 
+* 1.2.1 (02/10/2018): Bugfix release for incompatibilities between Mac OS and Linux.
 * 1.2 (16/02/2018): 
     - Improvements to species read assignment logic gives better precision and recall.
     - Added --delete-intermediate option to delete intermediate BAM files.
