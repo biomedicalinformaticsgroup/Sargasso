@@ -44,7 +44,11 @@ import schema
 
 # from . import options as opt
 from .__init__ import __version__
-from . import classes as cls
+from separators import SeparatorManager
+from separators import Separator
+from commandline_parser import CommandlineParser
+from parameter_validator import ParameterValidator
+from options import Options
 
 
 def separate_species(args):
@@ -58,16 +62,25 @@ def separate_species(args):
     # options = docopt.docopt(docstring, argv=args,
     #                         version="species_separator v" + __version__)
 
+    #https://github.com/docopt/docopt/blob/master/examples/git/git.py
+    ops = CommandlineParser.parse(args,Separator.DOC,options_first=True)
 
-    separator = cls.SeparatorManager(args[0],args).get()
-    separator.run()
+    # todo this could be refactor into validator somehow?
+    data_type=ops[Options.DATA_TYPE]
+    try:
+        ParameterValidator.validate_datatype(data_type)
+    except schema.SchemaError as exc:
+        exit("Exiting: " + exc.code)
+
+    separator = SeparatorManager().get(data_type)
+    separator.run(args)
 
     # todo remove debug code
     print("--------------------------")
     print("make file content:")
     print("--------------------------")
 
-    with open('/home/xinhe/Projects/Sargasso/results/anothertest4/Makefile', 'r') as fin:
+    with open('/home/xinhe/Projects/Sargasso/results/anothertest5/Makefile', 'r') as fin:
         print fin.read()
     print("--------------------------")
 

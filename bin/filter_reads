@@ -4,15 +4,17 @@ set -o nounset
 set -o errexit
 set -o xtrace
 
-SAMPLES=$1
-INPUT_DIR=$2
-OUTPUT_DIR=$3
-THREADS=$4 #How many chunks to split the read files into
-MISMATCH_THRESHOLD=$5
-MINMATCH_THRESHOLD=$6
-MULTIMAP_THRESHOLD=$7
-REJECT_MULTIMAPS=$8
-SPECIES=( "${@:9}" )
+DATA_TYPE=$1
+SAMPLES=$2
+INPUT_DIR=$3
+OUTPUT_DIR=$4
+THREADS=$5 #How many chunks to split the read files into
+MISMATCH_THRESHOLD=$6
+MINMATCH_THRESHOLD=$7
+MULTIMAP_THRESHOLD=$8
+REJECT_MULTIMAPS=$9
+
+SPECIES=( "${@:10}" )
 
 NUM_SPECIES=${#SPECIES[@]}
 BLOCK_DIR=${OUTPUT_DIR}/Blocks
@@ -238,7 +240,7 @@ first_sample=1
 
 for sample in ${SAMPLES}; do
     create_per_thread_input_files ${sample}
-    filter_control ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${MISMATCH_THRESHOLD} ${MINMATCH_THRESHOLD} ${MULTIMAP_THRESHOLD} ${REJECT_MULTIMAPS} ${SPECIES[*]}
+    filter_control ${DATA_TYPE} ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${MISMATCH_THRESHOLD} ${MINMATCH_THRESHOLD} ${MULTIMAP_THRESHOLD} ${REJECT_MULTIMAPS} ${SPECIES[*]}
     merge_per_thread_filtered_files ${sample}
     # todo remove comment
     # cleanup_intermediate_files ${sample}
