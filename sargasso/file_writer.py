@@ -1,35 +1,51 @@
+from options import Options
+from factory import Manager
+
+import os.path
+from datetime import datetime
+import schema
+
 import contextlib
 import os
-import os.path
 import textwrap
 
 
-@contextlib.contextmanager
-def writing_to_file(writer_cls, directory, filename):
-    writer = writer_cls()
-    try:
-        yield writer
-    finally:
-        writer.write_to_file(directory, filename)
 
 
-class _Writer(object):
+class Writer(object):
     def __init__(self):
         self.lines = []
 
     def _add_line(self, line_string):
         self.lines.append(line_string)
 
-    def write_to_file(self, directory, filename):
+
+    # todo ask owen how this works
+    @contextlib.contextmanager
+    def writing_to_file(self, directory, filename):
+        try:
+            yield
+        finally:
+            self._write_to_file(directory, filename)
+
+    def _write_to_file(self, directory, filename):
         with open(os.path.join(directory, filename), "w") as output_file:
             output_file.write("\n".join(self.lines) + '\n')
 
+    def write(self):
+        raise NotImplementedError()
 
-class MakefileWriter(_Writer):
+
+
+
+class MakefileWriter(Writer):
+    def __init__(self):
+        pass
+
     INDENT = '\t'
 
     def __init__(self):
-        _Writer.__init__(self)
+        Writer.__init__(self)
 
         self.indent_level = 0
 
@@ -41,7 +57,7 @@ class MakefileWriter(_Writer):
 
     def add_line(self, line_string):
         line_string = MakefileWriter.INDENT * self.indent_level + line_string
-        _Writer._add_line(self, line_string)
+        Writer._add_line(self, line_string)
 
     def add_blank_line(self):
         self.add_line("")
@@ -81,3 +97,422 @@ class MakefileWriter(_Writer):
     def add_command(self, command_name, options):
         line_elements = [command_name] + options
         self.add_line(" ".join([str(l) for l in line_elements]))
+
+class RnaseqMakefileWriter(MakefileWriter):
+
+    # Write Makefile to output directory
+    def write(self,logger, options, sample_info):
+        print('Wring Rnaseq make file...')
+        """
+        Write Makefile to results directory to perform species separation.
+        logger: logging object
+        options: dictionary of command-line options
+        sample_info: object encapsulating samples and their accompanying read files
+        """
+        # todo ask Owen this
+        with self.writing_to_file(options[Options.OUTPUT_DIR], "Makefile"):
+            self._write_variable_definitions(logger, options, sample_info)
+            self._write_target_variable_definitions(logger)
+            self._write_phony_targets(logger)
+            self._write_all_target(logger)
+            self._write_filtered_reads_target(logger, options)
+            self._write_sorted_reads_target(logger, options)
+            self._write_mapped_reads_target(logger, sample_info, options)
+            # # self._write_masked_reads_target(logger)
+            self._write_collate_raw_reads_target(logger, sample_info)
+            # self._write_mask_star_index_targets(logger, options)
+            self._write_main_star_index_targets(logger, options)
+            self._write_clean_target(logger)
+
+    def _write_variable_definitions(self, logger, options, sample_info):
+        """
+        Write variable definitions to Makefile.
+
+        logger: logging object
+        writer: Makefile writer object
+        options: dictionary of command-line options
+        sample_info: object encapsulating samples and their accompanying read files
+        """
+        self.set_variable(Options.NUM_THREADS_VARIABLE, options[Options.NUM_THREADS])
+        self.add_blank_line()
+
+        self.set_variable(Options.DATA_TYPE_VARIABLE, options[Options.DATA_TYPE])
+        self.add_blank_line()
+
+        self.set_variable(Options.STAR_EXECUTABLE_VARIABLE, options[Options.STAR_EXECUTABLE])
+        self.add_blank_line()
+
+        self.set_variable(Options.SAMBAMBA_SORT_TMP_DIR_VARIABLE,options[Options.SAMBAMBA_SORT_TMP_DIR])
+        self.add_blank_line()
+
+        sample_names = sample_info.get_sample_names()
+        self.set_variable(Options.SAMPLES_VARIABLE, " ".join(sample_names))
+        self.set_variable(
+            Options.RAW_READS_DIRECTORY_VARIABLE,
+            options[Options.READS_BASE_DIR] if options[Options.READS_BASE_DIR] else "/")
+        self.set_variable(
+            Options.RAW_READS_LEFT_VARIABLE,
+            " ".join([",".join(sample_info.get_left_reads(name))
+                      for name in sample_names]))
+
+        if sample_info.paired_end_reads():
+            self.set_variable(
+                Options.RAW_READS_RIGHT_VARIABLE,
+                " ".join([",".join(sample_info.get_right_reads(name))
+                          for name in sample_names]))
+
+        self.add_blank_line()
+
+        for i, species in enumerate(options[Options.SPECIES]):
+            species_options = self._get_species_options(options, i)
+            self._write_species_variable_definitions(
+                logger, species, species_options)
+
+        self.add_blank_line()
+
+    def _write_target_variable_definitions(self, logger):
+        """
+        Write target directory variable definitions to Makefile.
+
+        logger: logging object
+        writer: Makefile writer object
+        """
+        self.set_variable(Options.STAR_INDICES_TARGET, "star_indices")
+        self.set_variable(Options.COLLATE_RAW_READS_TARGET, "raw_reads")
+        self.set_variable(Options.MAPPED_READS_TARGET, "mapped_reads")
+        self.set_variable(Options.SORTED_READS_TARGET, "sorted_reads")
+        self.set_variable(Options.FILTERED_READS_TARGET, "filtered_reads")
+        self.add_blank_line()
+
+    def _write_phony_targets(self, logger):
+        """
+        Write phony target definitions to Makefile.
+
+        logger: logging object
+        writer: Makefile writer object
+        """
+        with self.target_definition(
+                ".PHONY", [Options.ALL_TARGET, Options.CLEAN_TARGET],
+                raw_target=True, raw_dependencies=True):
+            pass
+
+    def _write_all_target(self, logger ):
+        """
+        Write main target definition to Makefile.
+
+        logger: logging object
+        writer: Makefile writer object
+        """
+        with self.target_definition(
+                Options.ALL_TARGET, [Options.FILTERED_READS_TARGET], raw_target=True):
+            pass
+
+    def _write_filtered_reads_target(self, logger, options):
+        """
+        Write target to separate reads by species to Makefile.
+
+        logger: logging object
+        writer: Makefile writer object
+        """
+        with self.target_definition(
+                Options.FILTERED_READS_TARGET, [Options.SORTED_READS_TARGET]):
+            self.add_comment(
+                "For each sample, take the reads mapping to each genome and " +
+                "filter them to their correct species of origin")
+            self.make_target_directory(Options.FILTERED_READS_TARGET)
+
+            self.add_command("filter_reads", [
+                self.variable_val(Options.DATA_TYPE_VARIABLE),
+                "\"{var}\"".format(var=self.variable_val(Options.SAMPLES_VARIABLE)),
+                self.variable_val(Options.SORTED_READS_TARGET),
+                self.variable_val(Options.FILTERED_READS_TARGET),
+                self.variable_val(Options.NUM_THREADS_VARIABLE),
+                options[Options.MISMATCH_THRESHOLD],
+                options[Options.MINMATCH_THRESHOLD],
+                options[Options.MULTIMAP_THRESHOLD],
+                "--reject-multimaps" if options[Options.REJECT_MULTIMAPS] else "\"\"",
+                "{sl}".format(sl=" ".join(options[Options.SPECIES]))])
+
+            if options[Options.DELETE_INTERMEDIATE]:
+                self.remove_target_directory(Options.SORTED_READS_TARGET)
+
+
+    def _write_sorted_reads_target(self, logger, options):
+        """
+        Write target to sort reads by name to Makefile.
+
+        logger: logging object
+        writer: Makefile writer object
+        options: dictionary of command-line options
+        """
+        with self.target_definition(
+                Options.SORTED_READS_TARGET, [Options.MAPPED_READS_TARGET]):
+            self.add_comment(
+                "For each sample, sort the mapped reads into read name order")
+            self.make_target_directory(Options.SORTED_READS_TARGET)
+
+            self.add_command(
+                "sort_reads",
+                ["\"{sl}\"".format(sl=" ".join(options[Options.SPECIES])),
+                 "\"{var}\"".format(
+                     var=self.variable_val(Options.SAMPLES_VARIABLE)),
+                 self.variable_val(Options.NUM_THREADS_VARIABLE),
+                 self.variable_val(Options.MAPPED_READS_TARGET),
+                 self.variable_val(Options.SORTED_READS_TARGET),
+                 self.variable_val(Options.SAMBAMBA_SORT_TMP_DIR_VARIABLE)])
+
+            if options[Options.DELETE_INTERMEDIATE]:
+                self.remove_target_directory(Options.MAPPED_READS_TARGET)
+
+    def _write_mapped_reads_target(self, logger, sample_info, options):
+        """
+        Write target to map reads to each species to Makefile.
+
+        logger: logging object
+        writer: Makefile writer object
+        """
+
+        index_targets = ["{index}/{species}".format(
+            index=self.variable_val(Options.STAR_INDICES_TARGET),
+            species=species)
+            for species in options[Options.SPECIES]]
+
+        index_targets.append(self.variable_val(Options.COLLATE_RAW_READS_TARGET))
+
+        with self.target_definition(
+                Options.MAPPED_READS_TARGET, index_targets, raw_dependencies=True):
+            self.add_comment(
+                "Map reads for each sample to each species' genome")
+            self.make_target_directory(Options.MAPPED_READS_TARGET)
+
+            map_reads_params = [
+                "\"{sl}\"".format(sl=" ".join(options[Options.SPECIES])),
+                "\"{var}\"".format(var=self.variable_val(Options.SAMPLES_VARIABLE)),
+                self.variable_val(Options.STAR_INDICES_TARGET),
+                self.variable_val(Options.NUM_THREADS_VARIABLE),
+                self.variable_val(Options.COLLATE_RAW_READS_TARGET),
+                self.variable_val(Options.MAPPED_READS_TARGET)]
+
+            map_reads_params.append(
+                Options.PAIRED_END_READS_TYPE if sample_info.paired_end_reads()
+                else Options.SINGLE_END_READS_TYPE)
+
+            map_reads_params.append(options[Options.STAR_EXECUTABLE])
+
+            self.add_command("map_reads", map_reads_params)
+
+    # def _write_masked_reads_target(logger, options):
+    # TODO: Write "masked_reads" target
+    #pass
+
+    def _write_collate_raw_reads_target(self, logger, sample_info):
+        """
+        Write target to collect raw reads files to Makefile.
+
+        logger: logging object
+        writer: Makefile writer object
+        sample_info: object encapsulating samples and their accompanying read files
+        """
+        with self.target_definition(Options.COLLATE_RAW_READS_TARGET, []):
+            self.add_comment(
+                "Create a directory with sub-directories for each sample, " +
+                "each of which contains links to the input raw reads files " +
+                "for that sample")
+            self.make_target_directory(Options.COLLATE_RAW_READS_TARGET)
+
+            collate_raw_reads_params = [
+                "\"{var}\"".format(var=self.variable_val(Options.SAMPLES_VARIABLE)),
+                self.variable_val(Options.RAW_READS_DIRECTORY_VARIABLE),
+                self.variable_val(Options.COLLATE_RAW_READS_TARGET),
+            ]
+
+            if sample_info.paired_end_reads():
+                collate_raw_reads_params += [
+                    Options.PAIRED_END_READS_TYPE,
+                    "\"{var}\"".format(
+                        var=self.variable_val(Options.RAW_READS_LEFT_VARIABLE)),
+                    "\"{var}\"".format(
+                        var=self.variable_val(Options.RAW_READS_RIGHT_VARIABLE))
+                ]
+            else:
+                collate_raw_reads_params += [
+                    Options.SINGLE_END_READS_TYPE,
+                    "\"{var}\"".format(
+                        var=self.variable_val(Options.RAW_READS_LEFT_VARIABLE)),
+                    "\"\""
+                ]
+
+            self.add_command("collate_raw_reads", collate_raw_reads_params)
+
+
+    #def _write_mask_star_index_targets(logger, options):
+    # TODO: Write targets for STAR indices for mask sequences
+    #pass
+
+
+    def _write_species_main_star_index_target(self, logger, species, species_options,star_executable):
+        """
+        Write target to create or link to STAR index for a species to Makefile.
+
+        logger: logging object
+        writer: Makefile writer object
+        species_var: Makefile variable for species
+        species_options: dictionary of command-line options for the particular
+        species
+        """
+        target = "{index}/{spec}".format(
+            index=self.variable_val(Options.STAR_INDICES_TARGET), spec=species)
+
+        with self.target_definition(target, [], raw_target=True):
+            if species_options[Options.GTF_FILE] is None:
+                self.make_target_directory(Options.STAR_INDICES_TARGET)
+                self.add_command(
+                    "ln",
+                    ["-s",
+                     self.variable_val(self._get_star_index_variable(species)),
+                     target])
+            else:
+                self.make_target_directory(target, raw_target=True)
+                self.add_command(
+                    "build_star_index",
+                    [self.variable_val(self._get_genome_fasta_variable(species)),
+                     self.variable_val(self._get_gtf_file_variable(species)),
+                     self.variable_val(Options.NUM_THREADS_VARIABLE),
+                     target,star_executable])
+
+    def _write_main_star_index_targets(self, logger, options):
+        """
+        Write targets to create or link to STAR indices to Makefile.
+
+        logger: logging object
+        writer: Makefile writer object
+        options: dictionary of command-line options
+        """
+        for i, species in enumerate(options[Options.SPECIES]):
+            species_options = self._get_species_options(options, i)
+            self._write_species_main_star_index_target(
+                logger, species, species_options,options[Options.STAR_EXECUTABLE])
+
+    def _write_clean_target(self, logger ):
+        """
+        Write target to clean results directory to Makefile.
+
+        logger: logging object
+        writer: Makefile writer object
+        """
+        with self.target_definition(Options.CLEAN_TARGET, [], raw_target=True):
+            self.remove_target_directory(Options.STAR_INDICES_TARGET)
+            self.remove_target_directory(Options.COLLATE_RAW_READS_TARGET)
+            self.remove_target_directory(Options.MAPPED_READS_TARGET)
+            self.remove_target_directory(Options.SORTED_READS_TARGET)
+            self.remove_target_directory(Options.FILTERED_READS_TARGET)
+
+
+    def _get_species_options(self, options, species_index):
+        """
+        Return a dictionary containing command-line options for a species.
+
+        options: dictionary containing all command-line options.
+        species_index: which species to return options for
+        """
+
+        species_options = { Options.SPECIES_NAME: options[Options.SPECIES][species_index] }
+
+        star_infos = options[Options.SPECIES_STAR_INFO][species_index].split(",")
+
+        if len(star_infos) == 1:
+            species_options[Options.STAR_INDEX] = star_infos[0]
+            species_options[Options.GTF_FILE] = None
+            species_options[Options.GENOME_FASTA] = None
+        elif len(star_infos) == 2:
+            species_options[Options.STAR_INDEX] = None
+            species_options[Options.GTF_FILE] = star_infos[0]
+            species_options[Options.GENOME_FASTA] = star_infos[1]
+        else:
+            raise schema.SchemaError(
+                None, "Should specify either a STAR index or both GTF file " +
+                      "and genome FASTA directory for species {species}.".
+                      format(species=species_options[Options.SPECIES_NAME]))
+
+        return species_options
+
+
+    def _write_species_variable_definitions(self, logger, species, species_options):
+        """
+        Write variable definitions for a particular species.
+
+        logger: logging object
+        writer: Makefile writer object
+        species: species number string
+        species_options: dictionary of options specific to a particular species.
+        """
+        if species_options[Options.GTF_FILE] is None:
+            self.set_variable(
+                self._get_star_index_variable(species), species_options[Options.STAR_INDEX])
+        else:
+            self.set_variable(
+                self._get_gtf_file_variable(species), species_options[Options.GTF_FILE])
+            self.set_variable(
+                self._get_genome_fasta_variable(species), species_options[Options.GENOME_FASTA])
+
+    def _get_star_index_variable(self, species):
+        """
+        Return STAR index variable name for a species.
+
+        species: species identifier
+        """
+        return "{species}_STAR_DIR".format(species=species.upper())
+
+
+    def _get_gtf_file_variable(self, species):
+        """
+        Return GTF file variable name for a species.
+
+        species: species identifier
+        """
+        return "{species}_GTF".format(species=species.upper())
+
+    def _get_genome_fasta_variable(self, species):
+        """
+        Return genome FASTA variable name for a species.
+
+        species: species identifier
+        """
+        return "{species}_GENOME_FASTA_DIR".format(species=species.upper())
+
+
+class ChipseqMakefileWriter(MakefileWriter):
+    pass
+
+
+class MakefileWriterManager(Manager):
+    mkw = {"rnaseq" : RnaseqMakefileWriter,
+           "chipseq": ChipseqMakefileWriter}
+
+    def _create(self,data_type):
+        return self.mkw[data_type]()
+
+    def get(self,data_type):
+        return self._create(data_type)
+
+
+class ExecutionRecordWriter(Writer):
+    # Write Execution Record to output directory
+    def write(self,options):
+
+
+        """
+        Write a log file containing all execution parameters in addition to the
+        time and date of execution
+
+        options: dictionary of command-line options
+        """
+        out_text = "Execution Record - {t}\n".format(
+            t=str(datetime.now().isoformat()))
+        out_text += "\n".join(["{desc}: {val}".format(
+            desc=it[0], val=str(options[it[1]]))
+            for it in Options.EXECUTION_RECORD_ENTRIES])
+
+        out_file = os.path.join(options[Options.OUTPUT_DIR], "execution_record.txt")
+        with open(out_file, 'w') as erf:
+            erf.write(out_text)
