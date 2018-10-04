@@ -23,7 +23,7 @@ from .__init__ import __version__
 
 class SampleFilter(object):
     DOC = """
-Usage: filter_control [-h] <data-type> [<args>...]
+Usage: filter_sample_reads [-h] <data-type> [<args>...]
     
 options:
    -h
@@ -163,9 +163,7 @@ The available commands are:
 
     def run(self,args):
         # Read in command-line options
-        docstring = CommandlineParser.substitute_common_options_into_usage(self.DOC)
-        options = docopt.docopt(docstring, argv=args,
-                                version="filter_sample_reads v" + __version__)
+        options = CommandlineParser.parse(args,self.DOC,True)
 
         # Validate command-line options
         self._validate_command_line_options(options)
