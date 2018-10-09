@@ -18,6 +18,7 @@ from parameter_validator import ParameterValidator
 from commandline_parser import CommandlineParser
 from log import LoggerManager
 from .__init__ import __version__
+from samutils import SamUtilsManager
 
 
 
@@ -80,11 +81,13 @@ The available commands are:
     def _filter_sample_reads(self, logger, options):
         logger.info("Starting species separation.")
 
-        h_check = hits_checker.HitsChecker(
+
+
+        h_check = hits_checker.HitsCheckerManager.get(self.data_type,
             options[SampleFilter.MISMATCH_THRESHOLD], options[SampleFilter.MINMATCH_THRESHOLD],
             options[SampleFilter.MULTIMAP_THRESHOLD], options[SampleFilter.REJECT_MULTIMAPS], logger)
 
-        filterers = [filterer.Filterer(i + 1, options[SampleFilter.SPECIES_INPUT_BAM][i],
+        filterers = [filterer.FilterManager.get(self.data_type, i + 1, options[SampleFilter.SPECIES_INPUT_BAM][i],
                                        options[SampleFilter.SPECIES_OUTPUT_BAM][i], logger)
                      for i, species in enumerate(options[SampleFilter.SPECIES])]
 

@@ -1,18 +1,21 @@
 from . import hits_info
-from . import samutils
 from . import separation_stats
+from samutils import SamUtilsManager
+
 
 
 class Filterer(object):
-    def __init__(self, species_id, input_bam, output_bam, logger):
+    def __init__(self, data_type, species_id, input_bam, output_bam, logger):
+        self.data_type = data_type
         self.species_id = species_id
         self.stats = separation_stats.SeparationStats(species_id)
+        self.samutils = SamUtilsManager.get(data_type)
 
-        input_hits = samutils.open_samfile_for_read(input_bam)
-        self.output_bam = samutils.open_samfile_for_write(
+        input_hits = self.samutils.open_samfile_for_read(input_bam)
+        self.output_bam = self.samutils.open_samfile_for_write(
             output_bam, input_hits)
 
-        self.hits_generator = samutils.hits_generator(input_hits)
+        self.hits_generator = self.samutils.hits_generator(input_hits)
         self.hits_for_read = None
         self.hits_info = None
         self.count = 0
@@ -36,7 +39,7 @@ class Filterer(object):
         self.hits_info = None
 
     def _update_hits_info(self):
-        self.hits_info = hits_info.HitsInfo(self.hits_for_read)
+        self.hits_info = hits_info.HitsInfoManager.get(self.data_type, self.hits_for_read)
 
     def _write_hits(self):
         for hit in self.hits_for_read:
@@ -54,3 +57,19 @@ class Filterer(object):
 
     def _add_ambiguous_hits_to_stats(self):
         self.stats.ambiguous_hits(self.hits_for_read)
+
+class RnaseqFilterer(Filterer):
+    pass
+class ChipseqFilterer(Filterer):
+    pass
+
+
+
+from factory import Manager
+class FilterManager(Manager):
+    ## todo reverse the dict
+    FILTERS = {'chipseq':RnaseqFilterer,
+               'rnaseq': ChipseqFilterer}
+    @staticmethod
+    def get(data_type, species_id, input_bam, output_bam, logger):
+        return FilterManager.FILTERS[data_type](data_type, species_id, input_bam, output_bam, logger)
