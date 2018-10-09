@@ -170,3 +170,21 @@ class HitsChecker:
             return CIGAR_LESS_GOOD
 
         return response
+
+
+class RnaseqHitsChecker(HitsChecker):
+    pass
+class ChipseqHitChecker(HitsChecker):
+    pass
+
+from factory import Manager
+class HitsCheckerManager(Manager):
+    # todo reverse dict
+    HITSCHECKERS = {'rnaseq':ChipseqHitChecker,
+                    'chipseq':RnaseqHitsChecker}
+
+    @staticmethod
+    def get(data_type,mismatch_thresh, minmatch_thresh, multimap_thresh,
+            reject_multimaps, logger):
+        return HitsCheckerManager.HITSCHECKERS[data_type](mismatch_thresh, minmatch_thresh, multimap_thresh,
+                                                          reject_multimaps, logger)

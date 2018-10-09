@@ -1,63 +1,56 @@
 import pysam
 
+class SamUtils(object):
 
-def open_samfile_for_read(filename):
-    return pysam.Samfile(filename, "rb")
+    def __init__(self,data_type):
+        self.data_type = data_type
 
+    @staticmethod
+    def open_samfile_for_read(filename):
+        return pysam.Samfile(filename, "rb")
 
-def open_samfile_for_write(filename, template):
-    return pysam.Samfile(filename, "wb", template=template)
+    @staticmethod
+    def open_samfile_for_write(filename, template):
+        return pysam.Samfile(filename, "wb", template=template)
 
-
-def all_hits(samfile):
-    return samfile.fetch(until_eof=True)
-
-
-def get_read_length(hit):
-    return hit.query_length
-
-
-def get_total_length(primary_hits):
-    total_length = 0
-    for hit in primary_hits:
-        total_length += hit.query_length
-    return total_length
+    @staticmethod
+    def all_hits(samfile):
+        return samfile.fetch(until_eof=True)
 
 
-def get_multimaps(hit):
-    return hit.get_tag("NH")
+
+    @staticmethod
+    def hits_generator(samfile):
+        last_hit_name = None
+        current_hits = []
+
+        for hit in SamUtils.all_hits(samfile):
+            current_hit_name = hit.query_name
+
+            if last_hit_name is None:
+                last_hit_name = current_hit_name
+
+            if current_hit_name == last_hit_name:
+                current_hits.append(hit)
+            else:
+                yield current_hits
+                last_hit_name = current_hit_name
+                current_hits = [hit]
+
+        yield current_hits
 
 
-def get_mismatches(hit):
-    return hit.get_tag("nM")
+class RnaseqSamUtils(SamUtils):
+    pass
+
+class ChipseqSamUtils(SamUtils):
+    pass
 
 
-def get_alignment_scores(hit):
-    return hit.get_tag("AS")
-
-
-def get_cigar(hit):
-    return hit.cigartuples
-
-def is_primary(hit):
-    return not hit.is_secondary
-
-
-def hits_generator(samfile):
-    last_hit_name = None
-    current_hits = []
-
-    for hit in all_hits(samfile):
-        current_hit_name = hit.query_name
-
-        if last_hit_name is None:
-            last_hit_name = current_hit_name
-
-        if current_hit_name == last_hit_name:
-            current_hits.append(hit)
-        else:
-            yield current_hits
-            last_hit_name = current_hit_name
-            current_hits = [hit]
-
-    yield current_hits
+from factory import Manager
+class SamUtilsManager(Manager):
+    SAMUTILS= {'rnaseq':ChipseqSamUtils,
+              'chipseq':RnaseqSamUtils}
+    @staticmethod
+    def get(data_type):
+        return SamUtilsManager.SAMUTILS[data_type](data_type)
