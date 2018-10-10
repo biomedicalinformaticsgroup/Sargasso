@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -o nounset
+set -o errexit
+set -o xtrace
+
+SEQUENCE_FASTA_FILE=$1
+NUM_THREADS=$2
+INDEX_DIR=$3
+BOWTIE2_BUILD_EXECUTABLE=$4
+
+function list_files {
+    local DELIMITER=$1
+    shift
+    local FILES=$@
+        
+    LIST=$(ls -1 $FILES | tr '\n' "$DELIMITER")
+    echo ${LIST%$DELIMITER}    
+}
+
+
+${BOWTIE2_BUILD_EXECUTABLE} --threads ${NUM_THREADS} ${SEQUENCE_FASTA_FILE} ${INDEX_DIR}/bt2index

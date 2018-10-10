@@ -39,14 +39,12 @@ class Writer(object):
 
 
 class MakefileWriter(Writer):
-    def __init__(self):
-        pass
 
     INDENT = '\t'
 
-    def __init__(self):
+    def __init__(self,data_type):
         Writer.__init__(self)
-
+        self.data_type = data_type
         self.indent_level = 0
 
     def indent(self):
@@ -98,33 +96,7 @@ class MakefileWriter(Writer):
         line_elements = [command_name] + options
         self.add_line(" ".join([str(l) for l in line_elements]))
 
-class RnaseqMakefileWriter(MakefileWriter):
-
-    # Write Makefile to output directory
-    def write(self,logger, options, sample_info):
-        print('Wring Rnaseq make file...')
-        """
-        Write Makefile to results directory to perform species separation.
-        logger: logging object
-        options: dictionary of command-line options
-        sample_info: object encapsulating samples and their accompanying read files
-        """
-        # todo ask Owen this
-        with self.writing_to_file(options[Options.OUTPUT_DIR], "Makefile"):
-            self._write_variable_definitions(logger, options, sample_info)
-            self._write_target_variable_definitions(logger)
-            self._write_phony_targets(logger)
-            self._write_all_target(logger)
-            self._write_filtered_reads_target(logger, options)
-            self._write_sorted_reads_target(logger, options)
-            self._write_mapped_reads_target(logger, sample_info, options)
-            # # self._write_masked_reads_target(logger)
-            self._write_collate_raw_reads_target(logger, sample_info)
-            # self._write_mask_star_index_targets(logger, options)
-            self._write_main_star_index_targets(logger, options)
-            self._write_clean_target(logger)
-
-    def _write_variable_definitions(self, logger, options, sample_info):
+    def _write_variable_definitions(self, logger, options, sample_info, species_options):
         """
         Write variable definitions to Makefile.
 
@@ -139,7 +111,7 @@ class RnaseqMakefileWriter(MakefileWriter):
         self.set_variable(Options.DATA_TYPE_VARIABLE, options[Options.DATA_TYPE])
         self.add_blank_line()
 
-        self.set_variable(Options.STAR_EXECUTABLE_VARIABLE, options[Options.STAR_EXECUTABLE])
+        self.set_variable(Options.MAPPER_EXECUTABLE_VARIABLE, options[Options.MAPPER_EXECUTABLE])
         self.add_blank_line()
 
         self.set_variable(Options.SAMBAMBA_SORT_TMP_DIR_VARIABLE,options[Options.SAMBAMBA_SORT_TMP_DIR])
@@ -164,9 +136,8 @@ class RnaseqMakefileWriter(MakefileWriter):
         self.add_blank_line()
 
         for i, species in enumerate(options[Options.SPECIES]):
-            species_options = self._get_species_options(options, i)
             self._write_species_variable_definitions(
-                logger, species, species_options)
+                logger, species, species_options[i])
 
         self.add_blank_line()
 
@@ -177,7 +148,7 @@ class RnaseqMakefileWriter(MakefileWriter):
         logger: logging object
         writer: Makefile writer object
         """
-        self.set_variable(Options.STAR_INDICES_TARGET, "star_indices")
+        self.set_variable(Options.MAPPER_INDICES_TARGET, "mapper_indexes")
         self.set_variable(Options.COLLATE_RAW_READS_TARGET, "raw_reads")
         self.set_variable(Options.MAPPED_READS_TARGET, "mapped_reads")
         self.set_variable(Options.SORTED_READS_TARGET, "sorted_reads")
@@ -236,7 +207,6 @@ class RnaseqMakefileWriter(MakefileWriter):
             if options[Options.DELETE_INTERMEDIATE]:
                 self.remove_target_directory(Options.SORTED_READS_TARGET)
 
-
     def _write_sorted_reads_target(self, logger, options):
         """
         Write target to sort reads by name to Makefile.
@@ -264,7 +234,7 @@ class RnaseqMakefileWriter(MakefileWriter):
             if options[Options.DELETE_INTERMEDIATE]:
                 self.remove_target_directory(Options.MAPPED_READS_TARGET)
 
-    def _write_mapped_reads_target(self, logger, sample_info, options):
+    def _write_mapped_reads_target(self, sample_info, options):
         """
         Write target to map reads to each species to Makefile.
 
@@ -273,7 +243,7 @@ class RnaseqMakefileWriter(MakefileWriter):
         """
 
         index_targets = ["{index}/{species}".format(
-            index=self.variable_val(Options.STAR_INDICES_TARGET),
+            index=self.variable_val(Options.MAPPER_INDICES_TARGET),
             species=species)
             for species in options[Options.SPECIES]]
 
@@ -288,7 +258,7 @@ class RnaseqMakefileWriter(MakefileWriter):
             map_reads_params = [
                 "\"{sl}\"".format(sl=" ".join(options[Options.SPECIES])),
                 "\"{var}\"".format(var=self.variable_val(Options.SAMPLES_VARIABLE)),
-                self.variable_val(Options.STAR_INDICES_TARGET),
+                self.variable_val(Options.MAPPER_INDICES_TARGET),
                 self.variable_val(Options.NUM_THREADS_VARIABLE),
                 self.variable_val(Options.COLLATE_RAW_READS_TARGET),
                 self.variable_val(Options.MAPPED_READS_TARGET)]
@@ -297,15 +267,10 @@ class RnaseqMakefileWriter(MakefileWriter):
                 Options.PAIRED_END_READS_TYPE if sample_info.paired_end_reads()
                 else Options.SINGLE_END_READS_TYPE)
 
-            map_reads_params.append(options[Options.STAR_EXECUTABLE])
+            map_reads_params.append(options[Options.MAPPER_EXECUTABLE])
+            self.add_command("map_reads_"+ self.data_type, map_reads_params)
 
-            self.add_command("map_reads", map_reads_params)
-
-    # def _write_masked_reads_target(logger, options):
-    # TODO: Write "masked_reads" target
-    #pass
-
-    def _write_collate_raw_reads_target(self, logger, sample_info):
+    def _write_collate_raw_reads_target(self, sample_info):
         """
         Write target to collect raw reads files to Makefile.
 
@@ -344,41 +309,48 @@ class RnaseqMakefileWriter(MakefileWriter):
 
             self.add_command("collate_raw_reads", collate_raw_reads_params)
 
+    def _get_species_options(self, options, species_index):
+        return options['species_options'][species_index]
+
+
+
+class RnaseqMakefileWriter(MakefileWriter):
+
+    # Write Makefile to output directory
+    def write(self,logger, options):
+        print('Wring Rnaseq make file...')
+        """
+        Write Makefile to results directory to perform species separation.
+        logger: logging object
+        options: dictionary of command-line options
+        sample_info: object encapsulating samples and their accompanying read files
+        """
+        sample_info = options['sample_info']
+        species_options = options['species_options']
+        # todo ask Owen this
+        with self.writing_to_file(options[Options.OUTPUT_DIR], "Makefile"):
+            self._write_variable_definitions(logger, options, sample_info, species_options)
+            self._write_target_variable_definitions(logger)
+            self._write_phony_targets(logger)
+            self._write_all_target(logger)
+            self._write_filtered_reads_target(logger, options)
+            self._write_sorted_reads_target(logger, options)
+            self._write_mapped_reads_target( sample_info, options)
+            # # self._write_masked_reads_target(logger)
+            self._write_collate_raw_reads_target( sample_info)
+            # self._write_mask_star_index_targets(logger, options)
+            self._write_main_star_index_targets(logger, options)
+            self._write_clean_target(logger)
+
+
+    # def _write_masked_reads_target(logger, options):
+    # TODO: Write "masked_reads" target
+    #pass
+
 
     #def _write_mask_star_index_targets(logger, options):
     # TODO: Write targets for STAR indices for mask sequences
     #pass
-
-
-    def _write_species_main_star_index_target(self, logger, species, species_options,star_executable):
-        """
-        Write target to create or link to STAR index for a species to Makefile.
-
-        logger: logging object
-        writer: Makefile writer object
-        species_var: Makefile variable for species
-        species_options: dictionary of command-line options for the particular
-        species
-        """
-        target = "{index}/{spec}".format(
-            index=self.variable_val(Options.STAR_INDICES_TARGET), spec=species)
-
-        with self.target_definition(target, [], raw_target=True):
-            if species_options[Options.GTF_FILE] is None:
-                self.make_target_directory(Options.STAR_INDICES_TARGET)
-                self.add_command(
-                    "ln",
-                    ["-s",
-                     self.variable_val(self._get_star_index_variable(species)),
-                     target])
-            else:
-                self.make_target_directory(target, raw_target=True)
-                self.add_command(
-                    "build_star_index",
-                    [self.variable_val(self._get_genome_fasta_variable(species)),
-                     self.variable_val(self._get_gtf_file_variable(species)),
-                     self.variable_val(Options.NUM_THREADS_VARIABLE),
-                     target,star_executable])
 
     def _write_main_star_index_targets(self, logger, options):
         """
@@ -391,7 +363,39 @@ class RnaseqMakefileWriter(MakefileWriter):
         for i, species in enumerate(options[Options.SPECIES]):
             species_options = self._get_species_options(options, i)
             self._write_species_main_star_index_target(
-                logger, species, species_options,options[Options.STAR_EXECUTABLE])
+                logger, species, species_options,options[Options.MAPPER_EXECUTABLE])
+
+    def _write_species_main_star_index_target(self, logger, species, species_options,executable):
+        """
+        Write target to create or link to STAR index for a species to Makefile.
+
+        logger: logging object
+        writer: Makefile writer object
+        species_var: Makefile variable for species
+        species_options: dictionary of command-line options for the particular
+        species
+        """
+        target = "{index}/{spec}".format(
+            index=self.variable_val(Options.MAPPER_INDICES_TARGET), spec=species)
+
+        with self.target_definition(target, [], raw_target=True):
+            if species_options[Options.GTF_FILE] is None:
+                self.make_target_directory(Options.MAPPER_INDICES_TARGET)
+                self.add_command(
+                    "ln",
+                    ["-s",
+                     self.variable_val(self._get_star_index_variable(species)),
+                     target])
+            else:
+                self.make_target_directory(target, raw_target=True)
+                self.add_command(
+                    "build_star_index",
+                    [self.variable_val(self._get_genome_fasta_variable(species)),
+                     self.variable_val(self._get_gtf_file_variable(species)),
+                     self.variable_val(Options.NUM_THREADS_VARIABLE),
+                     target,executable])
+
+
 
     def _write_clean_target(self, logger ):
         """
@@ -401,40 +405,14 @@ class RnaseqMakefileWriter(MakefileWriter):
         writer: Makefile writer object
         """
         with self.target_definition(Options.CLEAN_TARGET, [], raw_target=True):
-            self.remove_target_directory(Options.STAR_INDICES_TARGET)
+            self.remove_target_directory(Options.MAPPER_INDICES_TARGET)
             self.remove_target_directory(Options.COLLATE_RAW_READS_TARGET)
             self.remove_target_directory(Options.MAPPED_READS_TARGET)
             self.remove_target_directory(Options.SORTED_READS_TARGET)
             self.remove_target_directory(Options.FILTERED_READS_TARGET)
 
 
-    def _get_species_options(self, options, species_index):
-        """
-        Return a dictionary containing command-line options for a species.
 
-        options: dictionary containing all command-line options.
-        species_index: which species to return options for
-        """
-
-        species_options = { Options.SPECIES_NAME: options[Options.SPECIES][species_index] }
-
-        star_infos = options[Options.SPECIES_STAR_INFO][species_index].split(",")
-
-        if len(star_infos) == 1:
-            species_options[Options.STAR_INDEX] = star_infos[0]
-            species_options[Options.GTF_FILE] = None
-            species_options[Options.GENOME_FASTA] = None
-        elif len(star_infos) == 2:
-            species_options[Options.STAR_INDEX] = None
-            species_options[Options.GTF_FILE] = star_infos[0]
-            species_options[Options.GENOME_FASTA] = star_infos[1]
-        else:
-            raise schema.SchemaError(
-                None, "Should specify either a STAR index or both GTF file " +
-                      "and genome FASTA directory for species {species}.".
-                      format(species=species_options[Options.SPECIES_NAME]))
-
-        return species_options
 
 
     def _write_species_variable_definitions(self, logger, species, species_options):
@@ -448,7 +426,7 @@ class RnaseqMakefileWriter(MakefileWriter):
         """
         if species_options[Options.GTF_FILE] is None:
             self.set_variable(
-                self._get_star_index_variable(species), species_options[Options.STAR_INDEX])
+                self._get_star_index_variable(species), species_options[Options.MAPPER_INDEX])
         else:
             self.set_variable(
                 self._get_gtf_file_variable(species), species_options[Options.GTF_FILE])
@@ -482,18 +460,106 @@ class RnaseqMakefileWriter(MakefileWriter):
 
 
 class ChipseqMakefileWriter(MakefileWriter):
-    pass
+    # Write Makefile to output directory
+    def write(self,logger, options):
+        print('Wring Chipseq make file...')
+        """
+        Write Makefile to results directory to perform species separation.
+        logger: logging object
+        options: dictionary of command-line options
+        sample_info: object encapsulating samples and their accompanying read files
+        """
+        # todo ask Owen this
+        sample_info = options['sample_info']
+        species_options = options['species_options']
+        with self.writing_to_file(options[Options.OUTPUT_DIR], "Makefile"):
+            self._write_variable_definitions(logger, options, sample_info, species_options)
+            self._write_target_variable_definitions(logger)
+            self._write_phony_targets(logger)
+            self._write_all_target(logger)
+            self._write_filtered_reads_target(logger, options)
+            self._write_sorted_reads_target(logger, options)
+            self._write_mapped_reads_target(sample_info, options)
+            # # # self._write_masked_reads_target(logger)
+            self._write_collate_raw_reads_target(sample_info)
+            # # self._write_mask_star_index_targets(logger, options)
+            self._write_main_bowtie2_index_targets(logger, options)
+            # self._write_clean_target(logger)
+
+
+    def _write_main_bowtie2_index_targets(self, logger, options):
+        """
+        Write targets to create or link to STAR indices to Makefile.
+
+        logger: logging object
+        writer: Makefile writer object
+        options: dictionary of command-line options
+        """
+        for i, species in enumerate(options[Options.SPECIES]):
+            species_options = self._get_species_options(options, i)
+            self._write_species_main_bowtie2_index_target(
+                logger, species, species_options,options[Options.MAPPER_INDEX_EXECUTABLE])
+
+    def _write_species_main_bowtie2_index_target(self, logger, species, species_options, executable):
+        """
+        Write target to create or link to STAR index for a species to Makefile.
+
+        logger: logging object
+        writer: Makefile writer object
+        species_var: Makefile variable for species
+        species_options: dictionary of command-line options for the particular
+        species
+        """
+        target = "{index}/{spec}".format(
+            index=self.variable_val(Options.MAPPER_INDICES_TARGET), spec=species)
+
+        with self.target_definition(target, [], raw_target=True):
+            if species_options[Options.GENOME_FASTA] is None:
+                self.make_target_directory(Options.MAPPER_INDICES_TARGET)
+                self.add_command(
+                    "ln",
+                    ["-s",
+                     self.variable_val(self._get_bowtie2_index_variable(species)),
+                     target])
+            else:
+                self.make_target_directory(target, raw_target=True)
+                self.add_command(
+                    "build_bowtie2_index",
+                    [self.variable_val(self._get_genome_fasta_variable(species)),
+                     self.variable_val(Options.NUM_THREADS_VARIABLE),
+                     target,executable])
+
+
+    def _write_species_variable_definitions(self, logger, species, species_options):
+        """
+        Write variable definitions for a particular species.
+
+        logger: logging object
+        writer: Makefile writer object
+        species: species number string
+        species_options: dictionary of options specific to a particular species.
+        """
+        if species_options[Options.GENOME_FASTA] is None:
+            self.set_variable(
+                self._get_bowtie2_index_variable(species), species_options[Options.MAPPER_INDEX])
+        else:
+            self.set_variable(
+                self._get_genome_fasta_variable(species), species_options[Options.GENOME_FASTA])
+
+
+    def _get_bowtie2_index_variable(self,species):
+        return "{species}_BOWTIE2_DIR".format(species=species.upper())
+
+    def _get_genome_fasta_variable(self, species):
+        return "{species}_GENOME_FASTA_FILE".format(species=species.upper())
 
 
 class MakefileWriterManager(Manager):
     mkw = {"rnaseq" : RnaseqMakefileWriter,
            "chipseq": ChipseqMakefileWriter}
 
-    def _create(self,data_type):
-        return self.mkw[data_type]()
-
     def get(self,data_type):
-        return self._create(data_type)
+        return self.mkw[data_type](data_type)
 
 
 class ExecutionRecordWriter(Writer):

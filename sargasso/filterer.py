@@ -67,9 +67,8 @@ class ChipseqFilterer(Filterer):
 
 from factory import Manager
 class FilterManager(Manager):
-    ## todo reverse the dict
-    FILTERS = {'chipseq':RnaseqFilterer,
-               'rnaseq': ChipseqFilterer}
+    FILTERS = {'rnaseq':RnaseqFilterer,
+               'chipseq': ChipseqFilterer}
     @staticmethod
     def get(data_type, species_id, input_bam, output_bam, logger):
         return FilterManager.FILTERS[data_type](data_type, species_id, input_bam, output_bam, logger)

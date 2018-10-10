@@ -47,22 +47,6 @@ The available commands are:
         self.data_type=data_type;
 
 
-    def _validate_threshold_options(self,
-            options, mismatch_opt_name, minmatch_opt_name, multimap_opt_name):
-
-        options[mismatch_opt_name] = ParameterValidator.validate_float_option(
-            options[mismatch_opt_name],
-            "Maximum percentage of mismatches must be a float between 0 and 100",
-            0, 100, True)
-        options[minmatch_opt_name] = ParameterValidator.validate_float_option(
-            options[minmatch_opt_name],
-            "Maximum percentage of read length which does not match must be a " +
-            "float between 0 and 100", 0, 100, True)
-        options[multimap_opt_name] = ParameterValidator.validate_int_option(
-            options[multimap_opt_name],
-            "Maximum number of multiple mappings must be a positive integer",
-            1, True)
-
     def _validate_command_line_options(self, options):
         try:
             ParameterValidator.validate_log_level(options)
@@ -71,7 +55,7 @@ The available commands are:
                     options[SampleFilter.SPECIES_INPUT_BAM][index],
                     "Could not find input BAM file for species {i}".format(i=index))
 
-            self._validate_threshold_options(
+            ParameterValidator().validate_threshold_options(
                 options, SampleFilter.MISMATCH_THRESHOLD, SampleFilter.MINMATCH_THRESHOLD, SampleFilter.MULTIMAP_THRESHOLD)
 
         except schema.SchemaError as exc:
@@ -166,7 +150,7 @@ The available commands are:
 
     def run(self,args):
         # Read in command-line options
-        options = CommandlineParser.parse(args,self.DOC,True)
+        options = CommandlineParser().parse(args,self.DOC)
 
         # Validate command-line options
         self._validate_command_line_options(options)
@@ -180,7 +164,7 @@ The available commands are:
 class RnaseqSampleFilter(SampleFilter):
     DOC = """
 Usage:
-filter_sample_reads rnaseq
+filter_sample_reads <data-type>
     [--log-level=<log-level>] [--reject-multimaps]
     <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
     (<species> <species-input-bam> <species-output-bam>)
@@ -224,6 +208,51 @@ Note: the input BAM files MUST be sorted in read name order. Failure to
 ensure input BAM files are correctly sorted will result in erroneous output.
 """
 class ChipseqSampleFilter(SampleFilter):
+    DOC = """
+Usage:
+filter_sample_reads <data-type>
+    [--log-level=<log-level>] [--reject-multimaps]
+    <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
+    (<species> <species-input-bam> <species-output-bam>)
+    (<species> <species-input-bam> <species-output-bam>) ...
+
+Options:
+{help_option_spec}
+    {help_option_description}
+{ver_option_spec}
+    {ver_option_description}
+{log_option_spec}
+    {log_option_description}
+<species>
+    Name of species.
+<species-input-bam>
+    BAM file containing reads mapped against species' genome.
+<species-output-bam>
+    BAM file to which read mappings assigned to species after filtering
+    will be written.
+--mismatch-threshold=<mismatch-threshold>
+    Maximum percentage of read bases allowed to be mismatches against the
+    genome during filtering.
+--minmatch-threshold=<minmatch-threshold>
+    Maximum percentage of read length allowed to not be mapped during
+    filtering.
+<multimap-threshold>
+    Maximum number of multiple mappings allowed during filtering.
+--reject-multimaps
+    If set, any read which multimaps to *either* species' genome will be
+    rejected and not be assigned to either species.
+
+filter_sample_reads takes a set of BAM files as input, the results of mapping a set
+of mixed species RNA-seq reads against a number of species' genomes, and
+determines, if possible, from which species each read originates. Disambiguated
+read mappings are written to species-specific output BAM files.
+
+In normal operation, the user should not need to execute this script by hand
+themselves.
+
+Note: the input BAM files MUST be sorted in read name order. Failure to
+ensure input BAM files are correctly sorted will result in erroneous output.
+"""
     pass
 
 
@@ -256,7 +285,7 @@ class SampleFilterManager(Manager):
 def filter_sample_reads(args):
 
     #https://github.com/docopt/docopt/blob/master/examples/git/git.py
-    ops = CommandlineParser.parse(args,SampleFilter.DOC,options_first=True)
+    ops = CommandlineParser().parse_extra(args,SampleFilter.DOC,options_first=True)
     data_type=ops[SampleFilter.DATA_TYPE]
     try:
         ParameterValidator.validate_datatype(data_type)

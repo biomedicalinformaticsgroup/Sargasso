@@ -14,7 +14,46 @@ class ParameterValidator(object):
         pass
 
     def validate(self, options):
-        raise NotImplementedError()
+        """
+        Validate command line options are correctly specified.
+
+        options: dictionary of command-line options.
+        """
+        sample_info = options['sample_info']
+        species_options = options['species_options']
+
+        try:
+            self.validate_log_level(options)
+            self.validate_dir_option(
+                options[Options.READS_BASE_DIR], "Reads base directory does not exist",
+                nullable=True)
+            options[Options.NUM_THREADS] = self.validate_int_option(
+                options[Options.NUM_THREADS],
+                "Number of threads must be a positive integer",
+                min_val=1, nullable=True)
+            self.validate_file_option(
+                options[Options.SAMPLES_FILE], "Could not open samples definition file")
+            # debug remove comment in prod
+            # opt.validate_dir_option(
+            #     options[Options.OUTPUT_DIR], "Output directory should not exist",
+            #     should_exist=False)
+
+
+            # todo remove debug comment
+            self.validate_threshold_options(
+                options, Options.MISMATCH_THRESHOLD, Options.MINMATCH_THRESHOLD,
+                Options.MULTIMAP_THRESHOLD)
+
+            for i, species in enumerate(options[Options.SPECIES]):
+                self._validate_species_options(species, species_options[i])
+
+            # TODO: validate that all samples consistently have either single- or
+            # paired-end reads
+            self._validate_read_file(sample_info)
+
+            return sample_info
+        except schema.SchemaError as exc:
+            exit("Exiting: " + exc.code)
 
     @staticmethod
     def validate_log_level(options):
@@ -178,70 +217,6 @@ class ParameterValidator(object):
         ParameterValidator.validate_dict_option(
             data_type, Options.SUPPORTED_DATATYPE, "Invalid data type.")
 
-
-class RnaseqParameterValidator(ParameterValidator):
-    def validate(self,options):
-        """
-        Validate command line options are correctly specified.
-
-        options: dictionary of command-line options.
-        """
-        try:
-            self.validate_log_level(options)
-            self.validate_dir_option(
-                options[Options.READS_BASE_DIR], "Reads base directory does not exist",
-                nullable=True)
-            options[Options.NUM_THREADS] = self.validate_int_option(
-                options[Options.NUM_THREADS],
-                "Number of threads must be a positive integer",
-                min_val=1, nullable=True)
-            self.validate_file_option(
-                options[Options.SAMPLES_FILE], "Could not open samples definition file")
-            # debug remove comment in prod
-            # opt.validate_dir_option(
-            #     options[Options.OUTPUT_DIR], "Output directory should not exist",
-            #     should_exist=False)
-
-
-            if options[Options.OPTIMAL_STRATEGY]:
-                options[Options.MISMATCH_THRESHOLD] = 1
-                options[Options.MINMATCH_THRESHOLD] = 2
-                options[Options.MULTIMAP_THRESHOLD] = 999999
-                options[Options.REJECT_MULTIMAPS] = False
-            elif options[Options.CONSERVATIVE_STRATEGY]:
-                options[Options.MISMATCH_THRESHOLD] = 0
-                options[Options.MINMATCH_THRESHOLD] = 0
-                options[Options.MULTIMAP_THRESHOLD] = 1
-                options[Options.REJECT_MULTIMAPS] = True
-            elif options[Options.RECALL_STRATEGY]:
-                options[Options.MISMATCH_THRESHOLD] = 2
-                options[Options.MINMATCH_THRESHOLD] = 10
-                options[Options.MULTIMAP_THRESHOLD] = 999999
-                options[Options.REJECT_MULTIMAPS] = False
-            elif options[Options.PERMISSIVE_STRATEGY]:
-                options[Options.MISMATCH_THRESHOLD] = 25
-                options[Options.MINMATCH_THRESHOLD] = 25
-                options[Options.MULTIMAP_THRESHOLD] = 999999
-                options[Options.REJECT_MULTIMAPS] = False
-
-            # todo remove debug comment
-            # filter_sample_reads.validate_threshold_options(
-            #     options, Options.MISMATCH_THRESHOLD, Options.MINMATCH_THRESHOLD,
-            #     Options.MULTIMAP_THRESHOLD)
-
-            for i, species in enumerate(options[Options.SPECIES]):
-                species_options = self._get_species_options(options, i)
-                self._validate_species_options(species, species_options)
-
-            sample_info = self._read_sample_info(options)
-            # TODO: validate that all samples consistently have either single- or
-            # paired-end reads
-            self._validate_read_file(sample_info)
-
-            return sample_info
-        except schema.SchemaError as exc:
-            exit("Exiting: " + exc.code)
-
     def _validate_read_file(self, sample_info):
         """
         Validate all raw reads files exist.
@@ -254,55 +229,34 @@ class RnaseqParameterValidator(ParameterValidator):
                     self.validate_file_option(
                         reads_file, "Could not open reads file")
 
-    def _read_sample_info(self, options):
+
+
+    def _validate_species_options(self, species, species_options):
         """
-        Return an object encapsulating samples and their accompanying read files.
-        options: dictionary of command-line options
+        Validate command-line options for a species are correctly specified.
+        species: species identification string
+        species_options: dictionary of options specific to a particular species.
         """
-        sample_info = SampleInfo(options[Options.READS_BASE_DIR])
+        not NotImplementedError()
 
-        for line in open(options[Options.SAMPLES_FILE], 'r'):
-            sample_data = line.split()
+    def validate_threshold_options(self,
+                                   options, mismatch_opt_name, minmatch_opt_name, multimap_opt_name):
 
-            if len(sample_data) < 2 or len(sample_data) > 3:
-                line = line.rstrip('\n')
-                if len(line) > 80:
-                    line = line[0:77] + "..."
-                raise schema.SchemaError(
-                    None, "Sample file line should contain sample name and " +
-                          "lists of read files (or first and second pairs of read " +
-                          "files), separated by whitespace: \n{info}".format(info=line))
+        options[mismatch_opt_name] = ParameterValidator.validate_float_option(
+            options[mismatch_opt_name],
+            "Maximum percentage of mismatches must be a float between 0 and 100",
+            0, 100, True)
+        options[minmatch_opt_name] = ParameterValidator.validate_float_option(
+            options[minmatch_opt_name],
+            "Maximum percentage of read length which does not match must be a " +
+            "float between 0 and 100", 0, 100, True)
+        options[multimap_opt_name] = ParameterValidator.validate_int_option(
+            options[multimap_opt_name],
+            "Maximum number of multiple mappings must be a positive integer",
+            1, True)
 
-            sample_info.add_sample_data(sample_data)
+class RnaseqParameterValidator(ParameterValidator):
 
-        return sample_info
-
-    def _get_species_options(self, options, species_index):
-        """
-        Return a dictionary containing command-line options for a species.
-        options: dictionary containing all command-line options.
-        species_index: which species to return options for
-        """
-
-        species_options = { Options.SPECIES_NAME: options[Options.SPECIES][species_index] }
-
-        star_infos = options[Options.SPECIES_STAR_INFO][species_index].split(",")
-
-        if len(star_infos) == 1:
-            species_options[Options.STAR_INDEX] = star_infos[0]
-            species_options[Options.GTF_FILE] = None
-            species_options[Options.GENOME_FASTA] = None
-        elif len(star_infos) == 2:
-            species_options[Options.STAR_INDEX] = None
-            species_options[Options.GTF_FILE] = star_infos[0]
-            species_options[Options.GENOME_FASTA] = star_infos[1]
-        else:
-            raise schema.SchemaError(
-                None, "Should specify either a STAR index or both GTF file " +
-                      "and genome FASTA directory for species {species}.".
-                      format(species=species_options[Options.SPECIES_NAME]))
-
-        return species_options
 
     def _validate_species_options(self, species, species_options):
         """
@@ -320,13 +274,32 @@ class RnaseqParameterValidator(ParameterValidator):
                 format(species=species),
             nullable=True)
         self.validate_dir_option(
-            species_options[Options.STAR_INDEX],
+            species_options[Options.MAPPER_INDEX],
             "STAR index directory for species {species} should exist".
                 format(species=species),
             nullable=True)
 
+
+
+
 class ChipseqParameterValidator(ParameterValidator):
-    pass
+
+
+    def _validate_species_options(self, species, species_options):
+        """
+        Validate command-line options for a species are correctly specified.
+        species: species identification string
+        species_options: dictionary of options specific to a particular species.
+        """
+        self.validate_file_option(
+            species_options[Options.GENOME_FASTA],
+            "Could not open species {species} FASTA file".format(species=species),
+            nullable=True)
+        self.validate_dir_option(
+            species_options[Options.MAPPER_INDEX],
+            "Bowtie2 index directory for species {species} should exist".
+                format(species=species),
+            nullable=True)
 
 class ParameterValidatorManager(Manager):
     VALIDATORS = {"rnaseq" : RnaseqParameterValidator,
@@ -346,61 +319,6 @@ class ParameterValidatorManager(Manager):
         return self._create(data_type)
 
 
-class SampleInfo(object):
-
-    """
-    Encapsulates sample names and their accompanying reads files.
-    """
-
-    def __init__(self, base_reads_dir):
-        """
-        Create object.
-        base_reads_dir: Common base path to all raw reads files.
-        """
-        self.base_reads_dir = base_reads_dir
-        self.left_reads = {}
-        self.right_reads = {}
-        self.paired_end = None
-
-    def get_sample_names(self):
-        """
-        Return a list of sample names.
-        """
-        return self.left_reads.keys()
-
-    def get_left_reads(self, sample_name):
-        """
-        Return list of first in pair reads files for sample.
-        """
-        return self.left_reads[sample_name]
-
-    def get_right_reads(self, sample_name):
-        """
-        Return list of second in pair reads files for sample.
-        """
-        return self.right_reads[sample_name]
-
-    def paired_end_reads(self):
-        """
-        Returns True iff sample read files are paired-end data.
-        """
-        return self.paired_end
-
-    def add_sample_data(self, sample_data):
-        """
-        Add information for a single sample.
-        sample_data: list of strings - sample name, comma-separated list of
-        read files (or comma-separated list of first in pair reads files,
-        comma-separated list of second in pair reads files).
-        """
-        sample_name = sample_data[0]
-        self.left_reads[sample_name] = sample_data[1].split(',')
-
-        if len(sample_data) == 3:
-            self.right_reads[sample_name] = sample_data[2].split(',')
-            self.paired_end = True
-        else:
-            self.paired_end = False
 
 
 

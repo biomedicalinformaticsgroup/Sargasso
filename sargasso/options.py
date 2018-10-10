@@ -6,7 +6,7 @@ class Options(object):
     SAMPLES_FILE = "<samples-file>"
     OUTPUT_DIR = "<output-dir>"
     SPECIES = "<species>"
-    SPECIES_STAR_INFO = "<species-star-info>"
+    SPECIES_INFO = "<species-info>"
     READS_BASE_DIR = "--reads-base-dir"
     NUM_THREADS = "--num-threads"
     MISMATCH_THRESHOLD = "--mismatch-threshold"
@@ -19,17 +19,18 @@ class Options(object):
     PERMISSIVE_STRATEGY = "--permissive"
     RUN_SEPARATION = "--run-separation"
     DELETE_INTERMEDIATE = "--delete-intermediate"
-    STAR_EXECUTABLE = "--star-executable"
+    MAPPER_EXECUTABLE = "--mapper-executable"
+    MAPPER_INDEX_EXECUTABLE = "--mapper-index-executable"
     SAMBAMBA_SORT_TMP_DIR = "--sambamba-sort-tmp-dir"
 
     SPECIES_NAME = "species-name"
     GTF_FILE = "gtf-file"
     GENOME_FASTA = "genome-fasta"
-    STAR_INDEX = "star-index"
+    MAPPER_INDEX = "mapper-index"
 
     ALL_TARGET = "all"
     CLEAN_TARGET = "clean"
-    STAR_INDICES_TARGET = "STAR_INDICES"
+    MAPPER_INDICES_TARGET = "MAPPER_INDICES"
     COLLATE_RAW_READS_TARGET = "COLLATE_RAW_READS"
     MAPPED_READS_TARGET = "MAPPED_READS"
     SORTED_READS_TARGET = "SORTED_READS"
@@ -37,7 +38,7 @@ class Options(object):
 
     DATA_TYPE_VARIABLE = "DATA_TYPE"
     NUM_THREADS_VARIABLE = "NUM_THREADS"
-    STAR_EXECUTABLE_VARIABLE = "STAR_EXECLEVELSUTABLE"
+    MAPPER_EXECUTABLE_VARIABLE = "MAPPER_EXECUTABLE"
     SAMBAMBA_SORT_TMP_DIR_VARIABLE = "SAMBAMBA_SORT_TMP_DIR"
     SAMPLES_VARIABLE = "SAMPLES"
     RAW_READS_DIRECTORY_VARIABLE = "RAW_READS_DIRECTORY"
@@ -61,7 +62,7 @@ class Options(object):
         ["Samples File", SAMPLES_FILE],
         ["Output Dir", OUTPUT_DIR],
         ["Species", SPECIES],
-        ["Species STAR info", SPECIES_STAR_INFO],
+        ["Species STAR info", SPECIES_INFO],
         ["Reads Base Dir", READS_BASE_DIR],
         ["Number of Threads", NUM_THREADS],
         ["Mismatch Threshold", MISMATCH_THRESHOLD],
@@ -73,7 +74,7 @@ class Options(object):
         ["Recall Strategy", RECALL_STRATEGY],
         ["Run Separation", RUN_SEPARATION],
         ["Delete Intermediate" , DELETE_INTERMEDIATE],
-        ["Star Executable Path", STAR_EXECUTABLE],
+        ["Mapper Executable Path", MAPPER_EXECUTABLE],
         ["Sambamba Sort Tmp Dir", SAMBAMBA_SORT_TMP_DIR],
     ]
 

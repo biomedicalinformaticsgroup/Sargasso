@@ -13,8 +13,8 @@
 #https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE110032
 #ftp://ftp-trace.ncbi.nih.gov/sra/sra-instant/reads/ByRun/sra/SRR/SRR668/SRR6685151/SRR6685151.sra
 #fastq-dump --split-3 SRR6685151.sra &
-head -40000 SRR6685151_1.fastq > chipseq_mouse_R1.fastq
-head -40000 SRR6685151_2.fastq  > chipseq_mouse_R2.fastq
+head -4000 SRR6685151_1.fastq > chipseq_mouse_R1.fastq
+head -4000 SRR6685151_2.fastq  > chipseq_mouse_R2.fastq
 gzip chipseq_mouse_R1.fastq
 gzip chipseq_mouse_R2.fastq
 
@@ -27,10 +27,10 @@ gzip chipseq_mouse_R2.fastq
 #single end example
 #wget ftp://ftp-trace.ncbi.nih.gov/sra/sra-instant/reads/ByRun/sra/SRR/SRR298/SRR2989997/SRR2989997.sra
 #fastq-dump --split-3 SRR2989997.sra &
-#head -400 SRR2989997.fastq > chipseq_mouse.fastq
+#head -4000 SRR2989997.fastq > chipseq_mouse.fastq
 #gzip chipseq_mouse.fastq
 
-
+bowtie2-build -threads 4 /srv/data/genome/mouse/ensembl-93/mouse_primary_assembly.fa mapper_indexes/mouse/bt2index
 bowtie2-build --threads 48 /srv/data/genome/rat/ensembl-93/rat_toplevel.fa rat93
 bowtie2-build --threads 48 /srv/data/genome/mouse/ensembl-93/mouse_primary_assembly.fa  mouse93
 bowtie2-build --threads 48 /srv/data/genome/human/ensembl-93/human_primary_assembly.fa  human93
@@ -59,7 +59,7 @@ filter_control rnaseq /home/xinhe/Projects/Sargasso/results/chipseq/filtered_rea
  samtools view -F 4 -S mouse_paired_100.sam | grep -v ^@ | cut -f 1 | uniq -c | sort -n -r -k 1 | cut -f 1 -d'S' | uniq -c
 
 
-
+bowtie2 --no-unal --no-discordant --no-mixed -p 4 -k 100 -x mapper_indexes -1 raw_reads/chiseq_mouse_sample/reads_1/chipseq_mouse_R1.fastq.gz -2 raw_reads/chiseq_mouse_sample/reads_2/chipseq_mouse_R2.fastq.gz -S mapped_reads/chiseq_mouse_sample.mouse.bam
 bowtie2 --no-unal --no-discordant --no-mixed -p 24 -k 100 -x mouse93 -1 chipseq_rat_R1.fastq.gz -2 chipseq_rat_R2.fastq.gz -S rat_paired.sam
 bowtie2 --no-unal --no-discordant --no-mixed -p 24 -k 100 -x mouse93 -1 chipseq_mouse_R1.fastq.gz -2 chipseq_mouse_R2.fastq.gz -S mouse_paired.sam
 sambamba view -S mouse_paired.sam -f bam > chiseq_mouse_sample.bam
