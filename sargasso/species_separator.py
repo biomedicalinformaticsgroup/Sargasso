@@ -63,7 +63,7 @@ def separate_species(args):
     #                         version="species_separator v" + __version__)
 
     #https://github.com/docopt/docopt/blob/master/examples/git/git.py
-    ops = CommandlineParser.parse(args,Separator.DOC,options_first=True)
+    ops = CommandlineParser().parse_extra(args,Separator.DOC,options_first=True)
 
     # todo this could be refactor into validator somehow?
     data_type=ops[Options.DATA_TYPE]
@@ -80,27 +80,9 @@ def separate_species(args):
     print("make file content:")
     print("--------------------------")
 
-    with open('/home/xinhe/Projects/Sargasso/results/anothertest5/Makefile', 'r') as fin:
+    with open('/home/xinhe/Projects/Sargasso/results/chipseqtest/Makefile', 'r') as fin:
         print fin.read()
     print("--------------------------")
 
     print('done')
     exit(1)
-    # Validate command-line options
-    sample_info = _validate_command_line_options(options)
-
-    # Set up logger
-    logger = opt.get_logger_for_options(options)
-
-    # Create output directory
-    os.mkdir(options[OUTPUT_DIR])
-
-    # Write Makefile to output directory
-    _write_makefile(logger, options, sample_info)
-
-    # Write Execution Record to output directory
-    _write_execution_record(options)
-
-    # If specified, execute the Makefile with nohup
-    if options[RUN_SEPARATION]:
-        _run_species_separation(logger, options)

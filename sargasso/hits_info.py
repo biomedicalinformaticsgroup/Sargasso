@@ -91,9 +91,8 @@ class ChipseqHitsInfo(HitsInfo):
 
 from factory import Manager
 class HitsInfoManager(Manager):
-    #todo reverse dict
-    HITSINFO={'rnaseq':ChipseqHitsInfo,
-              'chipseq': RnaseqHitsInfo}
+    HITSINFO={'chipseq':ChipseqHitsInfo,
+              'rnaseq': RnaseqHitsInfo}
 
     @staticmethod
     def get(data_type,hits):
