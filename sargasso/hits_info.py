@@ -8,7 +8,7 @@ class HitsInfo:
         self.primary_hits = self._get_primary_hits()
         self.total_length = self._get_total_length(self.primary_hits)
         self.primary_cigars = [self._get_cigar(h) for h in self.primary_hits]
-        self.multimaps = self._get_multimaps(self.hits[0])
+        self.multimaps = self._get_multimaps(self.hits)
         self.primary_mismatches = self._get_mismatches(self.primary_hits[0])
 
     def get_total_length(self):
@@ -55,7 +55,7 @@ class HitsInfo:
     def _get_cigar(self, hit):
         return hit.cigartuples
 
-    def _get_multimaps(self, hit):
+    def _get_multimaps(self, hits):
         raise NotImplementedError()
 
     def _get_mismatches(self, hit):
@@ -67,8 +67,8 @@ class HitsInfo:
 
 class RnaseqHitsInfo(HitsInfo):
 
-    def _get_multimaps(self, hit):
-        return hit.get_tag("NH")
+    def _get_multimaps(self, hits):
+        return hits[0].get_tag("NH")
 
     def _get_mismatches(self, hit):
         return hit.get_tag("nM")

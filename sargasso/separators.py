@@ -37,7 +37,7 @@ class Separator(object):
         logger = LoggerManager(options).get()
 
         # Create output directory
-        os.mkdir(options[Options.OUTPUT_DIR])
+        # os.mkdir(options[Options.OUTPUT_DIR])
 
         # Write Makefile to output directory
         makefile_writer = MakefileWriterManager().get(self.data_type)
