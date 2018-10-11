@@ -400,7 +400,7 @@ class RnaseqMakefileWriter(MakefileWriter):
             self.remove_target_directory(Options.SORTED_READS_TARGET)
             self.remove_target_directory(Options.FILTERED_READS_TARGET)
 
-    def _write_species_variable_definitions(self, logger, species, species_options):
+    def _write_species_variable_definitions(self, species, species_options):
         """
         Write variable definitions for a particular species.
 
@@ -512,7 +512,7 @@ class ChipseqMakefileWriter(MakefileWriter):
                      self.variable_val(Options.NUM_THREADS_VARIABLE),
                      target, executable])
 
-    def _write_species_variable_definitions(self, logger, species, species_options):
+    def _write_species_variable_definitions(self, species, species_options):
         """
         Write variable definitions for a particular species.
 
