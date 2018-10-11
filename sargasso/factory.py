@@ -2,8 +2,5 @@ class Manager(object):
     def _create(self):
         pass
 
-    def get(self,data_type):
+    def get(self, data_type):
         pass
-
-
-

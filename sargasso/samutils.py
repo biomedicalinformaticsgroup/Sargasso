@@ -1,8 +1,10 @@
 import pysam
+from factory import Manager
+
 
 class SamUtils(object):
 
-    def __init__(self,data_type):
+    def __init__(self, data_type):
         self.data_type = data_type
 
     @staticmethod
@@ -16,8 +18,6 @@ class SamUtils(object):
     @staticmethod
     def all_hits(samfile):
         return samfile.fetch(until_eof=True)
-
-
 
     @staticmethod
     def hits_generator(samfile):
@@ -43,14 +43,15 @@ class SamUtils(object):
 class RnaseqSamUtils(SamUtils):
     pass
 
+
 class ChipseqSamUtils(SamUtils):
     pass
 
 
-from factory import Manager
 class SamUtilsManager(Manager):
-    SAMUTILS= {'rnaseq':ChipseqSamUtils,
-              'chipseq':RnaseqSamUtils}
+    SAMUTILS = {'rnaseq': ChipseqSamUtils,
+                'chipseq': RnaseqSamUtils}
+
     @staticmethod
     def get(data_type):
         return SamUtilsManager.SAMUTILS[data_type](data_type)

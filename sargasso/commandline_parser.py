@@ -1,14 +1,11 @@
-import docopt
 import textwrap
+
+import docopt
 import schema
 
-
-
-
-
-from .__init__ import __version__
-from options import Options
 from factory import Manager
+from options import Options
+from .__init__ import __version__
 
 
 class CommandlineParser(object):
@@ -22,20 +19,23 @@ class CommandlineParser(object):
     def parse(self, args, doc, options_first=False):
         # Read in command-line options
         docstring = self.substitute_common_options_into_usage(doc)
-        options = docopt.docopt(docstring, argv=args, version="species_separator v" + __version__,options_first=options_first)
+        options = docopt.docopt(docstring, argv=args, version="species_separator v" + __version__,
+                                options_first=options_first)
         return options
 
-    def parse_extra(self,args, doc, options_first=False):
+    def parse_parameters(self, args, doc, options_first=False):
         options = self.parse(args, doc, options_first)
         if not options_first:
             options['sample_info'] = self.parse_sample_info(options)
             options['species_options'] = self.parse_species_options(options)
-            options = self._parse_sargasso_STRATEGY(options)
+            options = self._parse_sargasso_strategy(options)
         return options
 
+    def parse_datatype(self, args, doc, data_type_string, options_first=True):
+        opts = self.parse(args, doc, options_first)
+        return opts[data_type_string]
 
-
-    def _parse_sargasso_STRATEGY(self, options):
+    def _parse_sargasso_strategy(self, options):
         if options[Options.OPTIMAL_STRATEGY]:
             options[Options.MISMATCH_THRESHOLD] = 1
             options[Options.MINMATCH_THRESHOLD] = 2
@@ -57,8 +57,6 @@ class CommandlineParser(object):
             options[Options.MULTIMAP_THRESHOLD] = 999999
             options[Options.REJECT_MULTIMAPS] = False
         return options
-
-
 
     def substitute_common_options_into_usage(self, usage_msg, **substitutions):
         """
@@ -91,8 +89,7 @@ class CommandlineParser(object):
             ver_option_spec=ver_spec, ver_option_description=ver_desc,
             **substitutions)
 
-
-    def parse_sample_info(self,options):
+    def parse_sample_info(self, options):
         """
         Return an object encapsulating samples and their accompanying read files.
         options: dictionary of command-line options
@@ -115,18 +112,14 @@ class CommandlineParser(object):
 
         return sample_info
 
-    def parse_species_options(self,options):
-        species_options={}
+    def parse_species_options(self, options):
+        species_options = {}
         for i, species in enumerate(options[Options.SPECIES]):
             species_options[i] = self._parse_species_options(options, i)
         return species_options
 
-
-    def get_logger(self):
-        raise NotImplementedError
-        return self.logger
-
-
+    def _parse_species_options(self, options, species_index):
+        raise NotImplementedError()
 
 
 class RnaseqCommandlineParser(CommandlineParser):
@@ -137,7 +130,7 @@ class RnaseqCommandlineParser(CommandlineParser):
         species_index: which species to return options for
         """
 
-        species_options = { Options.SPECIES_NAME: options[Options.SPECIES][species_index] }
+        species_options = {Options.SPECIES_NAME: options[Options.SPECIES][species_index]}
 
         star_infos = options[Options.SPECIES_INFO][species_index].split(",")
 
@@ -157,6 +150,7 @@ class RnaseqCommandlineParser(CommandlineParser):
 
         return species_options
 
+
 class ChipseCommandlineParser(CommandlineParser):
     def _parse_species_options(self, options, species_index):
         """
@@ -165,21 +159,22 @@ class ChipseCommandlineParser(CommandlineParser):
         species_index: which species to return options for
         """
 
-        species_options = { Options.SPECIES_NAME: options[Options.SPECIES][species_index] }
+        species_options = {Options.SPECIES_NAME: options[Options.SPECIES][species_index]}
 
         star_infos = options[Options.SPECIES_INFO][species_index]
 
         if options[Options.SPECIES_INFO][species_index].endswith('.fa'):
             species_options[Options.MAPPER_INDEX] = None
-            species_options[Options.GENOME_FASTA] =  star_infos
+            species_options[Options.GENOME_FASTA] = star_infos
         else:
             species_options[Options.MAPPER_INDEX] = star_infos
-            species_options[Options.GENOME_FASTA] =  None
+            species_options[Options.GENOME_FASTA] = None
 
         return species_options
 
+
 class CommandlineParserManager(Manager):
-    PARSERS = {"rnaseq" : RnaseqCommandlineParser,
+    PARSERS = {"rnaseq": RnaseqCommandlineParser,
                "chipseq": ChipseCommandlineParser}
 
     def __init__(self):
@@ -189,16 +184,15 @@ class CommandlineParserManager(Manager):
         # self.parser=self._create()
         pass
 
-    def _create(self,data_type):
-        commandlineParser = self.PARSERS[data_type]
-        return commandlineParser()
+    def _create(self, data_type):
+        commandline_parser = self.PARSERS[data_type]
+        return commandline_parser()
 
-    def get(self,data_type):
+    def get(self, data_type):
         return self._create(data_type)
 
 
 class SampleInfo(object):
-
     """
     Encapsulates sample names and their accompanying reads files.
     """

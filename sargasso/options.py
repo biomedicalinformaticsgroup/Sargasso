@@ -1,7 +1,7 @@
 import logging
 
-class Options(object):
 
+class Options(object):
     DATA_TYPE = "<data-type>"
     SAMPLES_FILE = "<samples-file>"
     OUTPUT_DIR = "<output-dir>"
@@ -73,11 +73,9 @@ class Options(object):
         ["Conservative Strategy", CONSERVATIVE_STRATEGY],
         ["Recall Strategy", RECALL_STRATEGY],
         ["Run Separation", RUN_SEPARATION],
-        ["Delete Intermediate" , DELETE_INTERMEDIATE],
+        ["Delete Intermediate", DELETE_INTERMEDIATE],
         ["Mapper Executable Path", MAPPER_EXECUTABLE],
         ["Sambamba Sort Tmp Dir", SAMBAMBA_SORT_TMP_DIR],
     ]
 
-
-
-    SUPPORTED_DATATYPE={'rnaseq':True,'chipseq':True}
+    SUPPORTED_DATATYPE = {'rnaseq': True, 'chipseq': True}

@@ -1,6 +1,6 @@
+import os
 from commandline_parser import CommandlineParserManager
 from factory import Manager
-from file_writer import ExecutionRecordWriter
 from file_writer import MakefileWriterManager
 from log import LoggerManager
 from options import Options
@@ -27,17 +27,17 @@ class Separator(object):
 
     def run(self, args):
         commandline_parser = CommandlineParserManager().get(self.data_type)
-        options = commandline_parser.parse_extra(args, self.DOC)
+        options = commandline_parser.parse_parameters(args, self.DOC)
 
         # Validate command-line options
         parameter_validator = ParameterValidatorManager().get(self.data_type)
-        sample_info = parameter_validator.validate(options)
+        parameter_validator.validate(options)
 
         # Set up logger
         logger = LoggerManager(options).get()
 
         # Create output directory
-        # os.mkdir(options[Options.OUTPUT_DIR])
+        os.mkdir(options[Options.OUTPUT_DIR])
 
         # Write Makefile to output directory
         makefile_writer = MakefileWriterManager().get(self.data_type)
@@ -49,7 +49,6 @@ class Separator(object):
         # If specified, execute the Makefile with nohup
         if options[Options.RUN_SEPARATION]:
             self._run_species_separation(options)
-
 
     def _run_species_separation(self, options):
         """

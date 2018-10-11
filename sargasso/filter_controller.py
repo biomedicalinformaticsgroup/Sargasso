@@ -1,18 +1,13 @@
-import docopt
+import subprocess
+
 import os
 import os.path
 import schema
-import subprocess
 
-from factory import Manager
-from parameter_validator import ParameterValidator
 from commandline_parser import CommandlineParser
+from factory import Manager
 from log import LoggerManager
-
-
-
-
-from .__init__ import __version__
+from parameter_validator import ParameterValidator
 
 
 class FilterController(object):
@@ -26,7 +21,7 @@ The available commands are:
    rnaseq   rnaseq data
    chipseq  chipseq data
 """
-    data_type=None
+    data_type = None
 
     DATA_TYPE = "<data-type>"
     BLOCK_DIR = "<block-dir>"
@@ -39,11 +34,10 @@ The available commands are:
     REJECT_MULTIMAPS = "--reject-multimaps"
     BLOCK_FILE_SEPARATOR = "___"
 
-    def __init__(self,data_type):
+    def __init__(self, data_type):
         self.data_type = data_type
 
-
-    def _validate_command_line_options(self,options):
+    def _validate_command_line_options(self, options):
         """
         Validate command line options are correctly specified.
 
@@ -60,8 +54,7 @@ The available commands are:
         except schema.SchemaError as exc:
             exit("Exiting: " + exc.code)
 
-
-    def _all_processes_finished(self,processes):
+    def _all_processes_finished(self, processes):
         """
         Return True if all processes have finished.
 
@@ -166,7 +159,8 @@ The available commands are:
             if options[FilterController.REJECT_MULTIMAPS]:
                 commands.append("--reject-multimaps")
 
-            print(' '.join(commands)) ##todo remove debug code
+            # todo remove debug code
+            print(' '.join(commands))
             proc = subprocess.Popen(commands)
             all_processes.append(proc)
 
@@ -184,7 +178,7 @@ The available commands are:
         args: list of command line arguments
         """
         # Read in command line options
-        options = CommandlineParser().parse(args,self.DOC)
+        options = CommandlineParser().parse(args, self.DOC)
 
         # Validate command line options
         self._validate_command_line_options(options)
@@ -194,8 +188,6 @@ The available commands are:
 
         # Parallelise species separation filtering of mapped read block files
         self._run_processes(logger, options)
-
-
 
 
 class RnaseqFilterController(FilterController):
@@ -250,6 +242,7 @@ input BAM files are correctly sorted will result in erroneous output.
 """
     pass
 
+
 class ChipseqFilterController(FilterController):
     DOC = """
 Usage:
@@ -303,35 +296,25 @@ input BAM files are correctly sorted will result in erroneous output.
     pass
 
 
-class filterControllerManager(Manager):
+class FilterControllerManager(Manager):
     FILTERCONTROLLER = {"rnaseq": RnaseqFilterController,
-                  "chipseq": ChipseqFilterController}
+                        "chipseq": ChipseqFilterController}
 
     def __init__(self):
         pass
 
     @staticmethod
     def get(data_type):
-        return filterControllerManager.FILTERCONTROLLER[data_type](data_type)
+        return FilterControllerManager.FILTERCONTROLLER[data_type](data_type)
 
 
 def filter_control(args):
-    ops = CommandlineParser().parse(args,FilterController.DOC,options_first=True)
-    data_type=ops[FilterController.DATA_TYPE]
+    ops = CommandlineParser().parse(args, FilterController.DOC, options_first=True)
+    data_type = ops[FilterController.DATA_TYPE]
     try:
         ParameterValidator.validate_datatype(data_type)
     except schema.SchemaError as exc:
         exit("Exiting: " + exc.code)
 
-    filterController = filterControllerManager.get(data_type)
-    filterController.run(args)
-
-
-
-
-
-
-
-
-
-
+    filter_controller = FilterControllerManager.get(data_type)
+    filter_controller.run(args)

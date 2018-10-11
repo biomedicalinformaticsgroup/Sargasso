@@ -10,15 +10,13 @@ class Logger(object):
         raise NotImplementedError
 
 
-
 class LoggerManager(Manager):
-
 
     def __init__(self, options):
         self.options = options
         self.logger = self._create(options)
 
-    def _create(self,options):
+    def _create(self, options):
         """
         Return a Logger instance with a command-line specified severity threshold.
 
