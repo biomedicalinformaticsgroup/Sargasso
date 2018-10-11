@@ -1,25 +1,14 @@
-import docopt
 import os
 import os.path
-import schema
-import subprocess
-
-import docopt
 import os.path
 import schema
 
-from . import filterer
-from . import hits_checker
-from .__init__ import __version__
-
-
 from factory import Manager
-from parameter_validator import ParameterValidator
 from commandline_parser import CommandlineParser
 from log import LoggerManager
-from .__init__ import __version__
-from samutils import SamUtilsManager
-
+from parameter_validator import ParameterValidator
+from . import filterer
+from . import hits_checker
 
 
 class SampleFilter(object):
@@ -43,9 +32,8 @@ The available commands are:
     MULTIMAP_THRESHOLD = "<multimap-threshold>"
     REJECT_MULTIMAPS = "--reject-multimaps"
 
-    def __init__(self,data_type):
-        self.data_type=data_type;
-
+    def __init__(self, data_type):
+        self.data_type = data_type
 
     def _validate_command_line_options(self, options):
         try:
@@ -56,23 +44,23 @@ The available commands are:
                     "Could not find input BAM file for species {i}".format(i=index))
 
             ParameterValidator().validate_threshold_options(
-                options, SampleFilter.MISMATCH_THRESHOLD, SampleFilter.MINMATCH_THRESHOLD, SampleFilter.MULTIMAP_THRESHOLD)
+                options, SampleFilter.MISMATCH_THRESHOLD, SampleFilter.MINMATCH_THRESHOLD,
+                SampleFilter.MULTIMAP_THRESHOLD)
 
         except schema.SchemaError as exc:
             exit(exc.code)
 
-
     def _filter_sample_reads(self, logger, options):
         logger.info("Starting species separation.")
 
-
-
         h_check = hits_checker.HitsCheckerManager.get(self.data_type,
-            options[SampleFilter.MISMATCH_THRESHOLD], options[SampleFilter.MINMATCH_THRESHOLD],
-            options[SampleFilter.MULTIMAP_THRESHOLD], options[SampleFilter.REJECT_MULTIMAPS], logger)
+                                                      options[SampleFilter.MISMATCH_THRESHOLD],
+                                                      options[SampleFilter.MINMATCH_THRESHOLD],
+                                                      options[SampleFilter.MULTIMAP_THRESHOLD],
+                                                      options[SampleFilter.REJECT_MULTIMAPS], logger)
 
         filterers = [filterer.FilterManager.get(self.data_type, i + 1, options[SampleFilter.SPECIES_INPUT_BAM][i],
-                                       options[SampleFilter.SPECIES_OUTPUT_BAM][i], logger)
+                                                options[SampleFilter.SPECIES_OUTPUT_BAM][i], logger)
                      for i, species in enumerate(options[SampleFilter.SPECIES])]
 
         all_filterers = filterers
@@ -137,20 +125,19 @@ The available commands are:
         with open(out_file, 'a') as outf:
             outf.write("\t".join([str(s) for s in stats]) + "\n")
 
-    def _get_next_read_name(self, filterer):
+    def _get_next_read_name(self, f):
         read_name = None
 
         try:
-            read_name = filterer.get_next_read_name()
+            read_name = f.get_next_read_name()
         except StopIteration:
             pass
 
         return read_name
 
-
-    def run(self,args):
+    def run(self, args):
         # Read in command-line options
-        options = CommandlineParser().parse(args,self.DOC)
+        options = CommandlineParser().parse(args, self.DOC)
 
         # Validate command-line options
         self._validate_command_line_options(options)
@@ -207,6 +194,8 @@ themselves.
 Note: the input BAM files MUST be sorted in read name order. Failure to
 ensure input BAM files are correctly sorted will result in erroneous output.
 """
+
+
 class ChipseqSampleFilter(SampleFilter):
     DOC = """
 Usage:
@@ -256,21 +245,9 @@ ensure input BAM files are correctly sorted will result in erroneous output.
     pass
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 class SampleFilterManager(Manager):
     SAMPLEFILTER = {"rnaseq": RnaseqSampleFilter,
-                     "chipseq": ChipseqSampleFilter}
+                    "chipseq": ChipseqSampleFilter}
 
     def __init__(self):
         pass
@@ -280,21 +257,15 @@ class SampleFilterManager(Manager):
         return SampleFilterManager.SAMPLEFILTER[data_type](data_type)
 
 
-
-
 def filter_sample_reads(args):
-
-    #https://github.com/docopt/docopt/blob/master/examples/git/git.py
-    ops = CommandlineParser().parse_extra(args,SampleFilter.DOC,options_first=True)
-    data_type=ops[SampleFilter.DATA_TYPE]
+    # https://github.com/docopt/docopt/blob/master/examples/git/git.py
+    data_type = CommandlineParser().parse_datatype(args, SampleFilter.DOC, SampleFilter.DATA_TYPE)
     try:
         ParameterValidator.validate_datatype(data_type)
     except schema.SchemaError as exc:
         exit("Exiting: " + exc.code)
 
-
-    sampleFilter = SampleFilterManager.get(data_type)
-    sampleFilter.run(args)
-
+    sample_filter = SampleFilterManager.get(data_type)
+    sample_filter.run(args)
 
     exit(1)

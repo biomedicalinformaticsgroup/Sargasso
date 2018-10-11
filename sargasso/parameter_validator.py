@@ -5,10 +5,8 @@ from factory import Manager
 import schema
 
 
-
-
 class ParameterValidator(object):
-    DATA_TYPE=None
+    DATA_TYPE = None
 
     def __init__(self):
         pass
@@ -37,7 +35,6 @@ class ParameterValidator(object):
             # opt.validate_dir_option(
             #     options[Options.OUTPUT_DIR], "Output directory should not exist",
             #     should_exist=False)
-
 
             # todo remove debug comment
             self.validate_threshold_options(
@@ -68,9 +65,8 @@ class ParameterValidator(object):
         ParameterValidator.validate_dict_option(
             options[Options.LOG_LEVEL_OPTION], Options.LEVELS, "Invalid log level")
 
-
     @staticmethod
-    def validate_dict_option( dict_option, values_dict, msg):
+    def validate_dict_option(dict_option, values_dict, msg):
         """
         Check if a command line option is a dictionary key.
 
@@ -86,6 +82,7 @@ class ParameterValidator(object):
         msg = "{msg}: '{opt}'.".format(msg=msg, opt=dict_option)
         return Schema(Use(lambda x: values_dict[x]), error=msg). \
             validate(dict_option)
+
     @staticmethod
     def validate_dir_option(dir_option, msg, should_exist=True, nullable=False):
         """
@@ -111,7 +108,7 @@ class ParameterValidator(object):
         Schema(validator, error=msg).validate(dir_option)
 
     @staticmethod
-    def validate_file_option( file_option, msg, should_exist=True, nullable=False):
+    def validate_file_option(file_option, msg, should_exist=True, nullable=False):
         """
         Check if a file specified by a command line option exists or not.
 
@@ -159,7 +156,7 @@ class ParameterValidator(object):
         return Schema(validator, error=msg).validate(int_option)
 
     @staticmethod
-    def validate_float_option( float_option, msg, min_val=None,
+    def validate_float_option(float_option, msg, min_val=None,
                               max_val=None, nullable=False):
         """
         Check if a command line option is a floating point number.
@@ -188,7 +185,7 @@ class ParameterValidator(object):
         return Schema(validator, error=msg).validate(float_option)
 
     @staticmethod
-    def check_boolean_value( option_string):
+    def check_boolean_value(option_string):
         """
         Validates that a command line option string represents a boolean value.
 
@@ -229,15 +226,13 @@ class ParameterValidator(object):
                     self.validate_file_option(
                         reads_file, "Could not open reads file")
 
-
-
     def _validate_species_options(self, species, species_options):
         """
         Validate command-line options for a species are correctly specified.
         species: species identification string
         species_options: dictionary of options specific to a particular species.
         """
-        not NotImplementedError()
+        raise NotImplementedError()
 
     def validate_threshold_options(self,
                                    options, mismatch_opt_name, minmatch_opt_name, multimap_opt_name):
@@ -255,8 +250,8 @@ class ParameterValidator(object):
             "Maximum number of multiple mappings must be a positive integer",
             1, True)
 
-class RnaseqParameterValidator(ParameterValidator):
 
+class RnaseqParameterValidator(ParameterValidator):
 
     def _validate_species_options(self, species, species_options):
         """
@@ -270,20 +265,15 @@ class RnaseqParameterValidator(ParameterValidator):
             nullable=True)
         self.validate_dir_option(
             species_options[Options.GENOME_FASTA],
-            "Genome FASTA directory for species {species} should exist".
-                format(species=species),
+            "Genome FASTA directory for species {species} should exist".format(species=species),
             nullable=True)
         self.validate_dir_option(
             species_options[Options.MAPPER_INDEX],
-            "STAR index directory for species {species} should exist".
-                format(species=species),
+            "STAR index directory for species {species} should exist".format(species=species),
             nullable=True)
 
 
-
-
 class ChipseqParameterValidator(ParameterValidator):
-
 
     def _validate_species_options(self, species, species_options):
         """
@@ -297,12 +287,12 @@ class ChipseqParameterValidator(ParameterValidator):
             nullable=True)
         self.validate_dir_option(
             species_options[Options.MAPPER_INDEX],
-            "Bowtie2 index directory for species {species} should exist".
-                format(species=species),
+            "Bowtie2 index directory for species {species} should exist".format(species=species),
             nullable=True)
 
+
 class ParameterValidatorManager(Manager):
-    VALIDATORS = {"rnaseq" : RnaseqParameterValidator,
+    VALIDATORS = {"rnaseq": RnaseqParameterValidator,
                   "chipseq": ChipseqParameterValidator}
 
     def __init__(self):
@@ -311,17 +301,9 @@ class ParameterValidatorManager(Manager):
         # self.validator = self._create()
         pass
 
-    def _create(self,data_type):
-        parameterValidator = self.VALIDATORS[data_type]
-        return parameterValidator()
+    def _create(self, data_type):
+        parameter_validator = self.VALIDATORS[data_type]
+        return parameter_validator()
 
-    def get(self,data_type):
+    def get(self, data_type):
         return self._create(data_type)
-
-
-
-
-
-
-
-

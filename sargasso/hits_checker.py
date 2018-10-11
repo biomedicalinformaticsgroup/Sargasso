@@ -1,24 +1,25 @@
 from collections import namedtuple
+from factory import Manager
 
-REJECTED = -1
-AMBIGUOUS = -2
-
-CIGAR_GOOD = 0
-CIGAR_LESS_GOOD = 1
-CIGAR_FAIL = 2
-
-CIGAR_OP_MATCH = 0  # From pysam
-CIGAR_OP_REF_INSERTION = 1  # From pysam
-CIGAR_OP_REF_DELETION = 2  # From pysam
-CIGAR_OP_REF_SKIP = 3  # From pysam
-
-
-ThresholdData = namedtuple(
-    'ThresholdData',
-    ['index', 'violated', 'multimaps',
-     'mismatches', 'cigar_check'])
 
 class HitsChecker:
+    REJECTED = -1
+    AMBIGUOUS = -2
+
+    CIGAR_GOOD = 0
+    CIGAR_LESS_GOOD = 1
+    CIGAR_FAIL = 2
+
+    CIGAR_OP_MATCH = 0  # From pysam
+    CIGAR_OP_REF_INSERTION = 1  # From pysam
+    CIGAR_OP_REF_DELETION = 2  # From pysam
+    CIGAR_OP_REF_SKIP = 3  # From pysam
+
+    ThresholdData = namedtuple(
+        'ThresholdData',
+        ['index', 'violated', 'multimaps',
+         'mismatches', 'cigar_check'])
+
     def __init__(self, mismatch_thresh, minmatch_thresh, multimap_thresh,
                  reject_multimaps, logger):
         self.mismatch_thresh = mismatch_thresh / 100.0
@@ -38,45 +39,45 @@ class HitsChecker:
         # the read can be assigned to one species or another, or if it must be
         # rejected as ambiguous
         for f in filterers:
-            f._update_hits_info()
+            f.update_hits_info()
 
         threshold_data = [self._check_thresholds(i, f) for i, f
                           in enumerate(filterers)]
         assignee = self._assign_hits(threshold_data)
 
-        if assignee == REJECTED:
+        if assignee == self.REJECTED:
             for filterer in filterers:
-                filterer._add_rejected_hits_to_stats()
-        elif assignee == AMBIGUOUS:
+                filterer.add_rejected_hits_to_stats()
+        elif assignee == self.AMBIGUOUS:
             for filterer in filterers:
-                filterer._add_ambiguous_hits_to_stats()
+                filterer.add_ambiguous_hits_to_stats()
         else:
             for i, filterer in enumerate(filterers):
                 if i == assignee:
                     self.check_and_write_hits_for_read(filterer)
                 else:
-                    filterer._add_rejected_hits_to_stats()
+                    filterer.add_rejected_hits_to_stats()
 
         for filterer in filterers:
-            filterer._clear_hits()
+            filterer.clear_hits()
 
     def check_and_write_hits_for_read(self, filterer):
         if filterer.hits_info is None:
-            filterer._update_hits_info()
+            filterer.update_hits_info()
 
         if self.check_hits(filterer.hits_info):
-            filterer._add_accepted_hits_to_stats()
-            filterer._write_hits()
+            filterer.add_accepted_hits_to_stats()
+            filterer.write_hits()
         else:
-            filterer._add_rejected_hits_to_stats()
+            filterer.add_rejected_hits_to_stats()
 
-        filterer._clear_hits()
+        filterer.clear_hits()
 
     def check_and_write_hits_for_remaining_reads(self, filterer):
         try:
             while True:
                 if filterer.hits_for_read is None:
-                    filterer._get_next_read_hits()
+                    filterer.get_next_read_hits()
                 self.check_and_write_hits_for_read(filterer)
         except StopIteration:
             pass
@@ -85,9 +86,9 @@ class HitsChecker:
         # check that the hits for a read are - in themselves - satisfactory to
         # be assigned to a species.
         return hits_info.get_multimaps() <= self.multimap_thresh and \
-            hits_info.get_primary_mismatches() <= \
-            round(self.mismatch_thresh * hits_info.get_total_length()) and \
-            self._check_cigars(hits_info) != CIGAR_FAIL
+               hits_info.get_primary_mismatches() <= \
+               round(self.mismatch_thresh * hits_info.get_total_length()) and \
+               self._check_cigars(hits_info) != self.CIGAR_FAIL
 
     def _assign_hits_standard(self, threshold_data):
         threshold_data = [t for t in threshold_data if not t.violated]
@@ -95,7 +96,7 @@ class HitsChecker:
         num_filterers = len(threshold_data)
 
         if num_filterers == 0:
-            return REJECTED
+            return self.REJECTED
         elif num_filterers == 1:
             return threshold_data[0].index
 
@@ -120,11 +121,11 @@ class HitsChecker:
         if len(threshold_data) == 1:
             return threshold_data[0].index
 
-        return AMBIGUOUS
+        return self.AMBIGUOUS
 
     def _assign_hits_reject_multimaps(self, threshold_data):
         if len([t for t in threshold_data if t.multimaps > 1]) > 0:
-            return REJECTED
+            return self.REJECTED
 
         return self._assign_hits_standard(threshold_data)
 
@@ -142,10 +143,10 @@ class HitsChecker:
             violated = True
 
         cigar_check = self._check_cigars(hits_info)
-        if cigar_check == CIGAR_FAIL:
+        if cigar_check == self.CIGAR_FAIL:
             violated = True
 
-        return ThresholdData(
+        return self.ThresholdData(
             index, violated, multimaps, mismatches, cigar_check)
 
     def _check_cigars(self, hits_info):
@@ -153,38 +154,40 @@ class HitsChecker:
         min_match = total_length - round(self.minmatch_thresh * total_length)
 
         cigars = hits_info.get_primary_cigars()
-        response = CIGAR_GOOD
+        response = self.CIGAR_GOOD
 
-        num_matches = 0;
+        num_matches = 0
         for cigar in cigars:
             for operation, length in cigar:
-                if operation == CIGAR_OP_MATCH:
+                if operation == self.CIGAR_OP_MATCH:
                     num_matches += length
-                elif operation == CIGAR_OP_REF_INSERTION or \
-                        operation == CIGAR_OP_REF_DELETION:
-                    response = CIGAR_LESS_GOOD
+                elif operation == self.CIGAR_OP_REF_INSERTION or \
+                        operation == self.CIGAR_OP_REF_DELETION:
+                    response = self.CIGAR_LESS_GOOD
 
         if num_matches < min_match:
-            return CIGAR_FAIL
+            return self.CIGAR_FAIL
         elif num_matches < total_length:
-            return CIGAR_LESS_GOOD
+            return self.CIGAR_LESS_GOOD
 
         return response
 
 
 class RnaseqHitsChecker(HitsChecker):
     pass
+
+
 class ChipseqHitChecker(HitsChecker):
     pass
 
-from factory import Manager
+
 class HitsCheckerManager(Manager):
     # todo reverse dict
-    HITSCHECKERS = {'rnaseq':ChipseqHitChecker,
-                    'chipseq':RnaseqHitsChecker}
+    HITSCHECKERS = {'rnaseq': ChipseqHitChecker,
+                    'chipseq': RnaseqHitsChecker}
 
     @staticmethod
-    def get(data_type,mismatch_thresh, minmatch_thresh, multimap_thresh,
+    def get(data_type, mismatch_thresh, minmatch_thresh, multimap_thresh,
             reject_multimaps, logger):
         return HitsCheckerManager.HITSCHECKERS[data_type](mismatch_thresh, minmatch_thresh, multimap_thresh,
                                                           reject_multimaps, logger)
