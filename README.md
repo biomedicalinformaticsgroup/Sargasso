@@ -25,6 +25,8 @@ Then install the *Sargasso* package and its Python package dependencies into the
 pip install git+https://github.com/statbio/sargasso.git
 ```
 
+Note that Sargasso v1.2.2 should work with Python versions >= 2.6 (including Python 3). Previous versions of Sargasso will only work with Python 2.
+
 Citation
 ========
 
@@ -35,6 +37,7 @@ If you make use of *Sargasso* please cite [our protocol paper](https://www.natur
 Changelog
 =========
 
+* 1.2.2 (11/10/2018): Bugfix release for compatibility with Python 3.
 * 1.2.1 (02/10/2018): Bugfix release for incompatibilities between Mac OS and Linux.
 * 1.2 (16/02/2018): 
     - Improvements to species read assignment logic gives better precision and recall.
