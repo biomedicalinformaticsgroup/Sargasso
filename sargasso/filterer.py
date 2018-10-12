@@ -24,7 +24,6 @@ class Filterer(object):
         if self.hits_for_read is None:
             self.get_next_read_hits()
             self.count += 1
-            print(self.hits_for_read)
             if self.count % 1000000 == 0:
                 self.logger.debug("Read {n} reads from species {s}".format(
                     n=self.count, s=self.species_id))
