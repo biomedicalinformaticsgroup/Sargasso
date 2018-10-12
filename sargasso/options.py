@@ -59,10 +59,11 @@ class Options(object):
     LOG_LEVEL_OPTION = "--" + LOG_LEVEL
 
     EXECUTION_RECORD_ENTRIES = [
+        ["Data Type", DATA_TYPE],
         ["Samples File", SAMPLES_FILE],
         ["Output Dir", OUTPUT_DIR],
         ["Species", SPECIES],
-        ["Species STAR info", SPECIES_INFO],
+        ["Species info", SPECIES_INFO],
         ["Reads Base Dir", READS_BASE_DIR],
         ["Number of Threads", NUM_THREADS],
         ["Mismatch Threshold", MISMATCH_THRESHOLD],
@@ -79,3 +80,6 @@ class Options(object):
     ]
 
     SUPPORTED_DATATYPE = {'rnaseq': True, 'chipseq': True}
+
+    SAMPLE_INFO_INDEX = "sample_info"
+    SPECIES_OPTIONS_INDEX = "species_options"

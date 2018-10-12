@@ -1,6 +1,8 @@
 import os
+
 from commandline_parser import CommandlineParserManager
 from factory import Manager
+from file_writer import ExecutionRecordWriter
 from file_writer import MakefileWriterManager
 from log import LoggerManager
 from options import Options
@@ -22,29 +24,32 @@ class Separator(object):
            chipseq  chipseq data
         """
 
-    def __init__(self, data_type):
+    def __init__(self, data_type, commandline_parser, parameter_validator, logger, makefile_writer,
+                 executionrecord_writer):
         self.data_type = data_type
+        self.commandline_parser = commandline_parser
+        self.parameter_validator = parameter_validator
+        self.logger = logger
+        self.makefile_writer = makefile_writer
+        self.executionrecord_writer = executionrecord_writer
 
     def run(self, args):
-        commandline_parser = CommandlineParserManager().get(self.data_type)
-        options = commandline_parser.parse_parameters(args, self.DOC)
+        options = self.commandline_parser.parse_parameters(args, self.DOC)
 
         # Validate command-line options
-        parameter_validator = ParameterValidatorManager().get(self.data_type)
-        parameter_validator.validate(options)
+        self.parameter_validator.validate(options)
 
         # Set up logger
-        logger = LoggerManager(options).get()
+        self.logger = self.logger.init(options)
 
         # Create output directory
-        # os.mkdir(options[Options.OUTPUT_DIR])
+        os.mkdir(options[Options.OUTPUT_DIR])
 
         # Write Makefile to output directory
-        makefile_writer = MakefileWriterManager().get(self.data_type)
-        makefile_writer.write(logger, options)
+        self.makefile_writer.write(self.logger, options)
 
         # Write Execution Record to output directory
-        # ExecutionRecordWriter().write(options)
+        self.executionrecord_writer.write(options)
 
         # If specified, execute the Makefile with nohup
         if options[Options.RUN_SEPARATION]:
@@ -292,5 +297,14 @@ class SeparatorManager(Manager):
     SEPARATORS = {"rnaseq": RnaseqSeparator,
                   "chipseq": ChipseqSeparator}
 
+    def _create(self, data_type):
+        logger = LoggerManager().get()
+        commandline_parser = CommandlineParserManager().get(data_type)
+        parameter_validator = ParameterValidatorManager().get(data_type)
+        makefile_writer = MakefileWriterManager().get(data_type)
+        executionrecord_writer = ExecutionRecordWriter()
+        return self.SEPARATORS[data_type](data_type, commandline_parser, parameter_validator, logger, makefile_writer,
+                                          executionrecord_writer)
+
     def get(self, data_type):
-        return self.SEPARATORS[data_type](data_type)
+        return self._create(data_type)

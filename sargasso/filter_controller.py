@@ -5,6 +5,7 @@ import os.path
 import schema
 
 from commandline_parser import CommandlineParser
+from commandline_parser import CommandlineParserManager
 from factory import Manager
 from log import LoggerManager
 from parameter_validator import ParameterValidator
@@ -34,8 +35,10 @@ The available commands are:
     REJECT_MULTIMAPS = "--reject-multimaps"
     BLOCK_FILE_SEPARATOR = "___"
 
-    def __init__(self, data_type):
+    def __init__(self, data_type, commandline_parser, logger):
         self.data_type = data_type
+        self.commandline_parser = commandline_parser
+        self.logger = logger
 
     def _validate_command_line_options(self, options):
         """
@@ -159,8 +162,6 @@ The available commands are:
             if options[FilterController.REJECT_MULTIMAPS]:
                 commands.append("--reject-multimaps")
 
-            # todo remove debug code
-            print(' '.join(commands))
             proc = subprocess.Popen(commands)
             all_processes.append(proc)
 
@@ -178,16 +179,16 @@ The available commands are:
         args: list of command line arguments
         """
         # Read in command line options
-        options = CommandlineParser().parse(args, self.DOC)
+        options = self.commandline_parser.parse(args, self.DOC)
 
         # Validate command line options
         self._validate_command_line_options(options)
 
         # Set up logger
-        logger = LoggerManager(options).get()
+        self.logger.init(options)
 
         # Parallelise species separation filtering of mapped read block files
-        self._run_processes(logger, options)
+        self._run_processes(self.logger, options)
 
 
 class RnaseqFilterController(FilterController):
@@ -303,18 +304,21 @@ class FilterControllerManager(Manager):
     def __init__(self):
         pass
 
-    @staticmethod
-    def get(data_type):
-        return FilterControllerManager.FILTERCONTROLLER[data_type](data_type)
+    def _create(self, data_type):
+        commandline_parser = CommandlineParserManager().get(data_type)
+        logger = LoggerManager().get()
+        return self.FILTERCONTROLLER[data_type](data_type, commandline_parser, logger)
+
+    def get(self, data_type):
+        return self._create(data_type)
 
 
 def filter_control(args):
-    ops = CommandlineParser().parse(args, FilterController.DOC, options_first=True)
-    data_type = ops[FilterController.DATA_TYPE]
+    data_type = CommandlineParser.parse_datatype(args, FilterController.DOC, FilterController.DATA_TYPE)
     try:
         ParameterValidator.validate_datatype(data_type)
     except schema.SchemaError as exc:
         exit("Exiting: " + exc.code)
 
-    filter_controller = FilterControllerManager.get(data_type)
+    filter_controller = FilterControllerManager().get(data_type)
     filter_controller.run(args)

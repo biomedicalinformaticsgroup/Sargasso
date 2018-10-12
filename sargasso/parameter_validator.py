@@ -1,8 +1,9 @@
-from schema import And, Or, Schema, Use
-from options import Options
 import os.path
-from factory import Manager
 import schema
+from schema import And, Or, Schema, Use
+
+from factory import Manager
+from options import Options
 
 
 class ParameterValidator(object):
@@ -17,8 +18,8 @@ class ParameterValidator(object):
 
         options: dictionary of command-line options.
         """
-        sample_info = options['sample_info']
-        species_options = options['species_options']
+        sample_info = options[Options.SAMPLE_INFO_INDEX]
+        species_options = options[Options.SPECIES_OPTIONS_INDEX]
 
         try:
             self.validate_log_level(options)
@@ -31,10 +32,9 @@ class ParameterValidator(object):
                 min_val=1, nullable=True)
             self.validate_file_option(
                 options[Options.SAMPLES_FILE], "Could not open samples definition file")
-            # debug remove comment in prod
-            # opt.validate_dir_option(
-            #     options[Options.OUTPUT_DIR], "Output directory should not exist",
-            #     should_exist=False)
+            self.validate_dir_option(
+                options[Options.OUTPUT_DIR], "Output directory should not exist",
+                should_exist=False)
 
             # todo remove debug comment
             self.validate_threshold_options(

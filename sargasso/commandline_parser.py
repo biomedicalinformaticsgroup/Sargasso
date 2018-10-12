@@ -18,7 +18,7 @@ class CommandlineParser(object):
 
     def parse(self, args, doc, options_first=False):
         # Read in command-line options
-        docstring = self.substitute_common_options_into_usage(doc)
+        docstring = self.__class__.substitute_common_options_into_usage(doc)
         options = docopt.docopt(docstring, argv=args, version="species_separator v" + __version__,
                                 options_first=options_first)
         return options
@@ -26,14 +26,17 @@ class CommandlineParser(object):
     def parse_parameters(self, args, doc, options_first=False):
         options = self.parse(args, doc, options_first)
         if not options_first:
-            options['sample_info'] = self.parse_sample_info(options)
-            options['species_options'] = self.parse_species_options(options)
+            options[Options.SAMPLE_INFO_INDEX] = self.parse_sample_info(options)
+            options[Options.SPECIES_OPTIONS_INDEX] = self.parse_species_options(options)
             options = self._parse_sargasso_strategy(options)
         return options
 
-    def parse_datatype(self, args, doc, data_type_string, options_first=True):
-        opts = self.parse(args, doc, options_first)
-        return opts[data_type_string]
+    @staticmethod
+    def parse_datatype(args, doc, data_type_string, options_first=True):
+        docstring = CommandlineParser.substitute_common_options_into_usage(doc)
+        options = docopt.docopt(docstring, argv=args, version="species_separator v" + __version__,
+                                options_first=options_first)
+        return options[data_type_string]
 
     def _parse_sargasso_strategy(self, options):
         if options[Options.OPTIMAL_STRATEGY]:
@@ -58,7 +61,8 @@ class CommandlineParser(object):
             options[Options.REJECT_MULTIMAPS] = False
         return options
 
-    def substitute_common_options_into_usage(self, usage_msg, **substitutions):
+    @staticmethod
+    def substitute_common_options_into_usage(usage_msg, **substitutions):
         """
         Substitute common option and other interpolations into a usage message.
 
