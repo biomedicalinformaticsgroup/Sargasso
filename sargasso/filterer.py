@@ -1,14 +1,13 @@
 from factory import Manager
 from samutils import SamUtilsManager
 from . import hits_info
-from . import separation_stats
 
 
 class Filterer(object):
     def __init__(self, data_type, species_id, input_bam, output_bam, logger):
         self.data_type = data_type
         self.species_id = species_id
-        self.stats = separation_stats.SeparationStats(species_id)
+        self.stats = SeparationStats(species_id)
         self.samutils = SamUtilsManager.get(data_type)
 
         input_hits = self.samutils.open_samfile_for_read(input_bam)
@@ -25,6 +24,7 @@ class Filterer(object):
         if self.hits_for_read is None:
             self.get_next_read_hits()
             self.count += 1
+            print(self.hits_for_read)
             if self.count % 1000000 == 0:
                 self.logger.debug("Read {n} reads from species {s}".format(
                     n=self.count, s=self.species_id))
@@ -74,3 +74,35 @@ class FilterManager(Manager):
     @staticmethod
     def get(data_type, species_id, input_bam, output_bam, logger):
         return FilterManager.FILTERS[data_type](data_type, species_id, input_bam, output_bam, logger)
+
+
+class SeparationStats:
+    def __init__(self, species_id):
+        self.name = "Species {n}".format(n=species_id)
+        self.hits_written = 0
+        self.reads_written = 0
+        self.hits_rejected = 0
+        self.reads_rejected = 0
+        self.hits_ambiguous = 0
+        self.reads_ambiguous = 0
+
+    def accepted_hits(self, hits):
+        self.hits_written += len(hits)
+        self.reads_written += 1
+
+    def rejected_hits(self, hits):
+        self.hits_rejected += len(hits)
+        self.reads_rejected += 1
+
+    def ambiguous_hits(self, hits):
+        self.hits_ambiguous += len(hits)
+        self.reads_ambiguous += 1
+
+    def __str__(self):
+        return ("{n}: wrote {f} filtered hits for {fr} reads; {r} hits for " +
+                "{rr} reads were rejected outright, and {a} hits for " +
+                "{ar} reads were rejected as ambiguous.").format(
+            n=self.name,
+            f=self.hits_written, fr=self.reads_written,
+            r=self.hits_rejected, rr=self.reads_rejected,
+            a=self.hits_ambiguous, ar=self.reads_ambiguous)

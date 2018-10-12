@@ -3,8 +3,9 @@ import os.path
 import os.path
 import schema
 
-from factory import Manager
 from commandline_parser import CommandlineParser
+from commandline_parser import CommandlineParserManager
+from factory import Manager
 from log import LoggerManager
 from parameter_validator import ParameterValidator
 from . import filterer
@@ -32,8 +33,10 @@ The available commands are:
     MULTIMAP_THRESHOLD = "<multimap-threshold>"
     REJECT_MULTIMAPS = "--reject-multimaps"
 
-    def __init__(self, data_type):
+    def __init__(self, data_type, commandline_parser, logger):
         self.data_type = data_type
+        self.commandline_parser = commandline_parser
+        self.logger = logger
 
     def _validate_command_line_options(self, options):
         try:
@@ -137,15 +140,15 @@ The available commands are:
 
     def run(self, args):
         # Read in command-line options
-        options = CommandlineParser().parse(args, self.DOC)
+        options = self.commandline_parser.parse(args, self.DOC)
 
         # Validate command-line options
         self._validate_command_line_options(options)
 
         # Set up logger
-        logger = LoggerManager(options).get()
+        self.logger.init(options)
 
-        self._filter_sample_reads(logger, options)
+        self._filter_sample_reads(self.logger, options)
 
 
 class RnaseqSampleFilter(SampleFilter):
@@ -252,20 +255,24 @@ class SampleFilterManager(Manager):
     def __init__(self):
         pass
 
-    @staticmethod
-    def get(data_type):
-        return SampleFilterManager.SAMPLEFILTER[data_type](data_type)
+    def _create(self, data_type):
+        commandline_parser = CommandlineParserManager().get(data_type)
+        logger = LoggerManager().get()
+        return self.SAMPLEFILTER[data_type](data_type, commandline_parser, logger)
+
+    def get(self, data_type):
+        return self._create(data_type)
 
 
 def filter_sample_reads(args):
     # https://github.com/docopt/docopt/blob/master/examples/git/git.py
-    data_type = CommandlineParser().parse_datatype(args, SampleFilter.DOC, SampleFilter.DATA_TYPE)
+    data_type = CommandlineParser.parse_datatype(args, SampleFilter.DOC, SampleFilter.DATA_TYPE)
     try:
         ParameterValidator.validate_datatype(data_type)
     except schema.SchemaError as exc:
         exit("Exiting: " + exc.code)
 
-    sample_filter = SampleFilterManager.get(data_type)
+    sample_filter = SampleFilterManager().get(data_type)
     sample_filter.run(args)
 
     exit(1)

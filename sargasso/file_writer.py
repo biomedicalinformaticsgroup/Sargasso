@@ -311,15 +311,14 @@ class RnaseqMakefileWriter(MakefileWriter):
 
     # Write Makefile to output directory
     def write(self, logger, options):
-        print('Wring Rnaseq make file...')
         """
         Write Makefile to results directory to perform species separation.
         logger: logging object
         options: dictionary of command-line options
         sample_info: object encapsulating samples and their accompanying read files
         """
-        sample_info = options['sample_info']
-        species_options = options['species_options']
+        sample_info = options[Options.SAMPLE_INFO_INDEX]
+        species_options = options[Options.SPECIES_OPTIONS_INDEX]
         # todo ask Owen this
         with self.writing_to_file(options[Options.OUTPUT_DIR], "Makefile"):
             self._write_variable_definitions(options, sample_info, species_options)
@@ -446,7 +445,6 @@ class RnaseqMakefileWriter(MakefileWriter):
 class ChipseqMakefileWriter(MakefileWriter):
     # Write Makefile to output directory
     def write(self, logger, options):
-        print('Wring Chipseq make file...')
         """
         Write Makefile to results directory to perform species separation.
         logger: logging object
@@ -454,8 +452,8 @@ class ChipseqMakefileWriter(MakefileWriter):
         sample_info: object encapsulating samples and their accompanying read files
         """
         # todo ask Owen this
-        sample_info = options['sample_info']
-        species_options = options['species_options']
+        sample_info = options[Options.SAMPLE_INFO_INDEX]
+        species_options = options[Options.SPECIES_OPTIONS_INDEX]
         with self.writing_to_file(options[Options.OUTPUT_DIR], "Makefile"):
             self._write_variable_definitions(options, sample_info, species_options)
             self._write_target_variable_definitions()

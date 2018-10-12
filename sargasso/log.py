@@ -1,33 +1,19 @@
-import sys
 import logging
+import sys
+
 from factory import Manager
 from options import Options
 
 
-class Logger(object):
+class SargassoLogger(object):
 
-    def write_execution_record(self):
-        raise NotImplementedError
+    def __init__(self, logger):
+        self.logger = logger
 
+    def init(self, options):
+        self._init(sys.stderr, options[Options.LOG_LEVEL_OPTION])
 
-class LoggerManager(Manager):
-
-    def __init__(self, options):
-        self.options = options
-        self.logger = self._create(options)
-
-    def _create(self, options):
-        """
-        Return a Logger instance with a command-line specified severity threshold.
-
-        Return a Logger instance with severity threshold specified by the command
-        line option log.LOG_LEVEL. Log messages will be written to standard out.
-        options: Dictionary mapping from command-line option strings to option
-        values.
-        """
-        return self._get_logger(sys.stderr, options[Options.LOG_LEVEL_OPTION])
-
-    def _get_logger(self, stream, level):
+    def _init(self, stream, level):
         """
         Return a Logger instance with the specified severity threshold.
 
@@ -42,10 +28,25 @@ class LoggerManager(Manager):
                                       datefmt='%Y-%m-%d %H:%M:%S')
         handler = logging.StreamHandler(stream)
         handler.setFormatter(formatter)
-        logger = logging.getLogger(__name__)
-        logger.setLevel(Options.LEVELS[level])
-        logger.addHandler(handler)
-        return logger
+        self.logger.setLevel(Options.LEVELS[level])
+        self.logger.addHandler(handler)
+
+    def info(self, msg, *args, **kwargs):
+        self.logger.info(msg, *args, **kwargs)
+
+    def debug(self, msg, *args, **kwargs):
+        self.logger.debug(msg, *args, **kwargs)
+
+    def write_execution_record(self):
+        raise NotImplementedError
+
+
+
+class LoggerManager(Manager):
+
+    def __init__(self):
+        pass
 
     def get(self):
-        return self.logger
+        logger = logging.getLogger(__name__)
+        return SargassoLogger(logger)
