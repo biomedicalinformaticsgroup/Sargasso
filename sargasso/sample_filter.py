@@ -7,6 +7,7 @@ from commandline_parser import CommandlineParser
 from commandline_parser import CommandlineParserManager
 from factory import Manager
 from log import LoggerManager
+from options import Options
 from parameter_validator import ParameterValidator
 from . import filterer
 from . import hits_checker
@@ -146,7 +147,7 @@ The available commands are:
         self._validate_command_line_options(options)
 
         # Set up logger
-        self.logger.init(options)
+        self.logger.init(options[Options.LOG_LEVEL_OPTION])
 
         self._filter_sample_reads(self.logger, options)
 

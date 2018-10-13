@@ -10,8 +10,8 @@ class SargassoLogger(object):
     def __init__(self, logger):
         self.logger = logger
 
-    def init(self, options):
-        self._init(sys.stderr, options[Options.LOG_LEVEL_OPTION])
+    def init(self, level):
+        self._init(sys.stderr, level)
 
     def _init(self, stream, level):
         """

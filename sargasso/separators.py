@@ -40,7 +40,7 @@ class Separator(object):
         self.parameter_validator.validate(options)
 
         # Set up logger
-        self.logger = self.logger.init(options)
+        self.logger = self.logger.init(options[Options.LOG_LEVEL_OPTION])
 
         # Create output directory
         os.mkdir(options[Options.OUTPUT_DIR])
