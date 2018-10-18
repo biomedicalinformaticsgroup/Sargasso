@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sargasso.filter_controller as entry_point
+import sargasso.filter.filter_controller as entry_point
 import sys
 
 entry_point.filter_control(sys.argv[1:])

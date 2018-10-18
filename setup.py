@@ -14,6 +14,7 @@ setup(
         'docopt==0.6.2',
         'pysam==0.8.2.1',
         'schema==0.3.1',
+        'pytest==3.9.1',
     ],
     scripts=[
         'bin/build_star_index',
