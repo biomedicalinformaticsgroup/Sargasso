@@ -1,0 +1,19 @@
+Execution Record - 2018-10-18T12:12:06.805530
+Data Type: rnaseq
+Samples File: /home/xinhe/Projects/Sargasso/tests/data/pe/rnaseq/rnaseq.tsv
+Output Dir: /tmp/pytest-of-xinhe/pytest-77/test_run_rnaseq0/rnaseq_test_pe
+Species: ['mouse', 'human', 'rat']
+Species info: ['/srv/data/genome/mouse/ensembl-94/STAR_indices/primary_assembly', '/srv/data/genome/human/ensembl-94/STAR_indices/primary_assembly', '/srv/data/genome/rat/ensembl-94/STAR_indices/toplevel']
+Reads Base Dir: /home/xinhe/Projects/Sargasso/tests/data/raw_reads
+Number of Threads: 2
+Mismatch Threshold: 1.0
+Minmatch Threshold: 2.0
+Multimap Threshold: 999999
+Reject Multimaps: False
+Optimal Strategy: True
+Conservative Strategy: False
+Recall Strategy: False
+Run Separation: False
+Delete Intermediate: False
+Mapper Executable Path: STAR
+Sambamba Sort Tmp Dir: /tmp
