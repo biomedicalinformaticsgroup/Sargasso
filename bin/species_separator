@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import sargasso.species_separator as entry_point
 import sys
+
+import sargasso.separator.species_separator as entry_point
 
 entry_point.separate_species(sys.argv[1:])

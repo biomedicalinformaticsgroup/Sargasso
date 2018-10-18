@@ -2,7 +2,7 @@
 
 #import cProfile
 #import pstats
-import sargasso.sample_filter as entry_point
+import sargasso.filter.sample_filter as entry_point
 import sys
 
 entry_point.filter_sample_reads(sys.argv[1:])
