@@ -30,7 +30,7 @@ gzip chipseq_mouse_R2.fastq
 #head -4000 SRR2989997.fastq > chipseq_mouse.fastq
 #gzip chipseq_mouse.fastq
 
-bowtie2-build -threads 4 /srv/data/genome/mouse/ensembl-93/mouse_primary_assembly.fa mapper_indexes/mouse/bt2index
+bowtie2-build --threads 40 /srv/data/genome/mouse/ensembl-93/mouse_primary_assembly.fa bt2index
 bowtie2-build --threads 48 /srv/data/genome/rat/ensembl-93/rat_toplevel.fa rat93
 bowtie2-build --threads 48 /srv/data/genome/mouse/ensembl-93/mouse_primary_assembly.fa  mouse93
 bowtie2-build --threads 48 /srv/data/genome/human/ensembl-93/human_primary_assembly.fa  human93
@@ -92,3 +92,78 @@ filter_reads rnaseq "chiseq_mouse_sample" sorted_reads filtered_reads 1 1 2 9999
 filter_reads rnaseq "chiseq_mouse_sample" sorted_reads filtered_reads 1 1 2 999999 "" mouse rat human
 
 multiqc -d -f -m sargasso -o filtered_reads_human_mouse_rat filtered_reads_human_mouse_rat
+
+
+
+
+
+## testing data for filtering process
+# from https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60241
+# Mus musculus
+# GSM1468703	(III) polII_ChIP__N2A__Luc_KD
+# GSM1468704	(III) polII_ChIP__N2A__Spq_KD
+# GSM1468703 SRR1539524
+wget -q ftp://ftp-trace.ncbi.nih.gov/sra/sra-instant/reads/ByRun/sra/SRR/SRR153/SRR1539524/SRR1539524.sra &
+# GSM1468704 SRR1539525
+wget -q ftp://ftp-trace.ncbi.nih.gov/sra/sra-instant/reads/ByRun/sra/SRR/SRR153/SRR1539525/SRR1539525.sra &
+
+fastq-dump --split-3 SRR1539524.sra &
+fastq-dump --split-3 SRR1539525.sra &
+
+
+# from https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE94804
+# human
+
+# GSM2483406 SRR5247732
+wget -q ftp://ftp-trace.ncbi.nih.gov/sra/sra-instant/reads/ByRun/sra/SRR/SRR524/SRR5247732/SRR5247732.sra &
+# GSM2483407 SRR5247733
+wget -q ftp://ftp-trace.ncbi.nih.gov/sra/sra-instant/reads/ByRun/sra/SRR/SRR524/SRR5247733/SRR5247733.sra &
+
+fastq-dump --split-3 SRR5247732.sra &
+fastq-dump --split-3 SRR5247733.sra &
+
+
+SRR1647822
+wget -q ftp://ftp-trace.ncbi.nih.gov/sra/sra-instant/reads/ByRun/sra/SRR/SRR164/SRR1647822/SRR1647822.sra &
+
+
+SRR=SRR1647822
+wget -q ftp://ftp-trace.ncbi.nih.gov/sra/sra-instant/reads/ByRun/sra/SRR/${SRR:0:6}/${SRR}/${SRR}.sra &
+
+
+
+species_separator chipseq --run-separation --num-threads 24 --best --sambamba-sort-tmp-dir /home/xinhe/tmp /home/xinhe/Projects/Sargasso/results/test_chipseq_real_data/pe.tsv /home/xinhe/Projects/Sargasso/results/test_chipseq_real_data/results/pe mouse /srv/data/genome/mouse/ensembl-94/bowtie2_indices/primary_assembly human /srv/data/genome/human/ensembl-94/bowtie2_indices/primary_assembly
+species_separator chipseq --run-separation --num-threads 24 --best --sambamba-sort-tmp-dir /home/xinhe/tmp /home/xinhe/Projects/Sargasso/results/test_chipseq_real_data/se.tsv /home/xinhe/Projects/Sargasso/results/test_chipseq_real_data/results/se mouse /srv/data/genome/mouse/ensembl-94/bowtie2_indices/primary_assembly human /srv/data/genome/human/ensembl-94/bowtie2_indices/primary_assembly
+
+
+declare -a STRATEGY_INCLUDED=("best" "conservative" "recall" "permissive")
+declare -a STRATEGY_INCLUDED=("best")
+for type in pe
+do
+    RESULTS_DIR=/home/xinhe/Projects/Sargasso/results/test_chipseq_real_data/results/${type}
+    for strategy in "${STRATEGY_INCLUDED[@]}"
+    do
+        RESULT_FOLDER=${RESULTS_DIR}/${strategy}
+        rm -rf ${RESULT_FOLDER}
+
+        species_separator chipseq --num-threads 2 --${strategy} \
+        --sambamba-sort-tmp-dir /home/xinhe/tmp /home/xinhe/Projects/Sargasso/results/test_chipseq_real_data/pe.tsv \
+        ${RESULT_FOLDER} \
+        mouse /srv/data/genome/mouse/ensembl-94/bowtie2_indices/primary_assembly \
+        human /srv/data/genome/human/ensembl-94/bowtie2_indices/primary_assembly
+
+        for folder in "mapper_indexes" "raw_reads" "mapped_reads" "sorted_reads"
+        do
+            ln -s ${RESULTS_DIR}/data/${folder} ${RESULT_FOLDER}/${folder}
+        done
+
+        (cd ${RESULT_FOLDER} && nohup make filtered_reads > nohup.out  &) &
+    done
+done
+
+
+species_separator chipseq --run-separation --num-threads 24 --best --sambamba-sort-tmp-dir /home/xinhe/tmp /home/xinhe/Projects/Sargasso/results/test_chipseq_real_data/pe.tsv /home/xinhe/Projects/Sargasso/results/test_chipseq_real_data/results/pe mouse /srv/data/genome/mouse/ensembl-94/bowtie2_indices/primary_assembly human /srv/data/genome/human/ensembl-94/bowtie2_indices/primary_assembly
+/home/xinhe/Projects/Sargasso/results/test_chipseq_real_data/results/pe
+
+read_name='SRR7968960.10652059'
+sambamba view -F "read_name =~ /^${read_name}/" human_1.mouse.bam
