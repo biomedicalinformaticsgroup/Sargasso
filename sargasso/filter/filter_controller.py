@@ -153,7 +153,7 @@ The available commands are:
 
                 get_output_path = lambda x: os.path.join(
                     options[FilterController.OUTPUT_DIR],
-                    "__".join([options[FilterController.SAMPLE_NAME], x,
+                    "___".join([options[FilterController.SAMPLE_NAME], x,
                               str(proc_no), "filtered.bam"]))
 
                 sp_out = get_output_path(species)
