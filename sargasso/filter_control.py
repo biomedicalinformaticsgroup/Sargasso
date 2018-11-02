@@ -163,7 +163,7 @@ def _run_processes(logger, options):
 
             get_output_path = lambda x: os.path.join(
                 options[OUTPUT_DIR],
-                "_".join([options[SAMPLE_NAME], x,
+                "__".join([options[SAMPLE_NAME], x,
                          str(proc_no), "filtered.bam"]))
 
             sp_out = get_output_path(species)
