@@ -276,4 +276,3 @@ def filter_sample_reads(args):
 
     sample_filter = SampleFilterManager.get(data_type)
     sample_filter.run(args)
-

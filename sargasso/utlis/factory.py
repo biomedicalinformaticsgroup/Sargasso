@@ -1,7 +1,8 @@
 class Manager(object):
-    def _create(self):
-        pass
+    @classmethod
+    def _create(cls, data_type):
+        raise NotImplementedError('Need to implement in subclass')
 
-    def get(self, data_type):
-        pass
-
+    @classmethod
+    def get(cls, data_type):
+        raise NotImplementedError('Need to implement in subclass')

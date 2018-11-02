@@ -16,29 +16,32 @@ class CommandlineParser(object):
         # self.pv = ParameterValidator()
         pass
 
-    def parse(self, args, doc, options_first=False):
+    @classmethod
+    def parse(cls, args, doc, options_first=False):
         # Read in command-line options
-        docstring = self.__class__.substitute_common_options_into_usage(doc)
+        docstring = cls._substitute_common_options_into_usage(doc)
         options = docopt.docopt(docstring, argv=args, version="species_separator v" + __version__,
                                 options_first=options_first)
         return options
 
-    def parse_parameters(self, args, doc, options_first=False):
-        options = self.parse(args, doc, options_first)
+    @classmethod
+    def parse_parameters(cls, args, doc, options_first=False):
+        options = cls.parse(args, doc, options_first)
         if not options_first:
-            options[Options.SAMPLE_INFO_INDEX] = self.parse_sample_info(options)
-            options[Options.SPECIES_OPTIONS_INDEX] = self.parse_species_options(options)
-            options = self._parse_sargasso_strategy(options)
+            options[Options.SAMPLE_INFO_INDEX] = cls.parse_sample_info(options)
+            options[Options.SPECIES_OPTIONS_INDEX] = cls.parse_species_options(options)
+            options = cls._parse_sargasso_strategy(options)
         return options
 
-    @staticmethod
-    def parse_datatype(args, doc, data_type_string, options_first=True):
-        docstring = CommandlineParser.substitute_common_options_into_usage(doc)
+    @classmethod
+    def parse_datatype(cls, args, doc, data_type_string, options_first=True):
+        docstring = CommandlineParser._substitute_common_options_into_usage(doc)
         options = docopt.docopt(docstring, argv=args, version="species_separator v" + __version__,
                                 options_first=options_first)
         return options[data_type_string]
 
-    def _parse_sargasso_strategy(self, options):
+    @classmethod
+    def _parse_sargasso_strategy(cls, options):
         if options[Options.OPTIMAL_STRATEGY]:
             options[Options.MISMATCH_THRESHOLD] = 1
             options[Options.MINMATCH_THRESHOLD] = 2
@@ -62,7 +65,7 @@ class CommandlineParser(object):
         return options
 
     @classmethod
-    def substitute_common_options_into_usage(cls, usage_msg, **substitutions):
+    def _substitute_common_options_into_usage(cls, usage_msg, **substitutions):
         """
         Substitute common option and other interpolations into a usage message.
 
@@ -93,7 +96,8 @@ class CommandlineParser(object):
             ver_option_spec=ver_spec, ver_option_description=ver_desc,
             **substitutions)
 
-    def parse_sample_info(self, options):
+    @classmethod
+    def parse_sample_info(cls, options):
         """
         Return an object encapsulating samples and their accompanying read files.
         options: dictionary of command-line options
@@ -116,18 +120,22 @@ class CommandlineParser(object):
 
         return sample_info
 
-    def parse_species_options(self, options):
+    @classmethod
+    def parse_species_options(cls, options):
         species_options = {}
         for i, species in enumerate(options[Options.SPECIES]):
-            species_options[i] = self._parse_species_options(options, i)
+            species_options[i] = cls._parse_species_options(options, i)
         return species_options
 
-    def _parse_species_options(self, options, species_index):
-        raise NotImplementedError()
+    @classmethod
+    def _parse_species_options(cls, options, species_index):
+        raise NotImplementedError('Need to implement in subclass')
 
 
 class RnaseqCommandlineParser(CommandlineParser):
-    def _parse_species_options(self, options, species_index):
+
+    @classmethod
+    def _parse_species_options(cls, options, species_index):
         """
         Return a dictionary containing command-line options for a species.
         options: dictionary containing all command-line options.
@@ -155,8 +163,9 @@ class RnaseqCommandlineParser(CommandlineParser):
         return species_options
 
 
-class ChipseCommandlineParser(CommandlineParser):
-    def _parse_species_options(self, options, species_index):
+class ChipseqCommandlineParser(CommandlineParser):
+    @classmethod
+    def _parse_species_options(cls, options, species_index):
         """
         Return a dictionary containing command-line options for a species.
         options: dictionary containing all command-line options.
@@ -179,7 +188,7 @@ class ChipseCommandlineParser(CommandlineParser):
 
 class CommandlineParserManager(Manager):
     PARSERS = {"rnaseq": RnaseqCommandlineParser,
-               "chipseq": ChipseCommandlineParser}
+               "chipseq": ChipseqCommandlineParser}
 
     @classmethod
     def _create(cls, data_type):

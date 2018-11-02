@@ -62,7 +62,7 @@ OUTPUT_DIR=$6
 READS_TYPE=$7
 BOWTIE2_EXECUTABLE=$8
 
-MULTI_READ_LIMIT=100
+MULTI_READ_LIMIT=20
 
 
 
@@ -73,10 +73,11 @@ for species in ${SPECIES}; do
         sample_reads_2_dir=${sample_dir}/reads_2
 
         if [[ "${READS_TYPE}" == "single" ]]; then
-            bowtie_se_reads ${sample} ${species} ${BOWTIE2_INDICES}/${species} ${NUM_THREADS} $(listFiles ${sample_reads_1_dir}/*) ${OUTPUT_DIR} ${BOWTIE2_EXECUTABLE} &
+            #todo handle number of threads here
+            bowtie_se_reads ${sample} ${species} ${BOWTIE2_INDICES}/${species} ${NUM_THREADS} $(listFiles ${sample_reads_1_dir}/*) ${OUTPUT_DIR} ${BOWTIE2_EXECUTABLE}
             #star_se_reads ${sample} ${species} ${STAR_INDICES_DIR}/${species} ${NUM_THREADS} $(listFiles ${sample_reads_1_dir}/*) ${OUTPUT_DIR} ${BOWTIE2_EXECUTABLE}
         else
-            bowtie_pe_reads ${sample} ${species} ${BOWTIE2_INDICES}/${species} ${NUM_THREADS} $(listFiles ${sample_reads_1_dir}/*) $(listFiles ${sample_reads_2_dir}/*) ${OUTPUT_DIR} ${BOWTIE2_EXECUTABLE} &
+            bowtie_pe_reads ${sample} ${species} ${BOWTIE2_INDICES}/${species} ${NUM_THREADS} $(listFiles ${sample_reads_1_dir}/*) $(listFiles ${sample_reads_2_dir}/*) ${OUTPUT_DIR} ${BOWTIE2_EXECUTABLE}
 #            ${BOWTIE2_EXECUTABLE} --no-unal --no-discordant --no-mixed -p ${NUM_THREADS} -k ${MULTI_READ_LIMIT} -x ${BOWTIE2_INDICES} -1 $(listFiles ${sample_reads_1_dir}/*) -2 $(listFiles ${sample_reads_1_dir}/*) -S ${OUTPUT_DIR}/
         fi
     done
