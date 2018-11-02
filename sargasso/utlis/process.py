@@ -31,5 +31,3 @@ class Process(object):
             args = ['nohup'] + args
         subprocess.Popen(args)
         os.chdir(cwd)
-
-

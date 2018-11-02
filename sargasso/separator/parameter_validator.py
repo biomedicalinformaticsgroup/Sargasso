@@ -7,12 +7,12 @@ from sargasso.utlis.factory import Manager
 
 
 class ParameterValidator(object):
-    DATA_TYPE = None
 
     def __init__(self):
         pass
 
-    def validate(self, options):
+    @classmethod
+    def validate(cls, options):
         """
         Validate command line options are correctly specified.
 
@@ -22,30 +22,30 @@ class ParameterValidator(object):
         species_options = options[Options.SPECIES_OPTIONS_INDEX]
 
         try:
-            self.validate_log_level(options)
-            self.validate_dir_option(
+            cls.validate_log_level(options)
+            cls.validate_dir_option(
                 options[Options.READS_BASE_DIR], "Reads base directory does not exist",
                 nullable=True)
-            options[Options.NUM_THREADS] = self.validate_int_option(
+            options[Options.NUM_THREADS] = cls.validate_int_option(
                 options[Options.NUM_THREADS],
                 "Number of threads must be a positive integer",
                 min_val=1, nullable=True)
-            self.validate_file_option(
+            cls.validate_file_option(
                 options[Options.SAMPLES_FILE], "Could not open samples definition file")
-            self.validate_dir_option(
+            cls.validate_dir_option(
                 options[Options.OUTPUT_DIR], "Output directory should not exist",
                 should_exist=False)
 
-            self.validate_threshold_options(
+            cls.validate_threshold_options(
                 options, Options.MISMATCH_THRESHOLD, Options.MINMATCH_THRESHOLD,
                 Options.MULTIMAP_THRESHOLD)
 
             for i, species in enumerate(options[Options.SPECIES]):
-                self._validate_species_options(species, species_options[i])
+                cls._validate_species_options(species, species_options[i])
 
             # TODO: validate that all samples consistently have either single- or
             # paired-end reads
-            self._validate_read_file(sample_info)
+            cls._validate_read_file(sample_info)
 
             return sample_info
         except schema.SchemaError as exc:
@@ -213,8 +213,8 @@ class ParameterValidator(object):
         ParameterValidator.validate_dict_option(
             data_type, Options.SUPPORTED_DATATYPE, "Invalid data type.")
 
-
-    def _validate_read_file(self, sample_info):
+    @classmethod
+    def _validate_read_file(cls, sample_info):
         """
         Validate all raw reads files exist.
         """
@@ -223,10 +223,11 @@ class ParameterValidator(object):
                 for reads_file in reads_file_list:
                     if sample_info.base_reads_dir:
                         reads_file = os.path.join(sample_info.base_reads_dir, reads_file)
-                    self.validate_file_option(
+                    cls.validate_file_option(
                         reads_file, "Could not open reads file")
 
-    def _validate_species_options(self, species, species_options):
+    @classmethod
+    def _validate_species_options(cls, species, species_options):
         """
         Validate command-line options for a species are correctly specified.
         species: species identification string
@@ -254,21 +255,22 @@ class ParameterValidator(object):
 
 class RnaseqParameterValidator(ParameterValidator):
 
-    def _validate_species_options(self, species, species_options):
+    @classmethod
+    def _validate_species_options(cls, species, species_options):
         """
         Validate command-line options for a species are correctly specified.
         species: species identification string
         species_options: dictionary of options specific to a particular species.
         """
-        self.validate_file_option(
+        cls.validate_file_option(
             species_options[Options.GTF_FILE],
             "Could not open species {species} GTF file".format(species=species),
             nullable=True)
-        self.validate_dir_option(
+        cls.validate_dir_option(
             species_options[Options.GENOME_FASTA],
             "Genome FASTA directory for species {species} should exist".format(species=species),
             nullable=True)
-        self.validate_dir_option(
+        cls.validate_dir_option(
             species_options[Options.MAPPER_INDEX],
             "STAR index directory for species {species} should exist".format(species=species),
             nullable=True)
@@ -276,17 +278,18 @@ class RnaseqParameterValidator(ParameterValidator):
 
 class ChipseqParameterValidator(ParameterValidator):
 
-    def _validate_species_options(self, species, species_options):
+    @classmethod
+    def _validate_species_options(cls, species, species_options):
         """
         Validate command-line options for a species are correctly specified.
         species: species identification string
         species_options: dictionary of options specific to a particular species.
         """
-        self.validate_file_option(
+        cls.validate_file_option(
             species_options[Options.GENOME_FASTA],
             "Could not open species {species} FASTA file".format(species=species),
             nullable=True)
-        self.validate_dir_option(
+        cls.validate_dir_option(
             species_options[Options.MAPPER_INDEX],
             "Bowtie2 index directory for species {species} should exist".format(species=species),
             nullable=True)

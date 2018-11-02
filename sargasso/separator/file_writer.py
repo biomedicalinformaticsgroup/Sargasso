@@ -28,8 +28,8 @@ class Writer(object):
         with open(os.path.join(directory, filename), "w") as output_file:
             output_file.write("\n".join(self.lines) + '\n')
 
-    def write(self):
-        raise NotImplementedError()
+    def write(self, *args):
+        raise NotImplementedError('Need to implement in subclass')
 
 
 class MakefileWriter(Writer):
@@ -76,7 +76,8 @@ class MakefileWriter(Writer):
     def set_variable(self, variable, value):
         self.add_line("{var}={val}".format(var=variable, val=value))
 
-    def variable_val(self, variable, raw=False):
+    @classmethod
+    def variable_val(cls, variable, raw=False):
         return variable if raw else "$({var})".format(var=variable)
 
     def make_target_directory(self, target, raw_target=False):
@@ -300,10 +301,11 @@ class MakefileWriter(Writer):
 
             self.add_command("collate_raw_reads", collate_raw_reads_params)
 
-    def _get_species_options(self, options, species_index):
+    @classmethod
+    def _get_species_options(cls, options, species_index):
         return options['species_options'][species_index]
 
-    def write(self):
+    def write(self, *args):
         raise NotImplementedError()
 
 
@@ -417,7 +419,8 @@ class RnaseqMakefileWriter(MakefileWriter):
             self.set_variable(
                 self._get_genome_fasta_variable(species), species_options[Options.GENOME_FASTA])
 
-    def _get_star_index_variable(self, species):
+    @classmethod
+    def _get_star_index_variable(cls, species):
         """
         Return STAR index variable name for a species.
 
@@ -425,7 +428,8 @@ class RnaseqMakefileWriter(MakefileWriter):
         """
         return "{species}_STAR_DIR".format(species=species.upper())
 
-    def _get_gtf_file_variable(self, species):
+    @classmethod
+    def _get_gtf_file_variable(cls, species):
         """
         Return GTF file variable name for a species.
 
@@ -433,7 +437,8 @@ class RnaseqMakefileWriter(MakefileWriter):
         """
         return "{species}_GTF".format(species=species.upper())
 
-    def _get_genome_fasta_variable(self, species):
+    @classmethod
+    def _get_genome_fasta_variable(cls, species):
         """
         Return genome FASTA variable name for a species.
 
@@ -526,10 +531,12 @@ class ChipseqMakefileWriter(MakefileWriter):
             self.set_variable(
                 self._get_genome_fasta_variable(species), species_options[Options.GENOME_FASTA])
 
-    def _get_bowtie2_index_variable(self, species):
+    @classmethod
+    def _get_bowtie2_index_variable(cls, species):
         return "{species}_BOWTIE2_DIR".format(species=species.upper())
 
-    def _get_genome_fasta_variable(self, species):
+    @classmethod
+    def _get_genome_fasta_variable(cls, species):
         return "{species}_GENOME_FASTA_FILE".format(species=species.upper())
 
 
@@ -540,6 +547,10 @@ class MakefileWriterManager(Manager):
     @classmethod
     def get(cls, data_type):
         return cls.mkw[data_type](data_type)
+
+    @classmethod
+    def _create(cls, data_type):
+        pass
 
 
 class ExecutionRecordWriter(Writer):

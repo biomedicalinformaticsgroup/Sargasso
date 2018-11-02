@@ -55,7 +55,8 @@ class Separator(object):
         if options[Options.RUN_SEPARATION]:
             self._run_species_separation(options)
 
-    def _run_species_separation(self, options):
+    @classmethod
+    def _run_species_separation(cls, options):
         """
         Executes the written Makefile with nohup.
 

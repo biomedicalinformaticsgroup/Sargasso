@@ -35,14 +35,15 @@ function get_per_thread_filtered_file() {
     SPECIES=$2
     INDEX=$3
 
-    echo "${OUTPUT_DIR}"/"${SAMPLE}"_"${SPECIES}"_"${INDEX}"_filtered.bam
+    sep="___"
+    echo "${OUTPUT_DIR}"/"${SAMPLE}${sep}${SPECIES}${sep}${INDEX}"_filtered.bam
 }
 
 function get_output_filtered_file() {
     SAMPLE=$1
     SPECIES=$2
-
-    echo "${OUTPUT_DIR}"/"${SAMPLE}"_"${SPECIES[index]}"_filtered.bam
+    sep="___"
+    echo "${OUTPUT_DIR}"/"${SAMPLE}${sep}${SPECIES[index]}"_filtered.bam
 }
 
 function create_per_thread_input_files() {
