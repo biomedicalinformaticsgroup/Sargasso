@@ -36,14 +36,14 @@ function get_per_thread_filtered_file() {
     INDEX=$3
 
     sep="___"
-    echo "${OUTPUT_DIR}"/"${SAMPLE}${sep}${SPECIES}${sep}${INDEX}"_filtered.bam
+    echo "${OUTPUT_DIR}"/"${SAMPLE}${sep}${SPECIES}${sep}${INDEX}"${sep}filtered.bam
 }
 
 function get_output_filtered_file() {
     SAMPLE=$1
     SPECIES=$2
     sep="___"
-    echo "${OUTPUT_DIR}"/"${SAMPLE}${sep}${SPECIES[index]}"_filtered.bam
+    echo "${OUTPUT_DIR}"/"${SAMPLE}${sep}${SPECIES[index]}"${sep}filtered.bam
 }
 
 function create_per_thread_input_files() {
@@ -105,7 +105,7 @@ function create_per_thread_input_files() {
         done
 
         block_indices["${THREADS}"]="${largest_read_no}"
-           
+
         # fetch the ids from the largest file & store in array
         sed_command=""
 
@@ -165,7 +165,7 @@ function merge_per_thread_filtered_files() {
             done
 
             filtered_file=$(get_output_filtered_file ${SAMPLE} ${SPECIES[index]})
-            sambamba merge ${filtered_file} ${pt_files[@]}
+            sambamba merge -t ${THREADS} ${filtered_file} ${pt_files[@]}
 
             index=$((${index} + 1))
         done
@@ -205,7 +205,7 @@ function calculate_filtering_summary() {
     TMP_SUMMARY_FILE="${OUTPUT_DIR}"/filtering_result_summary.txt
     OVERALL_SUMMARY_FILE="${OUTPUT_DIR}"/overall_filtering_summary.txt
 
-    while IFS='' read -r line || [[ -n "$line" ]]; 
+    while IFS='' read -r line || [[ -n "$line" ]];
     do
         if [ -z ${HEADER} ]
         then
