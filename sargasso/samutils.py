@@ -45,9 +45,12 @@ def is_primary(hit):
 
 def hits_generator(samfile):
     last_hit_name = None
-    current_hits = []
+    current_hits = None
 
     for hit in all_hits(samfile):
+        if current_hits is None:
+            current_hits = []
+            
         current_hit_name = hit.query_name
 
         if last_hit_name is None:
@@ -60,4 +63,5 @@ def hits_generator(samfile):
             last_hit_name = current_hit_name
             current_hits = [hit]
 
-    yield current_hits
+        if current_hits is not None:
+            yield current_hits
