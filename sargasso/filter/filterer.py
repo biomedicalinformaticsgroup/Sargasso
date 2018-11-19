@@ -34,7 +34,7 @@ class Filterer(object):
     def log_stats(self):
         self.logger.info(self.stats)
 
-    def _get_next_read_hits(self):
+    def get_next_read_hits(self):
         self.hits_for_read = next(self.hits_generator)
         self.hits_info = None
 
