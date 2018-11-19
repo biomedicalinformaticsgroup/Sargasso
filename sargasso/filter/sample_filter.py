@@ -38,7 +38,8 @@ The available commands are:
         self.commandline_parser = commandline_parser
         self.logger = logger
 
-    def _validate_command_line_options(self, options):
+    @classmethod
+    def _validate_command_line_options(cls, options):
         try:
             ParameterValidator.validate_log_level(options)
             for index, species in enumerate(options[SampleFilter.SPECIES]):
@@ -96,9 +97,14 @@ The available commands are:
                     competing_filterers = [cfilt]
                     min_read_name = read_name
 
+            # # todo remove debug
+            # print("Read:{}!!!".format(competing_filterers[0].hits_for_read[0].qname))
+
             # If there's only one filterer for this read, write hits for that read
             # to the output file for that species (or discard as ambiguous)
             if len(competing_filterers) == 1:
+                # # todo remove debug
+                # print('assigned due to only one competing filterer!')
                 h_check.check_and_write_hits_for_read(competing_filterers[0])
                 continue
 
@@ -112,7 +118,8 @@ The available commands are:
         self._write_stats(all_filterers, options[SampleFilter.SPECIES_OUTPUT_BAM][0])
 
     # write filter stats to table in file
-    def _write_stats(self, filterers, out_bam):
+    @classmethod
+    def _write_stats(cls, filterers, out_bam):
 
         stats = []
 
@@ -128,7 +135,8 @@ The available commands are:
         with open(out_file, 'a') as outf:
             outf.write("\t".join([str(s) for s in stats]) + "\n")
 
-    def _get_next_read_name(self, f):
+    @classmethod
+    def _get_next_read_name(cls, f):
         read_name = None
 
         try:

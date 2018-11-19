@@ -71,7 +71,10 @@ class FilterManager(Manager):
     FILTERS = {'rnaseq': RnaseqFilterer,
                'chipseq': ChipseqFilterer}
 
-    @staticmethod
-    def get(data_type, species_id, input_bam, output_bam, logger):
-        return FilterManager.FILTERS[data_type](data_type, species_id, input_bam, output_bam, logger)
+    @classmethod
+    def get(cls, data_type, species_id, input_bam, output_bam, logger):
+        return cls.FILTERS[data_type](data_type, species_id, input_bam, output_bam, logger)
 
+    @classmethod
+    def _create(cls, *args):
+        raise NotImplementedError('Not Implemented')

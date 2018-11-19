@@ -37,57 +37,69 @@ class HitsInfo:
 
         return [first_hit]
 
-    def _is_primary_hit(self, hit):
+    @classmethod
+    def _is_primary_hit(cls, hit):
         return not hit.is_secondary
 
-    def _is_paired_hit(self, hit):
+    @classmethod
+    def _is_paired_hit(cls, hit):
         return hit.is_paired
 
-    def _get_read_length(self, hit):
+    @classmethod
+    def _get_read_length(cls, hit):
         return hit.query_length
 
-    def _get_total_length(self, primary_hits):
+    @classmethod
+    def _get_total_length(cls, primary_hits):
         total_length = 0
         for hit in primary_hits:
-            total_length += self._get_read_length(hit)
+            total_length += cls._get_read_length(hit)
         return total_length
 
-    def _get_cigar(self, hit):
+    @classmethod
+    def _get_cigar(cls, hit):
         return hit.cigartuples
 
-    def _get_multimaps(self, hits):
-        raise NotImplementedError()
+    @classmethod
+    def _get_multimaps(cls, hits):
+        raise NotImplementedError('Need to implement in subclass')
 
-    def _get_mismatches(self, hit):
-        raise NotImplementedError()
+    @classmethod
+    def _get_mismatches(cls, hit):
+        raise NotImplementedError('Need to implement in subclass')
 
-    def _get_alignment_scores(self, hit):
-        raise NotImplementedError()
+    @classmethod
+    def _get_alignment_scores(cls, hit):
+        raise NotImplementedError('Need to implement in subclass')
 
 
 class RnaseqHitsInfo(HitsInfo):
-
-    def _get_multimaps(self, hits):
+    @classmethod
+    def _get_multimaps(cls, hits):
         return hits[0].get_tag("NH")
 
-    def _get_mismatches(self, hit):
+    @classmethod
+    def _get_mismatches(cls, hit):
         return hit.get_tag("nM")
 
-    def _get_alignment_scores(self, hit):
+    @classmethod
+    def _get_alignment_scores(cls, hit):
         return hit.get_tag("AS")
 
 
 class ChipseqHitsInfo(HitsInfo):
-
-    def _get_multimaps(self, hits):
-        if self._is_paired_hit(hits[0]):
+    @classmethod
+    def _get_multimaps(cls, hits):
+        if cls._is_paired_hit(hits[0]):
             return len(hits) / 2
         return len(hits)
 
-    def _get_mismatches(self, hit):
+    @classmethod
+    def _get_mismatches(cls, hit):
         return hit.get_tag("XM")
 
-    def _get_alignment_scores(self, hit):
+    @classmethod
+    def _get_alignment_scores(cls, hit):
         return hit.get_tag("AS")
 
 
@@ -95,6 +107,10 @@ class HitsInfoManager(Manager):
     HITSINFO = {'chipseq': ChipseqHitsInfo,
                 'rnaseq': RnaseqHitsInfo}
 
-    @staticmethod
-    def get(data_type, hits):
-        return HitsInfoManager.HITSINFO[data_type](data_type, hits)
+    @classmethod
+    def get(cls, data_type, hits):
+        return cls.HITSINFO[data_type](data_type, hits)
+
+    @classmethod
+    def _create(cls, *args):
+        raise NotImplementedError('Not Implemented')

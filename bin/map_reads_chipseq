@@ -8,7 +8,7 @@ function listFiles {
     FILES=$@
     
     DELIMITER=","
-    OUTPUT=$(ls -1 $FILES | tr '\n' "${DELIMITER}")
+    OUTPUT=$(ls -1 ${FILES} | tr '\n' "${DELIMITER}")
     echo ${OUTPUT%$DELIMITER}   
 }
 
