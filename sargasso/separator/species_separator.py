@@ -23,15 +23,3 @@ def separate_species(args):
 
     separator = SeparatorManager.get(data_type)
     separator.run(args)
-
-    # # todo remove debug code
-    # print("--------------------------")
-    # print("make file content:")
-    # print("--------------------------")
-    #
-    # with open('/home/xinhe/Projects/Sargasso/results/chipseqtest/Makefile', 'r') as fin:
-    #     print fin.read()
-    # print("--------------------------")
-    #
-    # print('done')
-    # exit(1)

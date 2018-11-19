@@ -97,14 +97,14 @@ The available commands are:
                     competing_filterers = [cfilt]
                     min_read_name = read_name
 
-            # # todo remove debug
-            # print("Read:{}!!!".format(competing_filterers[0].hits_for_read[0].qname))
+            if __debug__:
+                logger.debug("Read:{}".format(competing_filterers[0].hits_for_read[0].qname))
 
             # If there's only one filterer for this read, write hits for that read
             # to the output file for that species (or discard as ambiguous)
             if len(competing_filterers) == 1:
-                # # todo remove debug
-                # print('assigned due to only one competing filterer!')
+                if __debug__:
+                    logger.debug('assigned due to only one competing filterer!')
                 h_check.check_and_write_hits_for_read(competing_filterers[0])
                 continue
 

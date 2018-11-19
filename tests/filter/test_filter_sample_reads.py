@@ -8,6 +8,7 @@ def test_filter_sample_reads_pe_rnaseq(tmpdir):
             "1.0",
             "2.0",
             "999999",
+            "--log-level=info",
             "mouse",
             resource_filename("tests.data.pe.rnaseq.filtered_reads.Blocks",
                               "rnaseq_mouse_rat_sample___mouse___BLOCK___1.bam"),

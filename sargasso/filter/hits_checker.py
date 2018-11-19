@@ -16,13 +16,11 @@ class HitsChecker:
     CIGAR_OP_REF_DELETION = 2  # From pysam
     CIGAR_OP_REF_SKIP = 3  # From pysam
 
-    ThresholdData = namedtuple(
-        'ThresholdData',
-        ['index', 'violated', 'multimaps',
-         'mismatches', 'cigar_check'])
+    ThresholdData = namedtuple('ThresholdData', ['index', 'violated', 'multimaps', 'mismatches', 'cigar_check'])
 
     def __init__(self, mismatch_thresh, minmatch_thresh, multimap_thresh,
                  reject_multimaps, logger):
+        self.logger = logger
         self.mismatch_thresh = mismatch_thresh / 100.0
         self.minmatch_thresh = minmatch_thresh / 100.0
         self.multimap_thresh = multimap_thresh
@@ -45,9 +43,9 @@ class HitsChecker:
         threshold_data = [self._check_thresholds(i, f) for i, f
                           in enumerate(filterers)]
 
-        # # todo remove debug
-        # for t in threshold_data:
-        #     print(t)
+        if __debug__:
+            for t in threshold_data:
+                self.logger.debug(t)
 
         assignee = self._assign_hits(threshold_data)
 
@@ -84,9 +82,9 @@ class HitsChecker:
             while True:
                 if filterer.hits_for_read is None:
                     filterer.get_next_read_hits()
-                # # todo remove debug
-                #                 # print("Read:{}!!!".format(filterer.hits_for_read[0].qname))
-                #                 # print('assigned due to only one competing filterer!')
+                    if __debug__:
+                        self.logger.debug("Read:{}".format(filterer.hits_for_read[0].qname))
+                        self.logger.debug('assigned due to only one competing filterer!')
                 self.check_and_write_hits_for_read(filterer)
         except StopIteration:
             pass
@@ -94,11 +92,25 @@ class HitsChecker:
     def check_hits(self, hits_info):
         # check that the hits for a read are - in themselves - satisfactory to
         # be assigned to a species.
-        # # todo remove debug multimap
-        return hits_info.get_multimaps() <= self.multimap_thresh and \
-               hits_info.get_primary_mismatches() <= \
-               round(self.mismatch_thresh * hits_info.get_total_length()) and \
-               self._check_cigars(hits_info) != self.CIGAR_FAIL
+
+        violated = False
+
+        if hits_info.get_multimaps() > self.multimap_thresh:
+            violated = True
+            if __debug__:
+                self.logger.debug('only one competing filterer but violated multimap.')
+
+        if hits_info.get_primary_mismatches() > round(self.mismatch_thresh * hits_info.get_total_length()):
+            violated = True
+            if __debug__:
+                self.logger.debug('only one competing filterer but violated primary mismatches.')
+
+        if self._check_cigars(hits_info) == self.CIGAR_FAIL:
+            violated = True
+            if __debug__:
+                self.logger.debug('only one competing filterer but violated primary CIGAR.')
+
+        return not violated
 
     def _assign_hits_standard(self, threshold_data):
         threshold_data = [t for t in threshold_data if not t.violated]
@@ -108,8 +120,8 @@ class HitsChecker:
         if num_filterers == 0:
             return self.REJECTED
         elif num_filterers == 1:
-            # # todo remove debug
-            # print('assigned due to only one filter exist!')
+            if __debug__:
+                self.logger.debug('assigned due to only one filter exist!')
             return threshold_data[0].index
 
         min_mismatches = min([m.mismatches for m in threshold_data])
@@ -117,8 +129,8 @@ class HitsChecker:
                           if t.mismatches == min_mismatches]
 
         if len(threshold_data) == 1:
-            # # todo remove debug
-            # print('assigned due to primary hit min_mismatches!')
+            if __debug__:
+                self.logger.debug('assigned due to primary hit min_mismatches!')
             return threshold_data[0].index
 
         min_cigar_check = min([m.cigar_check for m in threshold_data])
@@ -126,8 +138,8 @@ class HitsChecker:
                           if t.cigar_check == min_cigar_check]
 
         if len(threshold_data) == 1:
-            # # todo remove debug
-            # print('assigned due to primart hit CIGAR!')
+            if __debug__:
+                self.logger.debug('assigned due to primart hit CIGAR!')
             return threshold_data[0].index
 
         min_multimaps = min([m.multimaps for m in threshold_data])
@@ -136,11 +148,12 @@ class HitsChecker:
 
         if len(threshold_data) == 1:
             # # todo remove debug multimap
-            # print('assigned due to number of multimap!')
+            if __debug__:
+                self.logger.debug('assigned due to number of multimap!')
             return threshold_data[0].index
 
-        # # todo remove debug
-        # print('assigned Ambigous!')
+        if __debug__:
+            self.logger.debug('assigned Ambigous!')
         return self.AMBIGUOUS
 
     def _assign_hits_reject_multimaps(self, threshold_data):
@@ -150,26 +163,28 @@ class HitsChecker:
         return self._assign_hits_standard(threshold_data)
 
     def _check_thresholds(self, index, filterer):
+
         hits_info = filterer.hits_info
         violated = False
 
         multimaps = hits_info.get_multimaps()
         if multimaps > self.multimap_thresh:
             # # todo remove debug multimap
-            # print('violated due to multimap!')
+            if __debug__:
+                self.logger.debug('violated due to multimap!')
             violated = True
 
         mismatches = hits_info.get_primary_mismatches()
         if mismatches > round(self.mismatch_thresh *
                               hits_info.get_total_length()):
-            # # todo remove debug
-            # print('violated due to primary mismatches!')
+            if __debug__:
+                self.logger.debug('violated due to primary mismatches!')
             violated = True
 
         cigar_check = self._check_cigars(hits_info)
         if cigar_check == self.CIGAR_FAIL:
-            # # todo remove debug
-            # print('violated due to primary CIGAR!')
+            if __debug__:
+                self.logger.debug('violated due to primary CIGAR!')
             violated = True
 
         return self.ThresholdData(
