@@ -41,7 +41,8 @@ The available commands are:
         self.commandline_parser = commandline_parser
         self.logger = logger
 
-    def _validate_command_line_options(self, options):
+    @classmethod
+    def _validate_command_line_options(cls, options):
         """
         Validate command line options are correctly specified.
 
@@ -58,7 +59,8 @@ The available commands are:
         except schema.SchemaError as exc:
             exit("Exiting: " + exc.code)
 
-    def _all_processes_finished(self, processes):
+    @classmethod
+    def _all_processes_finished(cls, processes):
         """
         Return True if all processes have finished.
 
@@ -82,28 +84,28 @@ The available commands are:
 
         return True
 
-    @staticmethod
-    def _get_block_files(block_dir, sp1):
-        is_block_file = lambda f: not os.path.isdir(os.path.join(block_dir, f))
+    @classmethod
+    def _get_block_files(cls, block_dir, sp1):
+        is_block_file = lambda bf: not os.path.isdir(os.path.join(block_dir, bf))
         block_files = [f for f in os.listdir(block_dir) if is_block_file(f)]
         block_files_out = []
 
         for block_file in sorted(block_files):
-            sections = block_file.split(FilterController.BLOCK_FILE_SEPARATOR)
+            sections = block_file.split(cls.BLOCK_FILE_SEPARATOR)
             if sections[1] == sp1:
                 block_files_out.append(block_file)
 
         return block_files_out
 
-    @staticmethod
-    def _get_input_path(block_dir, block_file, species):
-        sections = block_file.split(FilterController.BLOCK_FILE_SEPARATOR)
+    @classmethod
+    def _get_input_path(cls, block_dir, block_file, species):
+        sections = block_file.split(cls.BLOCK_FILE_SEPARATOR)
         sections[1] = species
-        block_file = FilterController.BLOCK_FILE_SEPARATOR.join(sections)
+        block_file = cls.BLOCK_FILE_SEPARATOR.join(sections)
         return os.path.join(block_dir, block_file)
 
-    @staticmethod
-    def _initialise_result_file(options):
+    @classmethod
+    def _initialise_result_file(cls, options):
         """
         Initialise results summary file.
 
@@ -154,7 +156,7 @@ The available commands are:
                 get_output_path = lambda x: os.path.join(
                     options[FilterController.OUTPUT_DIR],
                     self.BLOCK_FILE_SEPARATOR.join([options[FilterController.SAMPLE_NAME], x,
-                              str(proc_no), "filtered.bam"]))
+                                                    str(proc_no), "filtered.bam"]))
 
                 sp_out = get_output_path(species)
 

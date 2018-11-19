@@ -14,7 +14,7 @@ function list_files {
     shift
     local FILES=$@
         
-    LIST=$(ls -1 $FILES | tr '\n' "$DELIMITER")
+    LIST=$(ls -1 ${FILES} | tr '\n' "$DELIMITER")
     echo ${LIST%$DELIMITER}    
 }
 

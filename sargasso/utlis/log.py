@@ -42,7 +42,6 @@ class SargassoLogger(object):
         raise NotImplementedError
 
 
-
 class LoggerManager(Manager):
 
     def __init__(self):
@@ -52,3 +51,7 @@ class LoggerManager(Manager):
     def get(cls):
         logger = logging.getLogger(__name__)
         return SargassoLogger(logger)
+
+    @classmethod
+    def _create(cls, *args):
+        raise NotImplementedError('Not Implemented')
