@@ -1,7 +1,7 @@
 from sargasso.filter import hits_info
 from sargasso.filter.separation_stats import SeparationStats
-from sargasso.utlis.factory import Manager
-from sargasso.utlis.samutils import SamUtils
+from sargasso.utils.factory import Manager
+from sargasso.utils.samutils import SamUtils
 
 
 class Filterer(object):

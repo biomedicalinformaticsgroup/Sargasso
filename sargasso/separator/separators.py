@@ -5,9 +5,9 @@ from sargasso.separator.file_writer import ExecutionRecordWriter
 from sargasso.separator.file_writer import MakefileWriterManager
 from sargasso.separator.options import Options
 from sargasso.separator.parameter_validator import ParameterValidatorManager
-from sargasso.utlis.factory import Manager
-from sargasso.utlis.log import LoggerManager
-from sargasso.utlis.process import Process
+from sargasso.utils.factory import Manager
+from sargasso.utils.log import LoggerManager
+from sargasso.utils.process import Process
 
 
 class Separator(object):

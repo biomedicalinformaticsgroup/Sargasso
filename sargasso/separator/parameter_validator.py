@@ -3,7 +3,7 @@ import schema
 from schema import And, Or, Schema, Use
 
 from sargasso.separator.options import Options
-from sargasso.utlis.factory import Manager
+from sargasso.utils.factory import Manager
 
 
 class ParameterValidator(object):

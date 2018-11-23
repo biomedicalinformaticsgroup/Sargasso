@@ -2,7 +2,7 @@ import logging
 import sys
 
 from sargasso.separator.options import Options
-from sargasso.utlis.factory import Manager
+from sargasso.utils.factory import Manager
 
 
 class SargassoLogger(object):

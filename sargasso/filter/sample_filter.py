@@ -8,17 +8,17 @@ from sargasso.separator.commandline_parser import CommandlineParser
 from sargasso.separator.commandline_parser import CommandlineParserManager
 from sargasso.separator.options import Options
 from sargasso.separator.parameter_validator import ParameterValidator
-from sargasso.utlis.factory import Manager
-from sargasso.utlis.log import LoggerManager
+from sargasso.utils.factory import Manager
+from sargasso.utils.log import LoggerManager
 
 
 class SampleFilter(object):
     DOC = """
 Usage: filter_sample_reads [-h] <data-type> [<args>...]
-    
+
 options:
    -h
-   
+
 The available commands are:
    rnaseq   rnaseq data
    chipseq  chipseq data
