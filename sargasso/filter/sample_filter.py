@@ -6,22 +6,26 @@ import schema
 from sargasso.filter import filterer, hits_checker
 from sargasso.separator.commandline_parser import CommandlineParser
 from sargasso.separator.commandline_parser import CommandlineParserManager
-from sargasso.separator.options import Options
 from sargasso.separator.parameter_validator import ParameterValidator
 from sargasso.utils.factory import Manager
-from sargasso.utils.log import LoggerManager
+from sargasso.utils import log
 
 
 class SampleFilter(object):
-    DOC = """
-Usage: filter_sample_reads [-h] <data-type> [<args>...]
+    DOC = """Usage:
+    filter_sample_reads -h | --help
+    filter_sample_reads -v | --version
+    filter_sample_reads <data-type> [<args>...]
 
-options:
-   -h
+Options:
+{help_option_spec}
+    {help_option_description}
+{ver_option_spec}
+    {ver_option_description}
 
 The available commands are:
-   rnaseq   rnaseq data
-   chipseq  chipseq data
+   rnaseq       RNA-seq data
+   chipseq      ChIP-seq data
 
 """
     DATA_TYPE = "<data-type>"
@@ -33,10 +37,9 @@ The available commands are:
     MULTIMAP_THRESHOLD = "<multimap-threshold>"
     REJECT_MULTIMAPS = "--reject-multimaps"
 
-    def __init__(self, data_type, commandline_parser, logger):
+    def __init__(self, data_type, commandline_parser):
         self.data_type = data_type
         self.commandline_parser = commandline_parser
-        self.logger = logger
 
     @classmethod
     def _validate_command_line_options(cls, options):
@@ -154,7 +157,7 @@ The available commands are:
         self._validate_command_line_options(options)
 
         # Set up logger
-        self.logger.init(options[Options.LOG_LEVEL_OPTION])
+        self.logger = log.get_logger_for_options(options)
 
         self._filter_sample_reads(self.logger, options)
 
@@ -266,8 +269,7 @@ class SampleFilterManager(Manager):
     @classmethod
     def _create(cls, data_type):
         commandline_parser = CommandlineParserManager.get(data_type)
-        logger = LoggerManager.get()
-        return cls.SAMPLEFILTER[data_type](data_type, commandline_parser, logger)
+        return cls.SAMPLEFILTER[data_type](data_type, commandline_parser)
 
     @classmethod
     def get(cls, data_type):

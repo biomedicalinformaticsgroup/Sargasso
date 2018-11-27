@@ -2,6 +2,7 @@ import os.path
 import schema
 from schema import And, Or, Schema, Use
 
+from sargasso.utils import log
 from sargasso.separator.options import Options
 from sargasso.utils.factory import Manager
 
@@ -62,7 +63,7 @@ class ParameterValidator(object):
         values.
         """
         ParameterValidator.validate_dict_option(
-            options[Options.LOG_LEVEL_OPTION], Options.LEVELS, "Invalid log level")
+            options[log.LOG_LEVEL_OPTION], log.LEVELS, "Invalid log level")
 
     @classmethod
     def validate_dict_option(cls, dict_option, values_dict, msg):

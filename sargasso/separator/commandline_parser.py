@@ -6,6 +6,7 @@ import schema
 from sargasso import __version__
 from sargasso.separator.options import Options
 from sargasso.utils.factory import Manager
+from sargasso.utils import log
 
 
 class CommandlineParser(object):
@@ -83,10 +84,10 @@ class CommandlineParser(object):
         ver_desc = "Show version."
 
         log_spec = "{log_option}=<{log_level}>".format(
-            log_option=Options.LOG_LEVEL_OPTION, log_level=Options.LOG_LEVEL)
+            log_option=log.LOG_LEVEL_OPTION, log_level=log.LOG_LEVEL)
         log_desc = ("Set logging level " +
                     "(one of {log_level_vals}) [default: info].").format(
-            log_level_vals=str(Options.LEVELS.keys()))
+            log_level_vals=str(log.LEVELS.keys()))
         log_desc = '\n'.join(textwrap.wrap(
             log_desc, width=75, subsequent_indent="    "))
 

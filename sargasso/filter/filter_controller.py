@@ -6,22 +6,27 @@ import schema
 
 from sargasso.separator.commandline_parser import CommandlineParser
 from sargasso.separator.commandline_parser import CommandlineParserManager
-from sargasso.separator.options import Options
 from sargasso.separator.parameter_validator import ParameterValidator
 from sargasso.utils.factory import Manager
-from sargasso.utils.log import LoggerManager
+from sargasso.utils import log
 
 
 class FilterController(object):
-    DOC = """
-Usage: filter_control [-h] <data-type> [<args>...]
+    DOC = """Usage:
+    filter_control -h | --help
+    filter_control -v | --version
+    filter_control <data-type> [<args>...]
 
-options:
-   -h
+Options:
+{help_option_spec}
+    {help_option_description}
+{ver_option_spec}
+    {ver_option_description}
 
 The available commands are:
-   rnaseq   rnaseq data
-   chipseq  chipseq data
+   rnaseq   	RNA-seq data
+   chipseq  	ChIP-seq data
+
 """
     data_type = None
 
@@ -36,10 +41,9 @@ The available commands are:
     REJECT_MULTIMAPS = "--reject-multimaps"
     BLOCK_FILE_SEPARATOR = "___"
 
-    def __init__(self, data_type, commandline_parser, logger):
+    def __init__(self, data_type, commandline_parser):
         self.data_type = data_type
         self.commandline_parser = commandline_parser
-        self.logger = logger
 
     @classmethod
     def _validate_command_line_options(cls, options):
@@ -188,15 +192,14 @@ The available commands are:
         self._validate_command_line_options(options)
 
         # Set up logger
-        self.logger.init(options[Options.LOG_LEVEL_OPTION])
+        self.logger = log.get_logger_for_options(options)
 
         # Parallelise species separation filtering of mapped read block files
         self._run_processes(self.logger, options)
 
 
 class RnaseqFilterController(FilterController):
-    DOC = """
-Usage:
+    DOC = """Usage:
     filter_control <data-type>
         [--log-level=<log-level>] [--reject-multimaps]
         <block-dir> <output-dir> <sample-name>
@@ -204,12 +207,6 @@ Usage:
         (<species>) (<species>) ...
 
 Option:
-{help_option_spec}
-    {help_option_description}
-{ver_option_spec}
-    {ver_option_description}
-{log_option_spec}
-    {log_option_description}
 <block-dir>
     Directory containing pairs of mapped read BAM files.
 <output-dir>
@@ -229,6 +226,12 @@ Option:
 --reject-multimaps
     If set, any read which multimaps to any species' genome will be rejected
     and not be assigned to any species.
+{help_option_spec}
+    {help_option_description}
+{ver_option_spec}
+    {ver_option_description}
+{log_option_spec}
+    {log_option_description}
 
 filter_control takes a directory containing sets of BAM files as input, each
 set being the result of mapping a set of mixed species RNA-seq reads against
@@ -310,8 +313,7 @@ class FilterControllerManager(Manager):
     @classmethod
     def _create(cls, data_type):
         commandline_parser = CommandlineParserManager.get(data_type)
-        logger = LoggerManager.get()
-        return cls.FILTERCONTROLLER[data_type](data_type, commandline_parser, logger)
+        return cls.FILTERCONTROLLER[data_type](data_type, commandline_parser)
 
     @classmethod
     def get(cls, data_type):

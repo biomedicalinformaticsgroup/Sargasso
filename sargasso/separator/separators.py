@@ -6,7 +6,7 @@ from sargasso.separator.file_writer import MakefileWriterManager
 from sargasso.separator.options import Options
 from sargasso.separator.parameter_validator import ParameterValidatorManager
 from sargasso.utils.factory import Manager
-from sargasso.utils.log import LoggerManager
+from sargasso.utils import log
 from sargasso.utils.process import Process
 
 
@@ -18,7 +18,7 @@ class Separator(object):
     species_separator -v | --version
     species_separator <data-type> [<args>...]
 
-options:
+Options:
 {help_option_spec}
     {help_option_description}
 {ver_option_spec}
@@ -29,12 +29,11 @@ The available data types are:
    chipseq      ChIP-seq data
         """
 
-    def __init__(self, data_type, commandline_parser, parameter_validator, logger, makefile_writer,
+    def __init__(self, data_type, commandline_parser, parameter_validator, makefile_writer,
                  executionrecord_writer):
         self.data_type = data_type
         self.commandline_parser = commandline_parser
         self.parameter_validator = parameter_validator
-        self.logger = logger
         self.makefile_writer = makefile_writer
         self.executionrecord_writer = executionrecord_writer
 
@@ -45,7 +44,7 @@ The available data types are:
         self.parameter_validator.validate(options)
 
         # Set up logger
-        self.logger = self.logger.init(options[Options.LOG_LEVEL_OPTION])
+        self.logger = log.get_logger_for_options(options)
 
         # Create output directory
         os.mkdir(options[Options.OUTPUT_DIR])
@@ -302,13 +301,11 @@ class SeparatorManager(Manager):
 
     @classmethod
     def _create(cls, data_type):
-        logger = LoggerManager.get()
         commandline_parser = CommandlineParserManager.get(data_type)
         parameter_validator = ParameterValidatorManager.get(data_type)
         makefile_writer = MakefileWriterManager.get(data_type)
         executionrecord_writer = ExecutionRecordWriter()
-        return cls.SEPARATORS[data_type](data_type, commandline_parser, parameter_validator, logger, makefile_writer,
-                                         executionrecord_writer)
+        return cls.SEPARATORS[data_type](data_type, commandline_parser, parameter_validator, makefile_writer, executionrecord_writer)
 
     @classmethod
     def get(cls, data_type):

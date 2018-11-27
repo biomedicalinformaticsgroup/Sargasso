@@ -48,16 +48,6 @@ class Options(object):
     SINGLE_END_READS_TYPE = "single"
     PAIRED_END_READS_TYPE = "paired"
 
-    LOG_LEVEL = "log-level"
-    LEVELS = {
-        "debug": logging.DEBUG,
-        "info": logging.INFO,
-        "warning": logging.WARNING,
-        "error": logging.ERROR,
-        "critical": logging.CRITICAL
-    }
-    LOG_LEVEL_OPTION = "--" + LOG_LEVEL
-
     EXECUTION_RECORD_ENTRIES = [
         ["Data Type", DATA_TYPE],
         ["Samples File", SAMPLES_FILE],

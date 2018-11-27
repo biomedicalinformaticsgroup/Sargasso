@@ -1,57 +1,52 @@
+"""
+Utility functions for logging messages. Exports:
+
+get_logger: Return a logger with a specified severity threshold.
+"""
+
 import logging
 import sys
 
-from sargasso.separator.options import Options
-from sargasso.utils.factory import Manager
+LEVELS = {
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warning": logging.WARNING,
+    "error": logging.ERROR,
+    "critical": logging.CRITICAL
+}
+
+LOG_LEVEL = "log-level"
+LOG_LEVEL_OPTION = "--" + LOG_LEVEL
 
 
-class SargassoLogger(object):
+def get_logger(stream, level):
+    """
+    Return a Logger instance with the specified severity threshold.
 
-    def __init__(self, logger):
-        self.logger = logger
-
-    def init(self, level):
-        self._init(sys.stderr, level)
-        return self
-
-    def _init(self, stream, level):
-        """
-        Return a Logger instance with the specified severity threshold.
-
-        Return a Logger instance with the specified severity threshold, where the
-        threshold level should be a key of the 'LEVELS' dictionary. Log messages
-        will contain the current time and message severity level.
-        stream: Output stream to which the logger will write messages.
-        level: Severity threshold level, which should be a key of the 'LEVELS'
-        dictionary.
-        """
-        formatter = logging.Formatter(fmt='%(asctime)s %(levelname)s: %(message)s',
-                                      datefmt='%Y-%m-%d %H:%M:%S')
-        handler = logging.StreamHandler(stream)
-        handler.setFormatter(formatter)
-        self.logger.setLevel(Options.LEVELS[level])
-        self.logger.addHandler(handler)
-
-    def info(self, msg, *args, **kwargs):
-        self.logger.info(msg, *args, **kwargs)
-
-    def debug(self, msg, *args, **kwargs):
-        self.logger.debug(msg, *args, **kwargs)
-
-    def write_execution_record(self):
-        raise NotImplementedError
+    Return a Logger instance with the specified severity threshold, where the
+    threshold level should be a key of the 'LEVELS' dictionary. Log messages
+    will contain the current time and message severity level.
+    stream: Output stream to which the logger will write messages.
+    level: Severity threshold level, which should be a key of the 'LEVELS'
+    dictionary.
+    """
+    formatter = logging.Formatter(fmt='%(asctime)s %(levelname)s: %(message)s',
+                                  datefmt='%Y-%m-%d %H:%M:%S')
+    handler = logging.StreamHandler(stream)
+    handler.setFormatter(formatter)
+    logger = logging.getLogger(__name__)
+    logger.setLevel(LEVELS[level])
+    logger.addHandler(handler)
+    return logger
 
 
-class LoggerManager(Manager):
+def get_logger_for_options(options):
+    """
+    Return a Logger instance with a command-line specified severity threshold.
 
-    def __init__(self):
-        pass
-
-    @classmethod
-    def get(cls):
-        logger = logging.getLogger(__name__)
-        return SargassoLogger(logger)
-
-    @classmethod
-    def _create(cls, *args):
-        raise NotImplementedError('Not Implemented')
+    Return a Logger instance with severity threshold specified by the command
+    line option log.LOG_LEVEL. Log messages will be written to standard error.
+    options: Dictionary mapping from command-line option strings to option
+    values.
+    """
+    return get_logger(sys.stderr, options[LOG_LEVEL_OPTION])
