@@ -48,27 +48,6 @@ class Options(object):
     SINGLE_END_READS_TYPE = "single"
     PAIRED_END_READS_TYPE = "paired"
 
-    EXECUTION_RECORD_ENTRIES = [
-        ["Data Type", DATA_TYPE],
-        ["Samples File", SAMPLES_FILE],
-        ["Output Dir", OUTPUT_DIR],
-        ["Species", SPECIES],
-        ["Species info", SPECIES_INFO],
-        ["Reads Base Dir", READS_BASE_DIR],
-        ["Number of Threads", NUM_THREADS],
-        ["Mismatch Threshold", MISMATCH_THRESHOLD],
-        ["Minmatch Threshold", MINMATCH_THRESHOLD],
-        ["Multimap Threshold", MULTIMAP_THRESHOLD],
-        ["Reject Multimaps", REJECT_MULTIMAPS],
-        ["Optimal Strategy", OPTIMAL_STRATEGY],
-        ["Conservative Strategy", CONSERVATIVE_STRATEGY],
-        ["Recall Strategy", RECALL_STRATEGY],
-        ["Run Separation", RUN_SEPARATION],
-        ["Delete Intermediate", DELETE_INTERMEDIATE],
-        ["Mapper Executable Path", MAPPER_EXECUTABLE],
-        ["Sambamba Sort Tmp Dir", SAMBAMBA_SORT_TMP_DIR],
-    ]
-
     SUPPORTED_DATATYPE = {'rnaseq': True, 'chipseq': True}
 
     SAMPLE_INFO_INDEX = "sample_info"

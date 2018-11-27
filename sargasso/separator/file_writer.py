@@ -554,7 +554,26 @@ class MakefileWriterManager(Manager):
 
 
 class ExecutionRecordWriter(Writer):
-    # Write Execution Record to output directory
+    EXECUTION_RECORD_ENTRIES = [
+        ["Data Type", Options.DATA_TYPE],
+        ["Samples File", Options.SAMPLES_FILE],
+        ["Output Dir", Options.OUTPUT_DIR],
+        ["Species", Options.SPECIES],
+        ["Species info", Options.SPECIES_INFO],
+        ["Reads Base Dir", Options.READS_BASE_DIR],
+        ["Number of Threads", Options.NUM_THREADS],
+        ["Mismatch Threshold", Options.MISMATCH_THRESHOLD],
+        ["Minmatch Threshold", Options.MINMATCH_THRESHOLD],
+        ["Multimap Threshold", Options.MULTIMAP_THRESHOLD],
+        ["Reject Multimaps", Options.REJECT_MULTIMAPS],
+        ["Optimal Strategy", Options.OPTIMAL_STRATEGY],
+        ["Conservative Strategy", Options.CONSERVATIVE_STRATEGY],
+        ["Recall Strategy", Options.RECALL_STRATEGY],
+        ["Run Separation", Options.RUN_SEPARATION],
+        ["Delete Intermediate", Options.DELETE_INTERMEDIATE],
+        ["Mapper Executable Path", Options.MAPPER_EXECUTABLE],
+        ["Sambamba Sort Tmp Dir", Options.SAMBAMBA_SORT_TMP_DIR],
+    ]
 
     def write(self, options):
         """
@@ -567,7 +586,7 @@ class ExecutionRecordWriter(Writer):
             t=str(datetime.now().isoformat()))
         out_text += "\n".join(["{desc}: {val}".format(
             desc=it[0], val=str(options[it[1]]))
-            for it in Options.EXECUTION_RECORD_ENTRIES])
+            for it in self.EXECUTION_RECORD_ENTRIES])
 
         out_file = os.path.join(options[Options.OUTPUT_DIR], "execution_record.txt")
         with open(out_file, 'w') as erf:
