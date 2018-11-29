@@ -1,7 +1,7 @@
 import schema
 
 import sargasso.filter.filter_controllers as fcs
-import sargasso.filter.sample_filter as sfs
+import sargasso.filter.sample_filterer as sfs
 import sargasso.separator.file_writer as fw
 import sargasso.separator.commandline_parser as clp
 import sargasso.separator.parameter_validator as pv
@@ -37,7 +37,7 @@ class _BaseDataTypeManager(object):
             makefile_writer_cls,
             separator_cls,
             filter_controller_cls,
-            sample_filter_cls):
+            sample_filterer_cls):
 
         self.command_line_parser = command_line_parser_cls()
         self.parameter_validator = parameter_validator_cls()
@@ -51,7 +51,7 @@ class _BaseDataTypeManager(object):
         self.filter_controller = filter_controller_cls(
                 self.NAME,
                 self.command_line_parser)
-        self.sample_filter = sample_filter_cls(
+        self.sample_filterer = sample_filterer_cls(
                 self.NAME,
                 self.command_line_parser)
 
@@ -70,8 +70,8 @@ class _BaseDataTypeManager(object):
     def get_filter_controller(self):
         return self.filter_controller
 
-    def get_sample_filter(self):
-        return self.sample_filter
+    def get_sample_filterer(self):
+        return self.sample_filterer
 
 
 @_data_type

@@ -1,7 +1,8 @@
 from sargasso.filter.filter_controllers import FilterController
-from sargasso.filter.sample_filter import SampleFilter
+from sargasso.filter.sample_filterer import SampleFilter
 from sargasso.separator.data_types import get_data_type_manager
 from sargasso.separator.separators import Separator
+
 
 def separate_species(args):
     data_type_manager = get_data_type_manager(args, Separator.DOC)
@@ -15,4 +16,4 @@ def filter_control(args):
 
 def filter_sample_reads(args):
     data_type_manager = get_data_type_manager(args, SampleFilter.DOC)
-    data_type_manager.get_sample_filter().run(args)
+    data_type_manager.get_sample_filterer().run(args)
