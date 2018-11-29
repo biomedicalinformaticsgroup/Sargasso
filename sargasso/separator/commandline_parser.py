@@ -9,26 +9,25 @@ from sargasso.utils import log
 
 class CommandlineParser(object):
     @classmethod
-    def parse(cls, args, doc, options_first=False):
-        # Read in command-line options
+    def parse(cls, args, doc):
         docstring = cls._substitute_common_options_into_usage(doc)
-        options = docopt.docopt(docstring, argv=args, version="species_separator v" + __version__,
-                                options_first=options_first)
-        return options
+        return docopt.docopt(docstring, argv=args,
+                             version="species_separator v" + __version__,
+                             options_first=False)
 
     @classmethod
-    def parse_parameters(cls, args, doc, options_first=False):
-        options = cls.parse(args, doc, options_first)
-        if not options_first:
-            options[opts.SAMPLE_INFO_INDEX] = cls.parse_sample_info(options)
-            options[opts.SPECIES_OPTIONS_INDEX] = cls.parse_species_options(options)
-            options = cls._parse_sargasso_strategy(options)
+    def parse_parameters(cls, args, doc):
+        options = cls.parse(args, doc)
+        options[opts.SAMPLE_INFO_INDEX] = cls.parse_sample_info(options)
+        options[opts.SPECIES_OPTIONS_INDEX] = cls.parse_species_options(options)
+        options = cls._parse_sargasso_strategy(options)
         return options
 
     @classmethod
     def parse_datatype(cls, args, doc, data_type_string):
         docstring = CommandlineParser._substitute_common_options_into_usage(doc)
-        options = docopt.docopt(docstring, argv=args, version="species_separator v" + __version__,
+        options = docopt.docopt(docstring, argv=args,
+                                version="species_separator v" + __version__,
                                 options_first=True)
         return options[data_type_string]
 
@@ -105,8 +104,9 @@ class CommandlineParser(object):
                     line = line[0:77] + "..."
                 raise schema.SchemaError(
                     None, "Sample file line should contain sample name and " +
-                          "lists of read files (or first and second pairs of read " +
-                          "files), separated by whitespace: \n{info}".format(info=line))
+                          "lists of read files (or first and second pairs of " +
+                          "read files), separated by whitespace: " +
+                          "\n{info}".format(info=line))
 
             sample_info.add_sample_data(sample_data)
 
@@ -134,7 +134,8 @@ class RnaseqCommandlineParser(CommandlineParser):
         species_index: which species to return options for
         """
 
-        species_options = {opts.SPECIES_NAME: options[opts.SPECIES_ARG][species_index]}
+        species_options = {opts.SPECIES_NAME:
+                           options[opts.SPECIES_ARG][species_index]}
 
         star_infos = options[opts.SPECIES_INFO_ARG][species_index].split(",")
 
@@ -164,15 +165,16 @@ class ChipseqCommandlineParser(CommandlineParser):
         species_index: which species to return options for
         """
 
-        species_options = {opts.SPECIES_NAME: options[opts.SPECIES_ARG][species_index]}
+        species_options = {opts.SPECIES_NAME:
+                           options[opts.SPECIES_ARG][species_index]}
 
-        star_infos = options[opts.SPECIES_INFO_ARG][species_index]
+        bowtie_infos = options[opts.SPECIES_INFO_ARG][species_index]
 
         if options[opts.SPECIES_INFO_ARG][species_index].endswith('.fa'):
             species_options[opts.MAPPER_INDEX] = None
-            species_options[opts.GENOME_FASTA] = star_infos
+            species_options[opts.GENOME_FASTA] = bowtie_infos
         else:
-            species_options[opts.MAPPER_INDEX] = star_infos
+            species_options[opts.MAPPER_INDEX] = bowtie_infos
             species_options[opts.GENOME_FASTA] = None
 
         return species_options
