@@ -44,7 +44,6 @@ class _BaseDataTypeManager(object):
         self.parameter_validator = parameter_validator_cls()
         self.makefile_writer = makefile_writer_cls(self.NAME)
         self.separator = separator_cls(
-                self.NAME,
                 self.command_line_parser,
                 self.parameter_validator,
                 self.makefile_writer,
@@ -53,7 +52,6 @@ class _BaseDataTypeManager(object):
                 self.NAME,
                 self.command_line_parser)
         self.sample_filterer = sample_filterer_cls(
-                self.NAME,
                 self.command_line_parser)
 
     def get_command_line_parser(self):

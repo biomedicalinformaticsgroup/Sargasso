@@ -5,11 +5,10 @@ from sargasso.utils.samutils import SamUtils
 
 class Filterer(object):
     def __init__(
-        self, hits_info_cls, data_type, species_id,
+        self, hits_info_cls, species_id,
         input_bam, output_bam, logger):
 
         self.hits_info_cls = hits_info_cls
-        self.data_type = data_type
         self.species_id = species_id
         self.stats = SeparationStats(species_id)
         self.samutils = SamUtils()
@@ -42,7 +41,7 @@ class Filterer(object):
         self.hits_info = None
 
     def update_hits_info(self):
-        self.hits_info = self.hits_info_cls(self.data_type, self.hits_for_read)
+        self.hits_info = self.hits_info_cls(self.hits_for_read)
 
     def write_hits(self):
         for hit in self.hits_for_read:
@@ -63,14 +62,14 @@ class Filterer(object):
 
 
 class RnaseqFilterer(Filterer):
-    def __init__(self, data_type, species_id, input_bam, output_bam, logger):
+    def __init__(self, species_id, input_bam, output_bam, logger):
         Filterer.__init__(
-            self, hits_info.RnaseqHitsInfo, data_type, species_id,
+            self, hits_info.RnaseqHitsInfo, species_id,
             input_bam, output_bam, logger)
 
 
 class ChipseqFilterer(Filterer):
-    def __init__(self, data_type, species_id, input_bam, output_bam, logger):
+    def __init__(self, species_id, input_bam, output_bam, logger):
         Filterer.__init__(
-            self, hits_info.ChipseqHitsInfo, data_type, species_id,
+            self, hits_info.ChipseqHitsInfo, species_id,
             input_bam, output_bam, logger)

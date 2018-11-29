@@ -1,6 +1,5 @@
 class HitsInfo:
-    def __init__(self, data_type, hits):
-        self.data_type = data_type
+    def __init__(self, hits):
         self.hits = hits
         self.primary_hits = self._get_primary_hits()
         self.total_length = self._get_total_length(self.primary_hits)

@@ -6,8 +6,6 @@ from sargasso.utils.process import Process
 
 
 class Separator(object):
-    data_type = None
-
     DOC = """Usage:
     species_separator -h | --help
     species_separator -v | --version
@@ -24,9 +22,9 @@ The available data types are:
    chipseq      ChIP-seq data
         """
 
-    def __init__(self, data_type, commandline_parser, parameter_validator, makefile_writer,
-                 executionrecord_writer):
-        self.data_type = data_type
+    def __init__(self, commandline_parser, parameter_validator,
+                 makefile_writer, executionrecord_writer):
+
         self.commandline_parser = commandline_parser
         self.parameter_validator = parameter_validator
         self.makefile_writer = makefile_writer
@@ -66,7 +64,6 @@ The available data types are:
 
 
 class RnaseqSeparator(Separator):
-    data_type = 'rnaseq'
     DOC = """Usage:
     species_separator <data-type>
         [--help] [--version]
@@ -188,7 +185,6 @@ species_separator --reads-base-dir=/srv/data/rnaseq --num-threads 4 --run-separa
 
 
 class ChipseqSeparator(Separator):
-    data_type = 'chipseq'
     DOC = """
 Usage:
     species_separator <data-type>

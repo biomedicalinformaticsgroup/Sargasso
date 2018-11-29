@@ -30,12 +30,10 @@ The available commands are:
     SPECIES_INPUT_BAM = "<species-input-bam>"
     SPECIES_OUTPUT_BAM = "<species-output-bam>"
 
-    def __init__(self, filterer_cls, hits_checker_cls,
-                 data_type, commandline_parser):
+    def __init__(self, filterer_cls, hits_checker_cls, commandline_parser):
 
         self.filterer_cls = filterer_cls
         self.hits_checker_cls = hits_checker_cls
-        self.data_type = data_type
         self.commandline_parser = commandline_parser
 
     @classmethod
@@ -66,8 +64,7 @@ The available commands are:
                 options[opts.REJECT_MULTIMAPS],
                 logger)
 
-        filterers = [self.filterer_cls(self.data_type,
-                                       i + 1,
+        filterers = [self.filterer_cls(i + 1,
                                        options[SampleFilter.SPECIES_INPUT_BAM][i],
                                        options[SampleFilter.SPECIES_OUTPUT_BAM][i],
                                        logger)
@@ -212,10 +209,10 @@ Note: the input BAM files MUST be sorted in read name order. Failure to
 ensure input BAM files are correctly sorted will result in erroneous output.
 """
 
-    def __init__(self, data_type, commandline_parser):
+    def __init__(self, commandline_parser):
         SampleFilter.__init__(
             self, filterer.RnaseqFilterer, hits_checker.RnaseqHitsChecker,
-            data_type, commandline_parser)
+            commandline_parser)
 
 
 class ChipseqSampleFilter(SampleFilter):
@@ -265,7 +262,7 @@ Note: the input BAM files MUST be sorted in read name order. Failure to
 ensure input BAM files are correctly sorted will result in erroneous output.
 """
 
-    def __init__(self, data_type, commandline_parser):
+    def __init__(self, commandline_parser):
         SampleFilter.__init__(
             self, filterer.ChipseqFilterer, hits_checker.ChipseqHitChecker,
-            data_type, commandline_parser)
+            commandline_parser)
