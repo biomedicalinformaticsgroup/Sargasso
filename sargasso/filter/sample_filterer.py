@@ -264,5 +264,5 @@ ensure input BAM files are correctly sorted will result in erroneous output.
 
     def __init__(self, commandline_parser):
         SampleFilter.__init__(
-            self, filterer.ChipseqFilterer, hits_checker.ChipseqHitChecker,
+            self, filterer.ChipseqFilterer, hits_checker.ChipseqHitsChecker,
             commandline_parser)

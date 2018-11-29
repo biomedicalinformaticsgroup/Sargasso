@@ -216,5 +216,5 @@ class RnaseqHitsChecker(HitsChecker):
     pass
 
 
-class ChipseqHitChecker(HitsChecker):
+class ChipseqHitsChecker(HitsChecker):
     pass
