@@ -1,4 +1,5 @@
 *.pyc
+*.pyo
 sargasso.egg-info/*
 results/*
 Mouseonly_results/*

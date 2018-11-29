@@ -1,7 +1,3 @@
-#!/usr/bin/env python
+#!/usr/bin/env bash
 
-import sargasso.separator.main as entry_point
-import sys
-
-entry_point.filter_control(sys.argv[1:])
-
+python -O -c "import sargasso.separator.main as entry_point; import sys; entry_point.filter_control(sys.argv[1:])" "$@"
