@@ -85,7 +85,7 @@ class _RnaseqDataTypeManager(_BaseDataTypeManager):
                 fw.RnaseqMakefileWriter,
                 sps.RnaseqSeparator,
                 fcs.RnaseqFilterController,
-                sfs.RnaseqSampleFilter)
+                sfs.RnaseqSampleFilterer)
 
 
 @_data_type
@@ -100,6 +100,6 @@ class _ChipseqDataTypeManager(_BaseDataTypeManager):
                 fw.ChipseqMakefileWriter,
                 sps.ChipseqSeparator,
                 fcs.ChipseqFilterController,
-                sfs.ChipseqSampleFilter)
+                sfs.ChipseqSampleFilterer)
 
 

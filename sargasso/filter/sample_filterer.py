@@ -10,7 +10,7 @@ from sargasso.separator.parameter_validator import ParameterValidator
 from sargasso.utils import log
 
 
-class SampleFilter(object):
+class SampleFilterer(object):
     DOC = """Usage:
     filter_sample_reads -h | --help
     filter_sample_reads -v | --version
@@ -42,7 +42,7 @@ The available commands are:
             ParameterValidator.validate_log_level(options)
             for index, species in enumerate(options[opts.SPECIES_ARG]):
                 ParameterValidator.validate_file_option(
-                    options[SampleFilter.SPECIES_INPUT_BAM][index],
+                    options[SampleFilterer.SPECIES_INPUT_BAM][index],
                     "Could not find input BAM file for species {i}".format(i=index))
 
             ParameterValidator.validate_threshold_options(
@@ -66,8 +66,8 @@ The available commands are:
 
         hits_managers = [self.hits_manager_cls(
                              i + 1,
-                             options[SampleFilter.SPECIES_INPUT_BAM][i],
-                             options[SampleFilter.SPECIES_OUTPUT_BAM][i],
+                             options[SampleFilterer.SPECIES_INPUT_BAM][i],
+                             options[SampleFilterer.SPECIES_OUTPUT_BAM][i],
                              logger)
                      for i, species in enumerate(options[opts.SPECIES_ARG])]
 
@@ -121,7 +121,7 @@ The available commands are:
         for filt in all_hits_managers:
             filt.log_stats()
 
-        self._write_stats(all_hits_managers, options[SampleFilter.SPECIES_OUTPUT_BAM][0])
+        self._write_stats(all_hits_managers, options[SampleFilterer.SPECIES_OUTPUT_BAM][0])
 
     # write filter stats to table in file
     @classmethod
@@ -165,7 +165,7 @@ The available commands are:
         self._filter_sample_reads(self.logger, options)
 
 
-class RnaseqSampleFilter(SampleFilter):
+class RnaseqSampleFilterer(SampleFilterer):
     DOC = """
 Usage:
 filter_sample_reads <data-type>
@@ -213,12 +213,12 @@ ensure input BAM files are correctly sorted will result in erroneous output.
 """
 
     def __init__(self, commandline_parser):
-        SampleFilter.__init__(
+        SampleFilterer.__init__(
             self, hits_manager.RnaseqHitsManager, hits_checker.RnaseqHitsChecker,
             commandline_parser)
 
 
-class ChipseqSampleFilter(SampleFilter):
+class ChipseqSampleFilterer(SampleFilterer):
     DOC = """
 Usage:
 filter_sample_reads <data-type>
@@ -266,6 +266,6 @@ ensure input BAM files are correctly sorted will result in erroneous output.
 """
 
     def __init__(self, commandline_parser):
-        SampleFilter.__init__(
+        SampleFilterer.__init__(
             self, hits_manager.ChipseqHitsManager, hits_checker.ChipseqHitsChecker,
             commandline_parser)
