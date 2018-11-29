@@ -48,7 +48,5 @@ class Options(object):
     SINGLE_END_READS_TYPE = "single"
     PAIRED_END_READS_TYPE = "paired"
 
-    SUPPORTED_DATATYPE = {'rnaseq': True, 'chipseq': True}
-
     SAMPLE_INFO_INDEX = "sample_info"
     SPECIES_OPTIONS_INDEX = "species_options"

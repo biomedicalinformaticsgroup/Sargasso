@@ -210,11 +210,6 @@ class ParameterValidator(object):
         return Or(validator, None)
 
     @classmethod
-    def validate_datatype(cls, data_type):
-        ParameterValidator.validate_dict_option(
-            data_type, Options.SUPPORTED_DATATYPE, "Invalid data type.")
-
-    @classmethod
     def _validate_read_file(cls, sample_info):
         """
         Validate all raw reads files exist.
@@ -294,23 +289,3 @@ class ChipseqParameterValidator(ParameterValidator):
             species_options[Options.MAPPER_INDEX],
             "Bowtie2 index directory for species {species} should exist".format(species=species),
             nullable=True)
-
-
-class ParameterValidatorManager(Manager):
-    VALIDATORS = {"rnaseq": RnaseqParameterValidator,
-                  "chipseq": ChipseqParameterValidator}
-
-    def __init__(self):
-        # self.data_type = data_type
-        # self.options = options
-        # self.validator = self._create()
-        pass
-
-    @classmethod
-    def _create(cls, data_type):
-        parameter_validator = cls.VALIDATORS[data_type]
-        return parameter_validator()
-
-    @classmethod
-    def get(cls, data_type):
-        return cls._create(data_type)

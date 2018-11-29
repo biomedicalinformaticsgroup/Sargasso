@@ -5,7 +5,6 @@ import schema
 
 from sargasso.filter import filterer, hits_checker
 from sargasso.separator.commandline_parser import CommandlineParser
-from sargasso.separator.commandline_parser import CommandlineParserManager
 from sargasso.separator.parameter_validator import ParameterValidator
 from sargasso.utils.factory import Manager
 from sargasso.utils import log
@@ -257,32 +256,3 @@ Note: the input BAM files MUST be sorted in read name order. Failure to
 ensure input BAM files are correctly sorted will result in erroneous output.
 """
     pass
-
-
-class SampleFilterManager(Manager):
-    SAMPLEFILTER = {"rnaseq": RnaseqSampleFilter,
-                    "chipseq": ChipseqSampleFilter}
-
-    def __init__(self):
-        pass
-
-    @classmethod
-    def _create(cls, data_type):
-        commandline_parser = CommandlineParserManager.get(data_type)
-        return cls.SAMPLEFILTER[data_type](data_type, commandline_parser)
-
-    @classmethod
-    def get(cls, data_type):
-        return cls._create(data_type)
-
-
-def filter_sample_reads(args):
-    # https://github.com/docopt/docopt/blob/master/examples/git/git.py
-    data_type = CommandlineParser.parse_datatype(args, SampleFilter.DOC, SampleFilter.DATA_TYPE)
-    try:
-        ParameterValidator.validate_datatype(data_type)
-    except schema.SchemaError as exc:
-        exit("Exiting: " + exc.code)
-
-    sample_filter = SampleFilterManager.get(data_type)
-    sample_filter.run(args)

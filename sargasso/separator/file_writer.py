@@ -540,19 +540,6 @@ class ChipseqMakefileWriter(MakefileWriter):
         return "{species}_GENOME_FASTA_FILE".format(species=species.upper())
 
 
-class MakefileWriterManager(Manager):
-    mkw = {"rnaseq": RnaseqMakefileWriter,
-           "chipseq": ChipseqMakefileWriter}
-
-    @classmethod
-    def get(cls, data_type):
-        return cls.mkw[data_type](data_type)
-
-    @classmethod
-    def _create(cls, data_type):
-        pass
-
-
 class ExecutionRecordWriter(Writer):
     EXECUTION_RECORD_ENTRIES = [
         ["Data Type", Options.DATA_TYPE],

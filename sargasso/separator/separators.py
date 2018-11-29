@@ -1,10 +1,6 @@
 import os
 
-from sargasso.separator.commandline_parser import CommandlineParserManager
-from sargasso.separator.file_writer import ExecutionRecordWriter
-from sargasso.separator.file_writer import MakefileWriterManager
 from sargasso.separator.options import Options
-from sargasso.separator.parameter_validator import ParameterValidatorManager
 from sargasso.utils.factory import Manager
 from sargasso.utils import log
 from sargasso.utils.process import Process
@@ -293,20 +289,3 @@ Options:
                         rat /srv/data/genome/rat/ensembl-93/bowtie2_indexes/toplevel
 
 """
-
-
-class SeparatorManager(Manager):
-    SEPARATORS = {"rnaseq": RnaseqSeparator,
-                  "chipseq": ChipseqSeparator}
-
-    @classmethod
-    def _create(cls, data_type):
-        commandline_parser = CommandlineParserManager.get(data_type)
-        parameter_validator = ParameterValidatorManager.get(data_type)
-        makefile_writer = MakefileWriterManager.get(data_type)
-        executionrecord_writer = ExecutionRecordWriter()
-        return cls.SEPARATORS[data_type](data_type, commandline_parser, parameter_validator, makefile_writer, executionrecord_writer)
-
-    @classmethod
-    def get(cls, data_type):
-        return cls._create(data_type)

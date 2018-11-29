@@ -35,10 +35,10 @@ class CommandlineParser(object):
         return options
 
     @classmethod
-    def parse_datatype(cls, args, doc, data_type_string, options_first=True):
+    def parse_datatype(cls, args, doc, data_type_string):
         docstring = CommandlineParser._substitute_common_options_into_usage(doc)
         options = docopt.docopt(docstring, argv=args, version="species_separator v" + __version__,
-                                options_first=options_first)
+                                options_first=True)
         return options[data_type_string]
 
     @classmethod
@@ -185,20 +185,6 @@ class ChipseqCommandlineParser(CommandlineParser):
             species_options[Options.GENOME_FASTA] = None
 
         return species_options
-
-
-class CommandlineParserManager(Manager):
-    PARSERS = {"rnaseq": RnaseqCommandlineParser,
-               "chipseq": ChipseqCommandlineParser}
-
-    @classmethod
-    def _create(cls, data_type):
-        commandline_parser = cls.PARSERS[data_type]
-        return commandline_parser()
-
-    @classmethod
-    def get(cls, data_type):
-        return cls._create(data_type)
 
 
 class SampleInfo(object):
