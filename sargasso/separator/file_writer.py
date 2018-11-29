@@ -1,11 +1,10 @@
 import contextlib
 import textwrap
-from datetime import datetime
-
 import os
 import os.path
+import sargasso.separator.options as opts
 
-from sargasso.separator.options import Options
+from datetime import datetime
 
 
 class Writer(object):
@@ -32,6 +31,26 @@ class Writer(object):
 
 
 class MakefileWriter(Writer):
+    ALL_TARGET = "all"
+    CLEAN_TARGET = "clean"
+    MAPPER_INDICES_TARGET = "MAPPER_INDICES"
+    COLLATE_RAW_READS_TARGET = "COLLATE_RAW_READS"
+    MAPPED_READS_TARGET = "MAPPED_READS"
+    SORTED_READS_TARGET = "SORTED_READS"
+    FILTERED_READS_TARGET = "FILTERED_READS"
+
+    DATA_TYPE_VARIABLE = "DATA_TYPE"
+    NUM_THREADS_VARIABLE = "NUM_THREADS"
+    MAPPER_EXECUTABLE_VARIABLE = "MAPPER_EXECUTABLE"
+    SAMBAMBA_SORT_TMP_DIR_VARIABLE = "SAMBAMBA_SORT_TMP_DIR"
+    SAMPLES_VARIABLE = "SAMPLES"
+    RAW_READS_DIRECTORY_VARIABLE = "RAW_READS_DIRECTORY"
+    RAW_READS_LEFT_VARIABLE = "RAW_READS_FILES_1"
+    RAW_READS_RIGHT_VARIABLE = "RAW_READS_FILES_2"
+
+    SINGLE_END_READS_TYPE = "single"
+    PAIRED_END_READS_TYPE = "paired"
+
     INDENT = '\t'
 
     def __init__(self, data_type):
@@ -98,37 +117,37 @@ class MakefileWriter(Writer):
         options: dictionary of command-line options
         sample_info: object encapsulating samples and their accompanying read files
         """
-        self.set_variable(Options.NUM_THREADS_VARIABLE, options[Options.NUM_THREADS])
+        self.set_variable(MakefileWriter.NUM_THREADS_VARIABLE, options[opts.NUM_THREADS])
         self.add_blank_line()
 
-        self.set_variable(Options.DATA_TYPE_VARIABLE, options[Options.DATA_TYPE])
+        self.set_variable(MakefileWriter.DATA_TYPE_VARIABLE, options[opts.DATA_TYPE_ARG])
         self.add_blank_line()
 
-        self.set_variable(Options.MAPPER_EXECUTABLE_VARIABLE, options[Options.MAPPER_EXECUTABLE])
+        self.set_variable(MakefileWriter.MAPPER_EXECUTABLE_VARIABLE, options[opts.MAPPER_EXECUTABLE])
         self.add_blank_line()
 
-        self.set_variable(Options.SAMBAMBA_SORT_TMP_DIR_VARIABLE, options[Options.SAMBAMBA_SORT_TMP_DIR])
+        self.set_variable(MakefileWriter.SAMBAMBA_SORT_TMP_DIR_VARIABLE, options[opts.SAMBAMBA_SORT_TMP_DIR])
         self.add_blank_line()
 
         sample_names = sample_info.get_sample_names()
-        self.set_variable(Options.SAMPLES_VARIABLE, " ".join(sample_names))
+        self.set_variable(MakefileWriter.SAMPLES_VARIABLE, " ".join(sample_names))
         self.set_variable(
-            Options.RAW_READS_DIRECTORY_VARIABLE,
-            options[Options.READS_BASE_DIR] if options[Options.READS_BASE_DIR] else "/")
+            MakefileWriter.RAW_READS_DIRECTORY_VARIABLE,
+            options[opts.READS_BASE_DIR] if options[opts.READS_BASE_DIR] else "/")
         self.set_variable(
-            Options.RAW_READS_LEFT_VARIABLE,
+            MakefileWriter.RAW_READS_LEFT_VARIABLE,
             " ".join([",".join(sample_info.get_left_reads(name))
                       for name in sample_names]))
 
         if sample_info.paired_end_reads():
             self.set_variable(
-                Options.RAW_READS_RIGHT_VARIABLE,
+                MakefileWriter.RAW_READS_RIGHT_VARIABLE,
                 " ".join([",".join(sample_info.get_right_reads(name))
                           for name in sample_names]))
 
         self.add_blank_line()
 
-        for i, species in enumerate(options[Options.SPECIES]):
+        for i, species in enumerate(options[opts.SPECIES_ARG]):
             self._write_species_variable_definitions(species, species_options[i])
 
         self.add_blank_line()
@@ -143,11 +162,11 @@ class MakefileWriter(Writer):
         logger: logging object
         writer: Makefile writer object
         """
-        self.set_variable(Options.MAPPER_INDICES_TARGET, "mapper_indexes")
-        self.set_variable(Options.COLLATE_RAW_READS_TARGET, "raw_reads")
-        self.set_variable(Options.MAPPED_READS_TARGET, "mapped_reads")
-        self.set_variable(Options.SORTED_READS_TARGET, "sorted_reads")
-        self.set_variable(Options.FILTERED_READS_TARGET, "filtered_reads")
+        self.set_variable(MakefileWriter.MAPPER_INDICES_TARGET, "mapper_indexes")
+        self.set_variable(MakefileWriter.COLLATE_RAW_READS_TARGET, "raw_reads")
+        self.set_variable(MakefileWriter.MAPPED_READS_TARGET, "mapped_reads")
+        self.set_variable(MakefileWriter.SORTED_READS_TARGET, "sorted_reads")
+        self.set_variable(MakefileWriter.FILTERED_READS_TARGET, "filtered_reads")
         self.add_blank_line()
 
     def _write_phony_targets(self):
@@ -158,7 +177,7 @@ class MakefileWriter(Writer):
         writer: Makefile writer object
         """
         with self.target_definition(
-                ".PHONY", [Options.ALL_TARGET, Options.CLEAN_TARGET],
+                ".PHONY", [MakefileWriter.ALL_TARGET, MakefileWriter.CLEAN_TARGET],
                 raw_target=True, raw_dependencies=True):
             pass
 
@@ -170,7 +189,7 @@ class MakefileWriter(Writer):
         writer: Makefile writer object
         """
         with self.target_definition(
-                Options.ALL_TARGET, [Options.FILTERED_READS_TARGET], raw_target=True):
+                MakefileWriter.ALL_TARGET, [MakefileWriter.FILTERED_READS_TARGET], raw_target=True):
             pass
 
     def _write_filtered_reads_target(self, options):
@@ -181,26 +200,26 @@ class MakefileWriter(Writer):
         writer: Makefile writer object
         """
         with self.target_definition(
-                Options.FILTERED_READS_TARGET, [Options.SORTED_READS_TARGET]):
+                MakefileWriter.FILTERED_READS_TARGET, [MakefileWriter.SORTED_READS_TARGET]):
             self.add_comment(
                 "For each sample, take the reads mapping to each genome and " +
                 "filter them to their correct species of origin")
-            self.make_target_directory(Options.FILTERED_READS_TARGET)
+            self.make_target_directory(MakefileWriter.FILTERED_READS_TARGET)
 
             self.add_command("filter_reads", [
-                self.variable_val(Options.DATA_TYPE_VARIABLE),
-                "\"{var}\"".format(var=self.variable_val(Options.SAMPLES_VARIABLE)),
-                self.variable_val(Options.SORTED_READS_TARGET),
-                self.variable_val(Options.FILTERED_READS_TARGET),
-                self.variable_val(Options.NUM_THREADS_VARIABLE),
-                options[Options.MISMATCH_THRESHOLD],
-                options[Options.MINMATCH_THRESHOLD],
-                options[Options.MULTIMAP_THRESHOLD],
-                "--reject-multimaps" if options[Options.REJECT_MULTIMAPS] else "\"\"",
-                "{sl}".format(sl=" ".join(options[Options.SPECIES]))])
+                self.variable_val(MakefileWriter.DATA_TYPE_VARIABLE),
+                "\"{var}\"".format(var=self.variable_val(MakefileWriter.SAMPLES_VARIABLE)),
+                self.variable_val(MakefileWriter.SORTED_READS_TARGET),
+                self.variable_val(MakefileWriter.FILTERED_READS_TARGET),
+                self.variable_val(MakefileWriter.NUM_THREADS_VARIABLE),
+                options[opts.MISMATCH_THRESHOLD],
+                options[opts.MINMATCH_THRESHOLD],
+                options[opts.MULTIMAP_THRESHOLD],
+                "--reject-multimaps" if options[opts.REJECT_MULTIMAPS] else "\"\"",
+                "{sl}".format(sl=" ".join(options[opts.SPECIES_ARG]))])
 
-            if options[Options.DELETE_INTERMEDIATE]:
-                self.remove_target_directory(Options.SORTED_READS_TARGET)
+            if options[opts.DELETE_INTERMEDIATE]:
+                self.remove_target_directory(MakefileWriter.SORTED_READS_TARGET)
 
     def _write_sorted_reads_target(self, options):
         """
@@ -211,23 +230,23 @@ class MakefileWriter(Writer):
         options: dictionary of command-line options
         """
         with self.target_definition(
-                Options.SORTED_READS_TARGET, [Options.MAPPED_READS_TARGET]):
+                MakefileWriter.SORTED_READS_TARGET, [MakefileWriter.MAPPED_READS_TARGET]):
             self.add_comment(
                 "For each sample, sort the mapped reads into read name order")
-            self.make_target_directory(Options.SORTED_READS_TARGET)
+            self.make_target_directory(MakefileWriter.SORTED_READS_TARGET)
 
             self.add_command(
                 "sort_reads",
-                ["\"{sl}\"".format(sl=" ".join(options[Options.SPECIES])),
+                ["\"{sl}\"".format(sl=" ".join(options[opts.SPECIES_ARG])),
                  "\"{var}\"".format(
-                     var=self.variable_val(Options.SAMPLES_VARIABLE)),
-                 self.variable_val(Options.NUM_THREADS_VARIABLE),
-                 self.variable_val(Options.MAPPED_READS_TARGET),
-                 self.variable_val(Options.SORTED_READS_TARGET),
-                 self.variable_val(Options.SAMBAMBA_SORT_TMP_DIR_VARIABLE)])
+                     var=self.variable_val(MakefileWriter.SAMPLES_VARIABLE)),
+                 self.variable_val(MakefileWriter.NUM_THREADS_VARIABLE),
+                 self.variable_val(MakefileWriter.MAPPED_READS_TARGET),
+                 self.variable_val(MakefileWriter.SORTED_READS_TARGET),
+                 self.variable_val(MakefileWriter.SAMBAMBA_SORT_TMP_DIR_VARIABLE)])
 
-            if options[Options.DELETE_INTERMEDIATE]:
-                self.remove_target_directory(Options.MAPPED_READS_TARGET)
+            if options[opts.DELETE_INTERMEDIATE]:
+                self.remove_target_directory(MakefileWriter.MAPPED_READS_TARGET)
 
     def _write_mapped_reads_target(self, sample_info, options):
         """
@@ -238,26 +257,26 @@ class MakefileWriter(Writer):
         """
 
         index_targets = ["{index}/{species}".format(
-            index=self.variable_val(Options.MAPPER_INDICES_TARGET),
+            index=self.variable_val(MakefileWriter.MAPPER_INDICES_TARGET),
             species=species)
-            for species in options[Options.SPECIES]]
+            for species in options[opts.SPECIES_ARG]]
 
-        index_targets.append(self.variable_val(Options.COLLATE_RAW_READS_TARGET))
+        index_targets.append(self.variable_val(MakefileWriter.COLLATE_RAW_READS_TARGET))
 
         with self.target_definition(
-                Options.MAPPED_READS_TARGET, index_targets, raw_dependencies=True):
+                MakefileWriter.MAPPED_READS_TARGET, index_targets, raw_dependencies=True):
             self.add_comment(
                 "Map reads for each sample to each species' genome")
-            self.make_target_directory(Options.MAPPED_READS_TARGET)
+            self.make_target_directory(MakefileWriter.MAPPED_READS_TARGET)
 
-            map_reads_params = ["\"{sl}\"".format(sl=" ".join(options[Options.SPECIES])),
-                                "\"{var}\"".format(var=self.variable_val(Options.SAMPLES_VARIABLE)),
-                                self.variable_val(Options.MAPPER_INDICES_TARGET),
-                                self.variable_val(Options.NUM_THREADS_VARIABLE),
-                                self.variable_val(Options.COLLATE_RAW_READS_TARGET),
-                                self.variable_val(Options.MAPPED_READS_TARGET),
-                                Options.PAIRED_END_READS_TYPE if sample_info.paired_end_reads()
-                                else Options.SINGLE_END_READS_TYPE, options[Options.MAPPER_EXECUTABLE]]
+            map_reads_params = ["\"{sl}\"".format(sl=" ".join(options[opts.SPECIES_ARG])),
+                                "\"{var}\"".format(var=self.variable_val(MakefileWriter.SAMPLES_VARIABLE)),
+                                self.variable_val(MakefileWriter.MAPPER_INDICES_TARGET),
+                                self.variable_val(MakefileWriter.NUM_THREADS_VARIABLE),
+                                self.variable_val(MakefileWriter.COLLATE_RAW_READS_TARGET),
+                                self.variable_val(MakefileWriter.MAPPED_READS_TARGET),
+                                MakefileWriter.PAIRED_END_READS_TYPE if sample_info.paired_end_reads()
+                                else MakefileWriter.SINGLE_END_READS_TYPE, options[opts.MAPPER_EXECUTABLE]]
 
             self.add_command("map_reads_" + self.data_type, map_reads_params)
 
@@ -269,32 +288,32 @@ class MakefileWriter(Writer):
         writer: Makefile writer object
         sample_info: object encapsulating samples and their accompanying read files
         """
-        with self.target_definition(Options.COLLATE_RAW_READS_TARGET, []):
+        with self.target_definition(MakefileWriter.COLLATE_RAW_READS_TARGET, []):
             self.add_comment(
                 "Create a directory with sub-directories for each sample, " +
                 "each of which contains links to the input raw reads files " +
                 "for that sample")
-            self.make_target_directory(Options.COLLATE_RAW_READS_TARGET)
+            self.make_target_directory(MakefileWriter.COLLATE_RAW_READS_TARGET)
 
             collate_raw_reads_params = [
-                "\"{var}\"".format(var=self.variable_val(Options.SAMPLES_VARIABLE)),
-                self.variable_val(Options.RAW_READS_DIRECTORY_VARIABLE),
-                self.variable_val(Options.COLLATE_RAW_READS_TARGET),
+                "\"{var}\"".format(var=self.variable_val(MakefileWriter.SAMPLES_VARIABLE)),
+                self.variable_val(MakefileWriter.RAW_READS_DIRECTORY_VARIABLE),
+                self.variable_val(MakefileWriter.COLLATE_RAW_READS_TARGET),
             ]
 
             if sample_info.paired_end_reads():
                 collate_raw_reads_params += [
-                    Options.PAIRED_END_READS_TYPE,
+                    MakefileWriter.PAIRED_END_READS_TYPE,
                     "\"{var}\"".format(
-                        var=self.variable_val(Options.RAW_READS_LEFT_VARIABLE)),
+                        var=self.variable_val(MakefileWriter.RAW_READS_LEFT_VARIABLE)),
                     "\"{var}\"".format(
-                        var=self.variable_val(Options.RAW_READS_RIGHT_VARIABLE))
+                        var=self.variable_val(MakefileWriter.RAW_READS_RIGHT_VARIABLE))
                 ]
             else:
                 collate_raw_reads_params += [
-                    Options.SINGLE_END_READS_TYPE,
+                    MakefileWriter.SINGLE_END_READS_TYPE,
                     "\"{var}\"".format(
-                        var=self.variable_val(Options.RAW_READS_LEFT_VARIABLE)),
+                        var=self.variable_val(MakefileWriter.RAW_READS_LEFT_VARIABLE)),
                     "\"\""
                 ]
 
@@ -318,10 +337,10 @@ class RnaseqMakefileWriter(MakefileWriter):
         options: dictionary of command-line options
         sample_info: object encapsulating samples and their accompanying read files
         """
-        sample_info = options[Options.SAMPLE_INFO_INDEX]
-        species_options = options[Options.SPECIES_OPTIONS_INDEX]
+        sample_info = options[opts.SAMPLE_INFO_INDEX]
+        species_options = options[opts.SPECIES_OPTIONS_INDEX]
         # todo ask Owen this
-        with self.writing_to_file(options[Options.OUTPUT_DIR], "Makefile"):
+        with self.writing_to_file(options[opts.OUTPUT_DIR_ARG], "Makefile"):
             self._write_variable_definitions(options, sample_info, species_options)
             self._write_target_variable_definitions()
             self._write_phony_targets()
@@ -351,10 +370,10 @@ class RnaseqMakefileWriter(MakefileWriter):
         writer: Makefile writer object
         options: dictionary of command-line options
         """
-        for i, species in enumerate(options[Options.SPECIES]):
+        for i, species in enumerate(options[opts.SPECIES_ARG]):
             species_options = self._get_species_options(options, i)
             self._write_species_main_star_index_target(
-                species, species_options, options[Options.MAPPER_EXECUTABLE])
+                species, species_options, options[opts.MAPPER_EXECUTABLE])
 
     def _write_species_main_star_index_target(self, species, species_options, executable):
         """
@@ -367,11 +386,11 @@ class RnaseqMakefileWriter(MakefileWriter):
         species
         """
         target = "{index}/{spec}".format(
-            index=self.variable_val(Options.MAPPER_INDICES_TARGET), spec=species)
+            index=self.variable_val(MakefileWriter.MAPPER_INDICES_TARGET), spec=species)
 
         with self.target_definition(target, [], raw_target=True):
-            if species_options[Options.GTF_FILE] is None:
-                self.make_target_directory(Options.MAPPER_INDICES_TARGET)
+            if species_options[opts.GTF_FILE] is None:
+                self.make_target_directory(MakefileWriter.MAPPER_INDICES_TARGET)
                 self.add_command(
                     "ln",
                     ["-s",
@@ -383,7 +402,7 @@ class RnaseqMakefileWriter(MakefileWriter):
                     "build_star_index",
                     [self.variable_val(self._get_genome_fasta_variable(species)),
                      self.variable_val(self._get_gtf_file_variable(species)),
-                     self.variable_val(Options.NUM_THREADS_VARIABLE),
+                     self.variable_val(MakefileWriter.NUM_THREADS_VARIABLE),
                      target, executable])
 
     def _write_clean_target(self):
@@ -393,12 +412,12 @@ class RnaseqMakefileWriter(MakefileWriter):
         logger: logging object
         writer: Makefile writer object
         """
-        with self.target_definition(Options.CLEAN_TARGET, [], raw_target=True):
-            self.remove_target_directory(Options.MAPPER_INDICES_TARGET)
-            self.remove_target_directory(Options.COLLATE_RAW_READS_TARGET)
-            self.remove_target_directory(Options.MAPPED_READS_TARGET)
-            self.remove_target_directory(Options.SORTED_READS_TARGET)
-            self.remove_target_directory(Options.FILTERED_READS_TARGET)
+        with self.target_definition(MakefileWriter.CLEAN_TARGET, [], raw_target=True):
+            self.remove_target_directory(MakefileWriter.MAPPER_INDICES_TARGET)
+            self.remove_target_directory(MakefileWriter.COLLATE_RAW_READS_TARGET)
+            self.remove_target_directory(MakefileWriter.MAPPED_READS_TARGET)
+            self.remove_target_directory(MakefileWriter.SORTED_READS_TARGET)
+            self.remove_target_directory(MakefileWriter.FILTERED_READS_TARGET)
 
     def _write_species_variable_definitions(self, species, species_options):
         """
@@ -409,14 +428,14 @@ class RnaseqMakefileWriter(MakefileWriter):
         species: species number string
         species_options: dictionary of options specific to a particular species.
         """
-        if species_options[Options.GTF_FILE] is None:
+        if species_options[opts.GTF_FILE] is None:
             self.set_variable(
-                self._get_star_index_variable(species), species_options[Options.MAPPER_INDEX])
+                self._get_star_index_variable(species), species_options[opts.MAPPER_INDEX])
         else:
             self.set_variable(
-                self._get_gtf_file_variable(species), species_options[Options.GTF_FILE])
+                self._get_gtf_file_variable(species), species_options[opts.GTF_FILE])
             self.set_variable(
-                self._get_genome_fasta_variable(species), species_options[Options.GENOME_FASTA])
+                self._get_genome_fasta_variable(species), species_options[opts.GENOME_FASTA])
 
     @classmethod
     def _get_star_index_variable(cls, species):
@@ -456,9 +475,9 @@ class ChipseqMakefileWriter(MakefileWriter):
         sample_info: object encapsulating samples and their accompanying read files
         """
         # todo ask Owen this
-        sample_info = options[Options.SAMPLE_INFO_INDEX]
-        species_options = options[Options.SPECIES_OPTIONS_INDEX]
-        with self.writing_to_file(options[Options.OUTPUT_DIR], "Makefile"):
+        sample_info = options[opts.SAMPLE_INFO_INDEX]
+        species_options = options[opts.SPECIES_OPTIONS_INDEX]
+        with self.writing_to_file(options[opts.OUTPUT_DIR_ARG], "Makefile"):
             self._write_variable_definitions(options, sample_info, species_options)
             self._write_target_variable_definitions()
             self._write_phony_targets()
@@ -480,10 +499,10 @@ class ChipseqMakefileWriter(MakefileWriter):
         writer: Makefile writer object
         options: dictionary of command-line options
         """
-        for i, species in enumerate(options[Options.SPECIES]):
+        for i, species in enumerate(options[opts.SPECIES_ARG]):
             species_options = self._get_species_options(options, i)
             self._write_species_main_bowtie2_index_target(
-                species, species_options, options[Options.MAPPER_INDEX_EXECUTABLE])
+                species, species_options, options[opts.MAPPER_INDEX_EXECUTABLE])
 
     def _write_species_main_bowtie2_index_target(self, species, species_options, executable):
         """
@@ -496,11 +515,11 @@ class ChipseqMakefileWriter(MakefileWriter):
         species
         """
         target = "{index}/{spec}".format(
-            index=self.variable_val(Options.MAPPER_INDICES_TARGET), spec=species)
+            index=self.variable_val(MakefileWriter.MAPPER_INDICES_TARGET), spec=species)
 
         with self.target_definition(target, [], raw_target=True):
-            if species_options[Options.GENOME_FASTA] is None:
-                self.make_target_directory(Options.MAPPER_INDICES_TARGET)
+            if species_options[opts.GENOME_FASTA] is None:
+                self.make_target_directory(MakefileWriter.MAPPER_INDICES_TARGET)
                 self.add_command(
                     "ln",
                     ["-s",
@@ -511,7 +530,7 @@ class ChipseqMakefileWriter(MakefileWriter):
                 self.add_command(
                     "build_bowtie2_index",
                     [self.variable_val(self._get_genome_fasta_variable(species)),
-                     self.variable_val(Options.NUM_THREADS_VARIABLE),
+                     self.variable_val(MakefileWriter.NUM_THREADS_VARIABLE),
                      target, executable])
 
     def _write_species_variable_definitions(self, species, species_options):
@@ -523,12 +542,12 @@ class ChipseqMakefileWriter(MakefileWriter):
         species: species number string
         species_options: dictionary of options specific to a particular species.
         """
-        if species_options[Options.GENOME_FASTA] is None:
+        if species_options[opts.GENOME_FASTA] is None:
             self.set_variable(
-                self._get_bowtie2_index_variable(species), species_options[Options.MAPPER_INDEX])
+                self._get_bowtie2_index_variable(species), species_options[opts.MAPPER_INDEX])
         else:
             self.set_variable(
-                self._get_genome_fasta_variable(species), species_options[Options.GENOME_FASTA])
+                self._get_genome_fasta_variable(species), species_options[opts.GENOME_FASTA])
 
     @classmethod
     def _get_bowtie2_index_variable(cls, species):
@@ -541,24 +560,26 @@ class ChipseqMakefileWriter(MakefileWriter):
 
 class ExecutionRecordWriter(Writer):
     EXECUTION_RECORD_ENTRIES = [
-        ["Data Type", Options.DATA_TYPE],
-        ["Samples File", Options.SAMPLES_FILE],
-        ["Output Dir", Options.OUTPUT_DIR],
-        ["Species", Options.SPECIES],
-        ["Species info", Options.SPECIES_INFO],
-        ["Reads Base Dir", Options.READS_BASE_DIR],
-        ["Number of Threads", Options.NUM_THREADS],
-        ["Mismatch Threshold", Options.MISMATCH_THRESHOLD],
-        ["Minmatch Threshold", Options.MINMATCH_THRESHOLD],
-        ["Multimap Threshold", Options.MULTIMAP_THRESHOLD],
-        ["Reject Multimaps", Options.REJECT_MULTIMAPS],
-        ["Optimal Strategy", Options.OPTIMAL_STRATEGY],
-        ["Conservative Strategy", Options.CONSERVATIVE_STRATEGY],
-        ["Recall Strategy", Options.RECALL_STRATEGY],
-        ["Run Separation", Options.RUN_SEPARATION],
-        ["Delete Intermediate", Options.DELETE_INTERMEDIATE],
-        ["Mapper Executable Path", Options.MAPPER_EXECUTABLE],
-        ["Sambamba Sort Tmp Dir", Options.SAMBAMBA_SORT_TMP_DIR],
+        ["Data Type", opts.DATA_TYPE_ARG],
+        ["Samples File", opts.SAMPLES_FILE_ARG],
+        ["Output Dir", opts.OUTPUT_DIR_ARG],
+        ["Species", opts.SPECIES_ARG],
+        ["Species info", opts.SPECIES_INFO_ARG],
+        ["Reads Base Dir", opts.READS_BASE_DIR],
+        ["Number of Threads", opts.NUM_THREADS],
+        ["Mismatch Threshold", opts.MISMATCH_THRESHOLD],
+        ["Minmatch Threshold", opts.MINMATCH_THRESHOLD],
+        ["Multimap Threshold", opts.MULTIMAP_THRESHOLD],
+        ["Reject Multimaps", opts.REJECT_MULTIMAPS],
+        ["Optimal Strategy", opts.OPTIMAL_STRATEGY],
+        ["Conservative Strategy", opts.CONSERVATIVE_STRATEGY],
+        ["Recall Strategy", opts.RECALL_STRATEGY],
+        ["Permissive Strategy", opts.PERMISSIVE_STRATEGY],
+        ["Run Separation", opts.RUN_SEPARATION],
+        ["Delete Intermediate", opts.DELETE_INTERMEDIATE],
+        ["Mapper Executable Path", opts.MAPPER_EXECUTABLE],
+        ["Mapper Indexing Executable Path", opts.MAPPER_INDEX_EXECUTABLE],
+        ["Sambamba Sort Tmp Dir", opts.SAMBAMBA_SORT_TMP_DIR],
     ]
 
     def write(self, options):
@@ -574,6 +595,6 @@ class ExecutionRecordWriter(Writer):
             desc=it[0], val=str(options[it[1]]))
             for it in self.EXECUTION_RECORD_ENTRIES])
 
-        out_file = os.path.join(options[Options.OUTPUT_DIR], "execution_record.txt")
+        out_file = os.path.join(options[opts.OUTPUT_DIR_ARG], "execution_record.txt")
         with open(out_file, 'w') as erf:
             erf.write(out_text)

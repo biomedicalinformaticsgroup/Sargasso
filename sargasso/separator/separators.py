@@ -1,6 +1,6 @@
 import os
+import sargasso.separator.options as opts
 
-from sargasso.separator.options import Options
 from sargasso.utils import log
 from sargasso.utils.process import Process
 
@@ -42,7 +42,7 @@ The available data types are:
         self.logger = log.get_logger_for_options(options)
 
         # Create output directory
-        os.mkdir(options[Options.OUTPUT_DIR])
+        os.mkdir(options[opts.OUTPUT_DIR_ARG])
 
         # Write Makefile to output directory
         self.makefile_writer.write(self.logger, options)
@@ -51,7 +51,7 @@ The available data types are:
         self.executionrecord_writer.write(options)
 
         # If specified, execute the Makefile with nohup
-        if options[Options.RUN_SEPARATION]:
+        if options[opts.RUN_SEPARATION]:
             self._run_species_separation(options)
 
     @classmethod
@@ -62,7 +62,7 @@ The available data types are:
         logger: logging object
         options: dictionary of command-line options
         """
-        Process.run_in_directory(options[Options.OUTPUT_DIR], "make")
+        Process.run_in_directory(options[opts.OUTPUT_DIR_ARG], "make")
 
 
 class RnaseqSeparator(Separator):

@@ -2,6 +2,7 @@ import os
 import os.path
 import os.path
 import schema
+import sargasso.separator.options as opts
 
 from sargasso.filter import filterer, hits_checker
 from sargasso.separator.commandline_parser import CommandlineParser
@@ -26,14 +27,8 @@ The available commands are:
    chipseq      ChIP-seq data
 
 """
-    DATA_TYPE = "<data-type>"
-    SPECIES = "<species>"
     SPECIES_INPUT_BAM = "<species-input-bam>"
     SPECIES_OUTPUT_BAM = "<species-output-bam>"
-    MISMATCH_THRESHOLD = "<mismatch-threshold>"
-    MINMATCH_THRESHOLD = "<minmatch-threshold>"
-    MULTIMAP_THRESHOLD = "<multimap-threshold>"
-    REJECT_MULTIMAPS = "--reject-multimaps"
 
     def __init__(self, filterer_cls, hits_checker_cls,
                  data_type, commandline_parser):
@@ -47,14 +42,16 @@ The available commands are:
     def _validate_command_line_options(cls, options):
         try:
             ParameterValidator.validate_log_level(options)
-            for index, species in enumerate(options[SampleFilter.SPECIES]):
+            for index, species in enumerate(options[opts.SPECIES_ARG]):
                 ParameterValidator.validate_file_option(
                     options[SampleFilter.SPECIES_INPUT_BAM][index],
                     "Could not find input BAM file for species {i}".format(i=index))
 
             ParameterValidator.validate_threshold_options(
-                options, SampleFilter.MISMATCH_THRESHOLD, SampleFilter.MINMATCH_THRESHOLD,
-                SampleFilter.MULTIMAP_THRESHOLD)
+                options,
+                opts.MISMATCH_THRESHOLD_ARG,
+                opts.MINMATCH_THRESHOLD_ARG,
+                opts.MULTIMAP_THRESHOLD_ARG)
 
         except schema.SchemaError as exc:
             exit(exc.code)
@@ -63,10 +60,10 @@ The available commands are:
         logger.info("Starting species separation.")
 
         h_check = self.hits_checker_cls(
-                options[SampleFilter.MISMATCH_THRESHOLD],
-                options[SampleFilter.MINMATCH_THRESHOLD],
-                options[SampleFilter.MULTIMAP_THRESHOLD],
-                options[SampleFilter.REJECT_MULTIMAPS],
+                options[opts.MISMATCH_THRESHOLD_ARG],
+                options[opts.MINMATCH_THRESHOLD_ARG],
+                options[opts.MULTIMAP_THRESHOLD_ARG],
+                options[opts.REJECT_MULTIMAPS],
                 logger)
 
         filterers = [self.filterer_cls(self.data_type,
@@ -74,7 +71,7 @@ The available commands are:
                                        options[SampleFilter.SPECIES_INPUT_BAM][i],
                                        options[SampleFilter.SPECIES_OUTPUT_BAM][i],
                                        logger)
-                     for i, species in enumerate(options[SampleFilter.SPECIES])]
+                     for i, species in enumerate(options[opts.SPECIES_ARG])]
 
         all_filterers = filterers
 

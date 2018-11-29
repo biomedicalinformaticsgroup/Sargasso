@@ -1,8 +1,8 @@
 import subprocess
-
 import os
 import os.path
 import schema
+import sargasso.separator.options as opts
 
 from sargasso.separator.commandline_parser import CommandlineParser
 from sargasso.separator.parameter_validator import ParameterValidator
@@ -26,17 +26,8 @@ The available commands are:
    chipseq  	ChIP-seq data
 
 """
-    data_type = None
-
-    DATA_TYPE = "<data-type>"
     BLOCK_DIR = "<block-dir>"
-    OUTPUT_DIR = "<output-dir>"
     SAMPLE_NAME = "<sample-name>"
-    SPECIES = "<species>"
-    MISMATCH_THRESHOLD = "<mismatch_threshold>"
-    MINMATCH_THRESHOLD = "<minmatch_threshold>"
-    MULTIMAP_THRESHOLD = "<multimap_threshold>"
-    REJECT_MULTIMAPS = "--reject-multimaps"
     BLOCK_FILE_SEPARATOR = "___"
 
     def __init__(self, data_type, commandline_parser):
@@ -56,7 +47,7 @@ The available commands are:
                 options[FilterController.BLOCK_DIR],
                 "Mapped reads block file directory does not exist")
             ParameterValidator.validate_dir_option(
-                options[FilterController.OUTPUT_DIR],
+                options[opts.OUTPUT_DIR_ARG],
                 "Filtered reads output directory does not exist")
         except schema.SchemaError as exc:
             exit("Exiting: " + exc.code)
@@ -115,7 +106,7 @@ The available commands are:
         """
         cols = []
 
-        for index, species in enumerate(options[FilterController.SPECIES]):
+        for index, species in enumerate(options[opts.SPECIES_ARG]):
             species_text = str(species)
 
             cols += [
@@ -124,7 +115,7 @@ The available commands are:
                 "Ambiguous-Hits-" + species_text, "Ambiguous-Reads-" + species_text
             ]
 
-        out_file = os.path.join(options[FilterController.OUTPUT_DIR], "filtering_result_summary.txt")
+        out_file = os.path.join(options[opts.OUTPUT_DIR_ARG], "filtering_result_summary.txt")
         with open(out_file, 'w') as outf:
             outf.write("\t".join(cols) + "\n")
 
@@ -135,7 +126,7 @@ The available commands are:
         logger: logging object
         options: dictionary of command-line options
         """
-        block_files = self._get_block_files(options[FilterController.BLOCK_DIR], options[FilterController.SPECIES][0])
+        block_files = self._get_block_files(options[FilterController.BLOCK_DIR], options[opts.SPECIES_ARG][0])
 
         # keep track of all processes
         all_processes = []
@@ -149,14 +140,15 @@ The available commands are:
             proc_no += 1
 
             commands = ["filter_sample_reads", self.data_type,
-                        options[FilterController.MISMATCH_THRESHOLD], options[FilterController.MINMATCH_THRESHOLD],
-                        options[FilterController.MULTIMAP_THRESHOLD]]
+                        options[opts.MISMATCH_THRESHOLD_ARG],
+                        options[opts.MINMATCH_THRESHOLD_ARG],
+                        options[opts.MULTIMAP_THRESHOLD_ARG]]
 
-            for species in options[FilterController.SPECIES]:
+            for species in options[opts.SPECIES_ARG]:
                 sp_in = self._get_input_path(options[FilterController.BLOCK_DIR], block_file, species)
 
                 get_output_path = lambda x: os.path.join(
-                    options[FilterController.OUTPUT_DIR],
+                    options[opts.OUTPUT_DIR_ARG],
                     self.BLOCK_FILE_SEPARATOR.join([options[FilterController.SAMPLE_NAME], x,
                                                     str(proc_no), "filtered.bam"]))
 
@@ -164,7 +156,7 @@ The available commands are:
 
                 commands += [species, sp_in, os.path.abspath(sp_out)]
 
-            if options[FilterController.REJECT_MULTIMAPS]:
+            if options[opts.REJECT_MULTIMAPS]:
                 commands.append("--reject-multimaps")
 
             proc = subprocess.Popen(commands)
@@ -201,7 +193,7 @@ class RnaseqFilterController(FilterController):
     filter_control <data-type>
         [--log-level=<log-level>] [--reject-multimaps]
         <block-dir> <output-dir> <sample-name>
-        <mismatch_threshold> <minmatch_threshold> <multimap_threshold>
+        <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
         (<species>) (<species>) ...
 
 Option:
@@ -219,7 +211,7 @@ Option:
 <minmatch-threshold>
     Maximum percentage of read length allowed to not be mapped during
     filtering.
-<multimap_threshold>
+<multimap-threshold>
     Maximum number of multiple mappings allowed during filtering.
 --reject-multimaps
     If set, any read which multimaps to any species' genome will be rejected
@@ -254,7 +246,7 @@ Usage:
     filter_control <data-type>
         [--log-level=<log-level>] [--reject-multimaps]
         <block-dir> <output-dir> <sample-name>
-        <mismatch_threshold> <minmatch_threshold> <multimap_threshold>
+        <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
         (<species>) (<species>) ...
 
 Option:
@@ -278,7 +270,7 @@ Option:
 <minmatch-threshold>
     Maximum percentage of read length allowed to not be mapped during
     filtering.
-<multimap_threshold>
+<multimap-threshold>
     Maximum number of multiple mappings allowed during filtering.
 --reject-multimaps
     If set, any read which multimaps to any species' genome will be rejected

@@ -1,21 +1,13 @@
 import textwrap
-
 import docopt
 import schema
+import sargasso.separator.options as opts
 
 from sargasso import __version__
-from sargasso.separator.options import Options
 from sargasso.utils import log
 
 
 class CommandlineParser(object):
-    def __init__(self):
-        # self.DATA_TYPE=data_type
-        # self.args = args
-        # self.doc = doc
-        # self.pv = ParameterValidator()
-        pass
-
     @classmethod
     def parse(cls, args, doc, options_first=False):
         # Read in command-line options
@@ -28,8 +20,8 @@ class CommandlineParser(object):
     def parse_parameters(cls, args, doc, options_first=False):
         options = cls.parse(args, doc, options_first)
         if not options_first:
-            options[Options.SAMPLE_INFO_INDEX] = cls.parse_sample_info(options)
-            options[Options.SPECIES_OPTIONS_INDEX] = cls.parse_species_options(options)
+            options[opts.SAMPLE_INFO_INDEX] = cls.parse_sample_info(options)
+            options[opts.SPECIES_OPTIONS_INDEX] = cls.parse_species_options(options)
             options = cls._parse_sargasso_strategy(options)
         return options
 
@@ -42,26 +34,26 @@ class CommandlineParser(object):
 
     @classmethod
     def _parse_sargasso_strategy(cls, options):
-        if options[Options.OPTIMAL_STRATEGY]:
-            options[Options.MISMATCH_THRESHOLD] = 1
-            options[Options.MINMATCH_THRESHOLD] = 2
-            options[Options.MULTIMAP_THRESHOLD] = 999999
-            options[Options.REJECT_MULTIMAPS] = False
-        elif options[Options.CONSERVATIVE_STRATEGY]:
-            options[Options.MISMATCH_THRESHOLD] = 0
-            options[Options.MINMATCH_THRESHOLD] = 0
-            options[Options.MULTIMAP_THRESHOLD] = 1
-            options[Options.REJECT_MULTIMAPS] = True
-        elif options[Options.RECALL_STRATEGY]:
-            options[Options.MISMATCH_THRESHOLD] = 2
-            options[Options.MINMATCH_THRESHOLD] = 10
-            options[Options.MULTIMAP_THRESHOLD] = 999999
-            options[Options.REJECT_MULTIMAPS] = False
-        elif options[Options.PERMISSIVE_STRATEGY]:
-            options[Options.MISMATCH_THRESHOLD] = 25
-            options[Options.MINMATCH_THRESHOLD] = 25
-            options[Options.MULTIMAP_THRESHOLD] = 999999
-            options[Options.REJECT_MULTIMAPS] = False
+        if options[opts.OPTIMAL_STRATEGY]:
+            options[opts.MISMATCH_THRESHOLD] = 1
+            options[opts.MINMATCH_THRESHOLD] = 2
+            options[opts.MULTIMAP_THRESHOLD] = 999999
+            options[opts.REJECT_MULTIMAPS] = False
+        elif options[opts.CONSERVATIVE_STRATEGY]:
+            options[opts.MISMATCH_THRESHOLD] = 0
+            options[opts.MINMATCH_THRESHOLD] = 0
+            options[opts.MULTIMAP_THRESHOLD] = 1
+            options[opts.REJECT_MULTIMAPS] = True
+        elif options[opts.RECALL_STRATEGY]:
+            options[opts.MISMATCH_THRESHOLD] = 2
+            options[opts.MINMATCH_THRESHOLD] = 10
+            options[opts.MULTIMAP_THRESHOLD] = 999999
+            options[opts.REJECT_MULTIMAPS] = False
+        elif options[opts.PERMISSIVE_STRATEGY]:
+            options[opts.MISMATCH_THRESHOLD] = 25
+            options[opts.MINMATCH_THRESHOLD] = 25
+            options[opts.MULTIMAP_THRESHOLD] = 999999
+            options[opts.REJECT_MULTIMAPS] = False
         return options
 
     @classmethod
@@ -102,9 +94,9 @@ class CommandlineParser(object):
         Return an object encapsulating samples and their accompanying read files.
         options: dictionary of command-line options
         """
-        sample_info = SampleInfo(options[Options.READS_BASE_DIR])
+        sample_info = SampleInfo(options[opts.READS_BASE_DIR])
 
-        for line in open(options[Options.SAMPLES_FILE], 'r'):
+        for line in open(options[opts.SAMPLES_FILE_ARG], 'r'):
             sample_data = line.split()
 
             if len(sample_data) < 2 or len(sample_data) > 3:
@@ -123,7 +115,7 @@ class CommandlineParser(object):
     @classmethod
     def parse_species_options(cls, options):
         species_options = {}
-        for i, species in enumerate(options[Options.SPECIES]):
+        for i, species in enumerate(options[opts.SPECIES_ARG]):
             species_options[i] = cls._parse_species_options(options, i)
         return species_options
 
@@ -142,23 +134,23 @@ class RnaseqCommandlineParser(CommandlineParser):
         species_index: which species to return options for
         """
 
-        species_options = {Options.SPECIES_NAME: options[Options.SPECIES][species_index]}
+        species_options = {opts.SPECIES_NAME: options[opts.SPECIES_ARG][species_index]}
 
-        star_infos = options[Options.SPECIES_INFO][species_index].split(",")
+        star_infos = options[opts.SPECIES_INFO_ARG][species_index].split(",")
 
         if len(star_infos) == 1:
-            species_options[Options.MAPPER_INDEX] = star_infos[0]
-            species_options[Options.GTF_FILE] = None
-            species_options[Options.GENOME_FASTA] = None
+            species_options[opts.MAPPER_INDEX] = star_infos[0]
+            species_options[opts.GTF_FILE] = None
+            species_options[opts.GENOME_FASTA] = None
         elif len(star_infos) == 2:
-            species_options[Options.MAPPER_INDEX] = None
-            species_options[Options.GTF_FILE] = star_infos[0]
-            species_options[Options.GENOME_FASTA] = star_infos[1]
+            species_options[opts.MAPPER_INDEX] = None
+            species_options[opts.GTF_FILE] = star_infos[0]
+            species_options[opts.GENOME_FASTA] = star_infos[1]
         else:
             raise schema.SchemaError(
                 None, "Should specify either a STAR index or both GTF file " +
                       "and genome FASTA directory for species {species}.".
-                      format(species=species_options[Options.SPECIES_NAME]))
+                      format(species=species_options[opts.SPECIES_NAME]))
 
         return species_options
 
@@ -172,16 +164,16 @@ class ChipseqCommandlineParser(CommandlineParser):
         species_index: which species to return options for
         """
 
-        species_options = {Options.SPECIES_NAME: options[Options.SPECIES][species_index]}
+        species_options = {opts.SPECIES_NAME: options[opts.SPECIES_ARG][species_index]}
 
-        star_infos = options[Options.SPECIES_INFO][species_index]
+        star_infos = options[opts.SPECIES_INFO_ARG][species_index]
 
-        if options[Options.SPECIES_INFO][species_index].endswith('.fa'):
-            species_options[Options.MAPPER_INDEX] = None
-            species_options[Options.GENOME_FASTA] = star_infos
+        if options[opts.SPECIES_INFO_ARG][species_index].endswith('.fa'):
+            species_options[opts.MAPPER_INDEX] = None
+            species_options[opts.GENOME_FASTA] = star_infos
         else:
-            species_options[Options.MAPPER_INDEX] = star_infos
-            species_options[Options.GENOME_FASTA] = None
+            species_options[opts.MAPPER_INDEX] = star_infos
+            species_options[opts.GENOME_FASTA] = None
 
         return species_options
 

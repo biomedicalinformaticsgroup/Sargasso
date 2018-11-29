@@ -1,9 +1,9 @@
 import os.path
 import schema
-from schema import And, Or, Schema, Use
+import sargasso.separator.options as opts
 
+from schema import And, Or, Schema, Use
 from sargasso.utils import log
-from sargasso.separator.options import Options
 
 
 class ParameterValidator(object):
@@ -18,29 +18,29 @@ class ParameterValidator(object):
 
         options: dictionary of command-line options.
         """
-        sample_info = options[Options.SAMPLE_INFO_INDEX]
-        species_options = options[Options.SPECIES_OPTIONS_INDEX]
+        sample_info = options[opts.SAMPLE_INFO_INDEX]
+        species_options = options[opts.SPECIES_OPTIONS_INDEX]
 
         try:
             cls.validate_log_level(options)
             cls.validate_dir_option(
-                options[Options.READS_BASE_DIR], "Reads base directory does not exist",
+                options[opts.READS_BASE_DIR], "Reads base directory does not exist",
                 nullable=True)
-            options[Options.NUM_THREADS] = cls.validate_int_option(
-                options[Options.NUM_THREADS],
+            options[opts.NUM_THREADS] = cls.validate_int_option(
+                options[opts.NUM_THREADS],
                 "Number of threads must be a positive integer",
                 min_val=1, nullable=True)
             cls.validate_file_option(
-                options[Options.SAMPLES_FILE], "Could not open samples definition file")
+                options[opts.SAMPLES_FILE_ARG], "Could not open samples definition file")
             cls.validate_dir_option(
-                options[Options.OUTPUT_DIR], "Output directory should not exist",
+                options[opts.OUTPUT_DIR_ARG], "Output directory should not exist",
                 should_exist=False)
 
             cls.validate_threshold_options(
-                options, Options.MISMATCH_THRESHOLD, Options.MINMATCH_THRESHOLD,
-                Options.MULTIMAP_THRESHOLD)
+                options, opts.MISMATCH_THRESHOLD, opts.MINMATCH_THRESHOLD,
+                opts.MULTIMAP_THRESHOLD)
 
-            for i, species in enumerate(options[Options.SPECIES]):
+            for i, species in enumerate(options[opts.SPECIES_ARG]):
                 cls._validate_species_options(species, species_options[i])
 
             # TODO: validate that all samples consistently have either single- or
@@ -258,15 +258,15 @@ class RnaseqParameterValidator(ParameterValidator):
         species_options: dictionary of options specific to a particular species.
         """
         cls.validate_file_option(
-            species_options[Options.GTF_FILE],
+            species_options[opts.GTF_FILE],
             "Could not open species {species} GTF file".format(species=species),
             nullable=True)
         cls.validate_dir_option(
-            species_options[Options.GENOME_FASTA],
+            species_options[opts.GENOME_FASTA],
             "Genome FASTA directory for species {species} should exist".format(species=species),
             nullable=True)
         cls.validate_dir_option(
-            species_options[Options.MAPPER_INDEX],
+            species_options[opts.MAPPER_INDEX],
             "STAR index directory for species {species} should exist".format(species=species),
             nullable=True)
 
@@ -281,10 +281,10 @@ class ChipseqParameterValidator(ParameterValidator):
         species_options: dictionary of options specific to a particular species.
         """
         cls.validate_file_option(
-            species_options[Options.GENOME_FASTA],
+            species_options[opts.GENOME_FASTA],
             "Could not open species {species} FASTA file".format(species=species),
             nullable=True)
         cls.validate_dir_option(
-            species_options[Options.MAPPER_INDEX],
+            species_options[opts.MAPPER_INDEX],
             "Bowtie2 index directory for species {species} should exist".format(species=species),
             nullable=True)
