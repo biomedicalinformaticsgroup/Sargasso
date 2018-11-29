@@ -43,19 +43,3 @@ class SamUtils(object):
 
         if current_hits is not None:
             yield current_hits
-
-# class RnaseqSamUtils(SamUtils):
-#     pass
-#
-#
-# class ChipseqSamUtils(SamUtils):
-#     pass
-#
-#
-# class SamUtilsManager(Manager):
-#     SAMUTILS = {'rnaseq': ChipseqSamUtils,
-#                 'chipseq': RnaseqSamUtils}
-#
-#     @staticmethod
-#     def get(data_type):
-#         return SamUtilsManager.SAMUTILS[data_type](data_type)

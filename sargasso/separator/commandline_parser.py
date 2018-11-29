@@ -5,7 +5,6 @@ import schema
 
 from sargasso import __version__
 from sargasso.separator.options import Options
-from sargasso.utils.factory import Manager
 from sargasso.utils import log
 
 

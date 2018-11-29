@@ -1,11 +1,14 @@
 from sargasso.filter import hits_info
 from sargasso.filter.separation_stats import SeparationStats
-from sargasso.utils.factory import Manager
 from sargasso.utils.samutils import SamUtils
 
 
 class Filterer(object):
-    def __init__(self, data_type, species_id, input_bam, output_bam, logger):
+    def __init__(
+        self, hits_info_cls, data_type, species_id,
+        input_bam, output_bam, logger):
+
+        self.hits_info_cls = hits_info_cls
         self.data_type = data_type
         self.species_id = species_id
         self.stats = SeparationStats(species_id)
@@ -39,7 +42,7 @@ class Filterer(object):
         self.hits_info = None
 
     def update_hits_info(self):
-        self.hits_info = hits_info.HitsInfoManager.get(self.data_type, self.hits_for_read)
+        self.hits_info = self.hits_info_cls(self.data_type, self.hits_for_read)
 
     def write_hits(self):
         for hit in self.hits_for_read:
@@ -60,21 +63,14 @@ class Filterer(object):
 
 
 class RnaseqFilterer(Filterer):
-    pass
+    def __init__(self, data_type, species_id, input_bam, output_bam, logger):
+        Filterer.__init__(
+            self, hits_info.RnaseqHitsInfo, data_type, species_id,
+            input_bam, output_bam, logger)
 
 
 class ChipseqFilterer(Filterer):
-    pass
-
-
-class FilterManager(Manager):
-    FILTERS = {'rnaseq': RnaseqFilterer,
-               'chipseq': ChipseqFilterer}
-
-    @classmethod
-    def get(cls, data_type, species_id, input_bam, output_bam, logger):
-        return cls.FILTERS[data_type](data_type, species_id, input_bam, output_bam, logger)
-
-    @classmethod
-    def _create(cls, *args):
-        raise NotImplementedError('Not Implemented')
+    def __init__(self, data_type, species_id, input_bam, output_bam, logger):
+        Filterer.__init__(
+            self, hits_info.ChipseqHitsInfo, data_type, species_id,
+            input_bam, output_bam, logger)

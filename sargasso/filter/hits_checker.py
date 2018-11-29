@@ -1,7 +1,5 @@
 from collections import namedtuple
 
-from sargasso.utils.factory import Manager
-
 
 class HitsChecker:
     REJECTED = -1
@@ -220,18 +218,3 @@ class RnaseqHitsChecker(HitsChecker):
 
 class ChipseqHitChecker(HitsChecker):
     pass
-
-
-class HitsCheckerManager(Manager):
-    HITSCHECKERS = {'rnaseq': RnaseqHitsChecker,
-                    'chipseq': ChipseqHitChecker}
-
-    @classmethod
-    def get(cls, data_type, mismatch_thresh, minmatch_thresh, multimap_thresh,
-            reject_multimaps, logger):
-        return cls.HITSCHECKERS[data_type](mismatch_thresh, minmatch_thresh, multimap_thresh,
-                                           reject_multimaps, logger)
-
-    @classmethod
-    def _create(cls, data_type):
-        pass

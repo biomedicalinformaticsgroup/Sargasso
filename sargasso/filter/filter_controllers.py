@@ -6,7 +6,6 @@ import schema
 
 from sargasso.separator.commandline_parser import CommandlineParser
 from sargasso.separator.parameter_validator import ParameterValidator
-from sargasso.utils.factory import Manager
 from sargasso.utils import log
 
 

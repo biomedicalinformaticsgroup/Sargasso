@@ -1,7 +1,6 @@
 import os
 
 from sargasso.separator.options import Options
-from sargasso.utils.factory import Manager
 from sargasso.utils import log
 from sargasso.utils.process import Process
 

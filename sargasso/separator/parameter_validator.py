@@ -4,7 +4,6 @@ from schema import And, Or, Schema, Use
 
 from sargasso.utils import log
 from sargasso.separator.options import Options
-from sargasso.utils.factory import Manager
 
 
 class ParameterValidator(object):

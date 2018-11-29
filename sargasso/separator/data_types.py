@@ -29,6 +29,7 @@ def get_data_type_manager(args, docstring):
 
     return _DATA_TYPES[data_type]
 
+
 class _BaseDataTypeManager(object):
     def __init__(
             self,

@@ -1,6 +1,3 @@
-from sargasso.utils.factory import Manager
-
-
 class HitsInfo:
     def __init__(self, data_type, hits):
         self.data_type = data_type
@@ -101,16 +98,3 @@ class ChipseqHitsInfo(HitsInfo):
     @classmethod
     def _get_alignment_scores(cls, hit):
         return hit.get_tag("AS")
-
-
-class HitsInfoManager(Manager):
-    HITSINFO = {'chipseq': ChipseqHitsInfo,
-                'rnaseq': RnaseqHitsInfo}
-
-    @classmethod
-    def get(cls, data_type, hits):
-        return cls.HITSINFO[data_type](data_type, hits)
-
-    @classmethod
-    def _create(cls, *args):
-        raise NotImplementedError('Not Implemented')

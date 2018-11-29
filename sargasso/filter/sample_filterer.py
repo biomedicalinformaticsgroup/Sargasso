@@ -6,7 +6,6 @@ import schema
 from sargasso.filter import filterer, hits_checker
 from sargasso.separator.commandline_parser import CommandlineParser
 from sargasso.separator.parameter_validator import ParameterValidator
-from sargasso.utils.factory import Manager
 from sargasso.utils import log
 
 
@@ -36,7 +35,11 @@ The available commands are:
     MULTIMAP_THRESHOLD = "<multimap-threshold>"
     REJECT_MULTIMAPS = "--reject-multimaps"
 
-    def __init__(self, data_type, commandline_parser):
+    def __init__(self, filterer_cls, hits_checker_cls,
+                 data_type, commandline_parser):
+
+        self.filterer_cls = filterer_cls
+        self.hits_checker_cls = hits_checker_cls
         self.data_type = data_type
         self.commandline_parser = commandline_parser
 
@@ -59,14 +62,18 @@ The available commands are:
     def _filter_sample_reads(self, logger, options):
         logger.info("Starting species separation.")
 
-        h_check = hits_checker.HitsCheckerManager.get(self.data_type,
-                                                      options[SampleFilter.MISMATCH_THRESHOLD],
-                                                      options[SampleFilter.MINMATCH_THRESHOLD],
-                                                      options[SampleFilter.MULTIMAP_THRESHOLD],
-                                                      options[SampleFilter.REJECT_MULTIMAPS], logger)
+        h_check = self.hits_checker_cls(
+                options[SampleFilter.MISMATCH_THRESHOLD],
+                options[SampleFilter.MINMATCH_THRESHOLD],
+                options[SampleFilter.MULTIMAP_THRESHOLD],
+                options[SampleFilter.REJECT_MULTIMAPS],
+                logger)
 
-        filterers = [filterer.FilterManager.get(self.data_type, i + 1, options[SampleFilter.SPECIES_INPUT_BAM][i],
-                                                options[SampleFilter.SPECIES_OUTPUT_BAM][i], logger)
+        filterers = [self.filterer_cls(self.data_type,
+                                       i + 1,
+                                       options[SampleFilter.SPECIES_INPUT_BAM][i],
+                                       options[SampleFilter.SPECIES_OUTPUT_BAM][i],
+                                       logger)
                      for i, species in enumerate(options[SampleFilter.SPECIES])]
 
         all_filterers = filterers
@@ -208,6 +215,11 @@ Note: the input BAM files MUST be sorted in read name order. Failure to
 ensure input BAM files are correctly sorted will result in erroneous output.
 """
 
+    def __init__(self, data_type, commandline_parser):
+        SampleFilter.__init__(
+            self, filterer.RnaseqFilterer, hits_checker.RnaseqHitsChecker,
+            data_type, commandline_parser)
+
 
 class ChipseqSampleFilter(SampleFilter):
     DOC = """
@@ -255,4 +267,8 @@ themselves.
 Note: the input BAM files MUST be sorted in read name order. Failure to
 ensure input BAM files are correctly sorted will result in erroneous output.
 """
-    pass
+
+    def __init__(self, data_type, commandline_parser):
+        SampleFilter.__init__(
+            self, filterer.ChipseqFilterer, hits_checker.ChipseqHitChecker,
+            data_type, commandline_parser)

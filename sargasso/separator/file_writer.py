@@ -6,7 +6,6 @@ import os
 import os.path
 
 from sargasso.separator.options import Options
-from sargasso.utils.factory import Manager
 
 
 class Writer(object):
