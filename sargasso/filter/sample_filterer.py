@@ -103,7 +103,8 @@ The available commands are:
                     min_read_name = read_name
 
             if __debug__:
-                logger.debug("Read:{}".format(competing_hits_managers[0].hits_for_read[0].qname))
+                logger.debug("Read:{}".format(
+                    competing_hits_managers[0].hits_for_read[0].qname))
 
             # If there's only one hits manager for this read, write hits for
             # that read to the output file for that species (or discard as
@@ -121,7 +122,8 @@ The available commands are:
         for filt in all_hits_managers:
             filt.log_stats()
 
-        self._write_stats(all_hits_managers, options[SampleFilterer.SPECIES_OUTPUT_BAM][0])
+        self._write_stats(all_hits_managers,
+                          options[SampleFilterer.SPECIES_OUTPUT_BAM][0])
 
     # write filter stats to table in file
     @classmethod

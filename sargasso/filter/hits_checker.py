@@ -14,7 +14,9 @@ class HitsChecker:
     CIGAR_OP_REF_DELETION = 2  # From pysam
     CIGAR_OP_REF_SKIP = 3  # From pysam
 
-    ThresholdData = namedtuple('ThresholdData', ['index', 'violated', 'multimaps', 'mismatches', 'cigar_check'])
+    ThresholdData = namedtuple(
+        'ThresholdData',
+        ['index', 'violated', 'multimaps', 'mismatches', 'cigar_check'])
 
     def __init__(self, mismatch_thresh, minmatch_thresh, multimap_thresh,
                  reject_multimaps, logger):
@@ -81,8 +83,10 @@ class HitsChecker:
                 if hits_manager.hits_for_read is None:
                     hits_manager.get_next_read_hits()
                     if __debug__:
-                        self.logger.debug("Read:{}".format(hits_manager.hits_for_read[0].qname))
-                        self.logger.debug('assigned due to only one competing hits manager!')
+                        self.logger.debug(
+                            "Read:{}".format(hits_manager.hits_for_read[0].qname))
+                        self.logger.debug(
+                            'assigned due to only one competing hits manager!')
                 self.check_and_write_hits_for_read(hits_manager)
         except StopIteration:
             pass
@@ -96,17 +100,22 @@ class HitsChecker:
         if hits_info.get_multimaps() > self.multimap_thresh:
             violated = True
             if __debug__:
-                self.logger.debug('only one competing hits manager but violated multimap.')
+                self.logger.debug(
+                    'only one competing hits manager but violated multimap.')
 
-        if hits_info.get_primary_mismatches() > round(self.mismatch_thresh * hits_info.get_total_length()):
+        if hits_info.get_primary_mismatches() > \
+                round(self.mismatch_thresh * hits_info.get_total_length()):
             violated = True
             if __debug__:
-                self.logger.debug('only one competing hits manager but violated primary mismatches.')
+                self.logger.debug(
+                    'only one competing hits manager but violated primary " + \
+                    "mismatches.')
 
         if self._check_cigars(hits_info) == self.CIGAR_FAIL:
             violated = True
             if __debug__:
-                self.logger.debug('only one competing hits manager but violated primary CIGAR.')
+                self.logger.debug(
+                    'only one competing hits manager but violated primary CIGAR.')
 
         return not violated
 

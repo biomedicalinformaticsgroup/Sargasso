@@ -115,7 +115,8 @@ The available commands are:
                 "Ambiguous-Hits-" + species_text, "Ambiguous-Reads-" + species_text
             ]
 
-        out_file = os.path.join(options[opts.OUTPUT_DIR_ARG], "filtering_result_summary.txt")
+        out_file = os.path.join(options[opts.OUTPUT_DIR_ARG],
+                                "filtering_result_summary.txt")
         with open(out_file, 'w') as outf:
             outf.write("\t".join(cols) + "\n")
 
@@ -126,7 +127,8 @@ The available commands are:
         logger: logging object
         options: dictionary of command-line options
         """
-        block_files = self._get_block_files(options[FilterController.BLOCK_DIR], options[opts.SPECIES_ARG][0])
+        block_files = self._get_block_files(options[FilterController.BLOCK_DIR],
+                                            options[opts.SPECIES_ARG][0])
 
         # keep track of all processes
         all_processes = []
@@ -145,12 +147,14 @@ The available commands are:
                         options[opts.MULTIMAP_THRESHOLD_ARG]]
 
             for species in options[opts.SPECIES_ARG]:
-                sp_in = self._get_input_path(options[FilterController.BLOCK_DIR], block_file, species)
+                sp_in = self._get_input_path(options[FilterController.BLOCK_DIR],
+                                             block_file, species)
 
                 get_output_path = lambda x: os.path.join(
                     options[opts.OUTPUT_DIR_ARG],
-                    self.BLOCK_FILE_SEPARATOR.join([options[FilterController.SAMPLE_NAME], x,
-                                                    str(proc_no), "filtered.bam"]))
+                    self.BLOCK_FILE_SEPARATOR.join(
+                        [options[FilterController.SAMPLE_NAME], x,
+                         str(proc_no), "filtered.bam"]))
 
                 sp_out = get_output_path(species)
 
@@ -237,7 +241,6 @@ themselves.
 Note: the input BAM files MUST be sorted in read name order. Failure to ensure
 input BAM files are correctly sorted will result in erroneous output.
 """
-    pass
 
 
 class ChipseqFilterController(FilterController):
@@ -290,4 +293,3 @@ themselves.
 Note: the input BAM files MUST be sorted in read name order. Failure to ensure
 input BAM files are correctly sorted will result in erroneous output.
 """
-    pass
