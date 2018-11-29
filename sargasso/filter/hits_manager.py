@@ -1,23 +1,21 @@
+import sargasso.utils.samutils as su
+
 from sargasso.filter import hits_info
 from sargasso.filter.separation_stats import SeparationStats
-from sargasso.utils.samutils import SamUtils
 
 
 class HitsManager(object):
     def __init__(
-        self, hits_info_cls, species_id,
-        input_bam, output_bam, logger):
+        self, hits_info_cls, species_id, input_bam, output_bam, logger):
 
         self.hits_info_cls = hits_info_cls
         self.species_id = species_id
         self.stats = SeparationStats(species_id)
-        self.samutils = SamUtils()
 
-        input_hits = self.samutils.open_samfile_for_read(input_bam)
-        self.output_bam = self.samutils.open_samfile_for_write(
-            output_bam, input_hits)
+        input_hits = su.open_samfile_for_read(input_bam)
+        self.output_bam = su.open_samfile_for_write(output_bam, input_hits)
 
-        self.hits_generator = self.samutils.hits_generator(input_hits)
+        self.hits_generator = su.hits_generator(input_hits)
         self.hits_for_read = None
         self.hits_info = None
         self.count = 0
