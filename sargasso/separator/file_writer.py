@@ -349,7 +349,7 @@ class MakefileWriter(Writer):
         raise NotImplementedError()
 
 
-class RnaseqMakefileWriter(MakefileWriter):
+class RnaSeqMakefileWriter(MakefileWriter):
 
     # Write Makefile to output directory
     def write(self, logger, options):
@@ -493,7 +493,7 @@ class RnaseqMakefileWriter(MakefileWriter):
         return "{species}_GENOME_FASTA_DIR".format(species=species.upper())
 
 
-class ChipseqMakefileWriter(MakefileWriter):
+class DnaSeqMakefileWriter(MakefileWriter):
     # Write Makefile to output directory
     def write(self, logger, options):
         """

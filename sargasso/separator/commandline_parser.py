@@ -124,7 +124,7 @@ class CommandlineParser(object):
         raise NotImplementedError('Need to implement in subclass')
 
 
-class RnaseqCommandlineParser(CommandlineParser):
+class RnaSeqCommandlineParser(CommandlineParser):
 
     @classmethod
     def _parse_species_options(cls, options, species_index):
@@ -156,7 +156,7 @@ class RnaseqCommandlineParser(CommandlineParser):
         return species_options
 
 
-class ChipseqCommandlineParser(CommandlineParser):
+class DnaSeqCommandlineParser(CommandlineParser):
     @classmethod
     def _parse_species_options(cls, options, species_index):
         """

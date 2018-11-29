@@ -250,7 +250,7 @@ class ParameterValidator(object):
             1, True)
 
 
-class RnaseqParameterValidator(ParameterValidator):
+class RnaSeqParameterValidator(ParameterValidator):
 
     @classmethod
     def _validate_species_options(cls, species, species_options):
@@ -275,7 +275,7 @@ class RnaseqParameterValidator(ParameterValidator):
             nullable=True)
 
 
-class ChipseqParameterValidator(ParameterValidator):
+class DnaSeqParameterValidator(ParameterValidator):
 
     @classmethod
     def _validate_species_options(cls, species, species_options):

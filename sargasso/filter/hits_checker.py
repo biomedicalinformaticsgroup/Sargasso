@@ -221,9 +221,9 @@ class HitsChecker:
         return response
 
 
-class RnaseqHitsChecker(HitsChecker):
+class RnaSeqHitsChecker(HitsChecker):
     pass
 
 
-class ChipseqHitsChecker(HitsChecker):
+class DnaSeqHitsChecker(HitsChecker):
     pass

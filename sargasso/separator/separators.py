@@ -17,8 +17,8 @@ Options:
     {ver_option_description}
 
 The available data types are:
-   rnaseq       RNA-seq data
-   chipseq      ChIP-seq data
+   rnaseq       RNA-sequencing data
+   dnaseq       DNA-sequencing data
         """
 
     def __init__(self, commandline_parser, parameter_validator,
@@ -64,7 +64,7 @@ The available data types are:
         subprocess.Popen(["nohup", "make"])
         os.chdir(cwd)
 
-class RnaseqSeparator(Separator):
+class RnaSeqSeparator(Separator):
     DOC = """Usage:
     species_separator <data-type>
         [--help] [--version]
@@ -185,7 +185,7 @@ species_separator --reads-base-dir=/srv/data/rnaseq --num-threads 4 --run-separa
 """
 
 
-class ChipseqSeparator(Separator):
+class DnaSeqSeparator(Separator):
     DOC = """
 Usage:
     species_separator <data-type>
@@ -277,7 +277,7 @@ Options:
 {log_option_spec}
     {log_option_description}
 
-    species_separator chipseq --reads-base-dir=/home/xinhe/Projects/Sargasso/pipeline_test/data/fastq/ --num-threads 4 \
+    species_separator dnaseq --reads-base-dir=/home/xinhe/Projects/Sargasso/pipeline_test/data/fastq/ --num-threads 4 \
                         --run-separation /home/xinhe/Projects/Sargasso/pipeline_test/data/fastq/chipseq.tsv \
                         my_results \
                         mouse /srv/data/genome/mouse/ensembl-93/bowtie2_indexes/primary_assembly \

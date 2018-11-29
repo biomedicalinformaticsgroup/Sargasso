@@ -74,32 +74,32 @@ class _BaseDataTypeManager(object):
 
 
 @_data_type
-class _RnaseqDataTypeManager(_BaseDataTypeManager):
+class _RnaSeqDataTypeManager(_BaseDataTypeManager):
     NAME = "rnaseq"
 
     def __init__(self):
         _BaseDataTypeManager.__init__(
                 self,
-                clp.RnaseqCommandlineParser,
-                pv.RnaseqParameterValidator,
-                fw.RnaseqMakefileWriter,
-                sps.RnaseqSeparator,
-                fcs.RnaseqFilterController,
-                sfs.RnaseqSampleFilterer)
+                clp.RnaSeqCommandlineParser,
+                pv.RnaSeqParameterValidator,
+                fw.RnaSeqMakefileWriter,
+                sps.RnaSeqSeparator,
+                fcs.RnaSeqFilterController,
+                sfs.RnaSeqSampleFilterer)
 
 
 @_data_type
-class _ChipseqDataTypeManager(_BaseDataTypeManager):
-    NAME = "chipseq"
+class _DnaSeqDataTypeManager(_BaseDataTypeManager):
+    NAME = "dnaseq"
 
     def __init__(self):
         _BaseDataTypeManager.__init__(
                 self,
-                clp.ChipseqCommandlineParser,
-                pv.ChipseqParameterValidator,
-                fw.ChipseqMakefileWriter,
-                sps.ChipseqSeparator,
-                fcs.ChipseqFilterController,
-                sfs.ChipseqSampleFilterer)
+                clp.DnaSeqCommandlineParser,
+                pv.DnaSeqParameterValidator,
+                fw.DnaSeqMakefileWriter,
+                sps.DnaSeqSeparator,
+                fcs.DnaSeqFilterController,
+                sfs.DnaSeqSampleFilterer)
 
 

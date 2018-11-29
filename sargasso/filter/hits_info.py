@@ -69,7 +69,7 @@ class HitsInfo:
         raise NotImplementedError('Need to implement in subclass')
 
 
-class RnaseqHitsInfo(HitsInfo):
+class RnaSeqHitsInfo(HitsInfo):
     @classmethod
     def _get_multimaps(cls, hits):
         return hits[0].get_tag("NH")
@@ -83,7 +83,7 @@ class RnaseqHitsInfo(HitsInfo):
         return hit.get_tag("AS")
 
 
-class ChipseqHitsInfo(HitsInfo):
+class DnaSeqHitsInfo(HitsInfo):
     @classmethod
     def _get_multimaps(cls, hits):
         if cls._is_paired_hit(hits[0]):

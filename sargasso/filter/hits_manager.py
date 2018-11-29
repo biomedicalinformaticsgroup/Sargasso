@@ -59,15 +59,15 @@ class HitsManager(object):
         self.stats.ambiguous_hits(self.hits_for_read)
 
 
-class RnaseqHitsManager(HitsManager):
+class RnaSeqHitsManager(HitsManager):
     def __init__(self, species_id, input_bam, output_bam, logger):
         HitsManager.__init__(
-            self, hits_info.RnaseqHitsInfo, species_id,
+            self, hits_info.RnaSeqHitsInfo, species_id,
             input_bam, output_bam, logger)
 
 
-class ChipseqHitsManager(HitsManager):
+class DnaSeqHitsManager(HitsManager):
     def __init__(self, species_id, input_bam, output_bam, logger):
         HitsManager.__init__(
-            self, hits_info.ChipseqHitsInfo, species_id,
+            self, hits_info.DnaSeqHitsInfo, species_id,
             input_bam, output_bam, logger)

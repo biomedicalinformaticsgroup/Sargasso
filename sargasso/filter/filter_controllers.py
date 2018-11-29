@@ -22,8 +22,8 @@ Options:
     {ver_option_description}
 
 The available commands are:
-   rnaseq   	RNA-seq data
-   chipseq  	ChIP-seq data
+   rnaseq   	RNA-sequencing data
+   dnaseq  	DNA-sequencing data
 
 """
     BLOCK_DIR = "<block-dir>"
@@ -192,7 +192,7 @@ The available commands are:
         self._run_processes(self.logger, options)
 
 
-class RnaseqFilterController(FilterController):
+class RnaSeqFilterController(FilterController):
     DOC = """Usage:
     filter_control <data-type>
         [--log-level=<log-level>] [--reject-multimaps]
@@ -243,7 +243,7 @@ input BAM files are correctly sorted will result in erroneous output.
 """
 
 
-class ChipseqFilterController(FilterController):
+class DnaSeqFilterController(FilterController):
     DOC = """
 Usage:
     filter_control <data-type>

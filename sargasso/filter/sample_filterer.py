@@ -23,8 +23,8 @@ Options:
     {ver_option_description}
 
 The available commands are:
-   rnaseq       RNA-seq data
-   chipseq      ChIP-seq data
+   rnaseq       RNA-sequencing data
+   dnaseq       DNA-sequencing data
 
 """
     SPECIES_INPUT_BAM = "<species-input-bam>"
@@ -167,7 +167,7 @@ The available commands are:
         self._filter_sample_reads(self.logger, options)
 
 
-class RnaseqSampleFilterer(SampleFilterer):
+class RnaSeqSampleFilterer(SampleFilterer):
     DOC = """
 Usage:
 filter_sample_reads <data-type>
@@ -216,11 +216,11 @@ ensure input BAM files are correctly sorted will result in erroneous output.
 
     def __init__(self, commandline_parser):
         SampleFilterer.__init__(
-            self, hits_manager.RnaseqHitsManager, hits_checker.RnaseqHitsChecker,
+            self, hits_manager.RnaSeqHitsManager, hits_checker.RnaSeqHitsChecker,
             commandline_parser)
 
 
-class ChipseqSampleFilterer(SampleFilterer):
+class DnaSeqSampleFilterer(SampleFilterer):
     DOC = """
 Usage:
 filter_sample_reads <data-type>
@@ -269,5 +269,5 @@ ensure input BAM files are correctly sorted will result in erroneous output.
 
     def __init__(self, commandline_parser):
         SampleFilterer.__init__(
-            self, hits_manager.ChipseqHitsManager, hits_checker.ChipseqHitsChecker,
+            self, hits_manager.DnaSeqHitsManager, hits_checker.DnaSeqHitsChecker,
             commandline_parser)
