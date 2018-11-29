@@ -2,7 +2,6 @@ import os
 import sargasso.separator.options as opts
 
 from sargasso.utils import log
-from sargasso.utils.process import Process
 
 
 class Separator(object):
@@ -60,8 +59,10 @@ The available data types are:
         logger: logging object
         options: dictionary of command-line options
         """
-        Process.run_in_directory(options[opts.OUTPUT_DIR_ARG], "make")
-
+        cwd = os.getcwd()
+        os.chdir(options[opts.OUTPUT_DIR_ARG])
+        subprocess.Popen(["nohup", "make"])
+        os.chdir(cwd)
 
 class RnaseqSeparator(Separator):
     DOC = """Usage:
