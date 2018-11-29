@@ -3,7 +3,7 @@ from sargasso.filter.separation_stats import SeparationStats
 from sargasso.utils.samutils import SamUtils
 
 
-class Filterer(object):
+class HitsManager(object):
     def __init__(
         self, hits_info_cls, species_id,
         input_bam, output_bam, logger):
@@ -61,15 +61,15 @@ class Filterer(object):
         self.stats.ambiguous_hits(self.hits_for_read)
 
 
-class RnaseqFilterer(Filterer):
+class RnaseqHitsManager(HitsManager):
     def __init__(self, species_id, input_bam, output_bam, logger):
-        Filterer.__init__(
+        HitsManager.__init__(
             self, hits_info.RnaseqHitsInfo, species_id,
             input_bam, output_bam, logger)
 
 
-class ChipseqFilterer(Filterer):
+class ChipseqHitsManager(HitsManager):
     def __init__(self, species_id, input_bam, output_bam, logger):
-        Filterer.__init__(
+        HitsManager.__init__(
             self, hits_info.ChipseqHitsInfo, species_id,
             input_bam, output_bam, logger)

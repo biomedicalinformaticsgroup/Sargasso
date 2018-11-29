@@ -31,15 +31,15 @@ class HitsChecker:
             minm=self.minmatch_thresh,
             mult=self.multimap_thresh))
 
-    def compare_and_write_hits(self, filterers):
+    def compare_and_write_hits(self, hits_managers):
         # Compare the hits for a particular read in each species and decide whether
         # the read can be assigned to one species or another, or if it must be
         # rejected as ambiguous
-        for f in filterers:
-            f.update_hits_info()
+        for m in hits_managers:
+            m.update_hits_info()
 
-        threshold_data = [self._check_thresholds(i, f) for i, f
-                          in enumerate(filterers)]
+        threshold_data = [self._check_thresholds(i, m) for i, m
+                          in enumerate(hits_managers)]
 
         if __debug__:
             for t in threshold_data:
@@ -48,42 +48,42 @@ class HitsChecker:
         assignee = self._assign_hits(threshold_data)
 
         if assignee == self.REJECTED:
-            for filterer in filterers:
-                filterer.add_rejected_hits_to_stats()
+            for hits_manager in hits_managers:
+                hits_manager.add_rejected_hits_to_stats()
         elif assignee == self.AMBIGUOUS:
-            for filterer in filterers:
-                filterer.add_ambiguous_hits_to_stats()
+            for hits_manager in hits_managers:
+                hits_manager.add_ambiguous_hits_to_stats()
         else:
-            for i, filterer in enumerate(filterers):
+            for i, hits_manager in enumerate(hits_managers):
                 if i == assignee:
-                    self.check_and_write_hits_for_read(filterer)
+                    self.check_and_write_hits_for_read(hits_manager)
                 else:
-                    filterer.add_rejected_hits_to_stats()
+                    hits_manager.add_rejected_hits_to_stats()
 
-        for filterer in filterers:
-            filterer.clear_hits()
+        for hits_manager in hits_managers:
+            hits_manager.clear_hits()
 
-    def check_and_write_hits_for_read(self, filterer):
-        if filterer.hits_info is None:
-            filterer.update_hits_info()
+    def check_and_write_hits_for_read(self, hits_manager):
+        if hits_manager.hits_info is None:
+            hits_manager.update_hits_info()
 
-        if self.check_hits(filterer.hits_info):
-            filterer.add_accepted_hits_to_stats()
-            filterer.write_hits()
+        if self.check_hits(hits_manager.hits_info):
+            hits_manager.add_accepted_hits_to_stats()
+            hits_manager.write_hits()
         else:
-            filterer.add_rejected_hits_to_stats()
+            hits_manager.add_rejected_hits_to_stats()
 
-        filterer.clear_hits()
+        hits_manager.clear_hits()
 
-    def check_and_write_hits_for_remaining_reads(self, filterer):
+    def check_and_write_hits_for_remaining_reads(self, hits_manager):
         try:
             while True:
-                if filterer.hits_for_read is None:
-                    filterer.get_next_read_hits()
+                if hits_manager.hits_for_read is None:
+                    hits_manager.get_next_read_hits()
                     if __debug__:
-                        self.logger.debug("Read:{}".format(filterer.hits_for_read[0].qname))
-                        self.logger.debug('assigned due to only one competing filterer!')
-                self.check_and_write_hits_for_read(filterer)
+                        self.logger.debug("Read:{}".format(hits_manager.hits_for_read[0].qname))
+                        self.logger.debug('assigned due to only one competing hits manager!')
+                self.check_and_write_hits_for_read(hits_manager)
         except StopIteration:
             pass
 
@@ -96,28 +96,28 @@ class HitsChecker:
         if hits_info.get_multimaps() > self.multimap_thresh:
             violated = True
             if __debug__:
-                self.logger.debug('only one competing filterer but violated multimap.')
+                self.logger.debug('only one competing hits manager but violated multimap.')
 
         if hits_info.get_primary_mismatches() > round(self.mismatch_thresh * hits_info.get_total_length()):
             violated = True
             if __debug__:
-                self.logger.debug('only one competing filterer but violated primary mismatches.')
+                self.logger.debug('only one competing hits manager but violated primary mismatches.')
 
         if self._check_cigars(hits_info) == self.CIGAR_FAIL:
             violated = True
             if __debug__:
-                self.logger.debug('only one competing filterer but violated primary CIGAR.')
+                self.logger.debug('only one competing hits manager but violated primary CIGAR.')
 
         return not violated
 
     def _assign_hits_standard(self, threshold_data):
         threshold_data = [t for t in threshold_data if not t.violated]
 
-        num_filterers = len(threshold_data)
+        num_hits_managers = len(threshold_data)
 
-        if num_filterers == 0:
+        if num_hits_managers == 0:
             return self.REJECTED
-        elif num_filterers == 1:
+        elif num_hits_managers == 1:
             if __debug__:
                 self.logger.debug('assigned due to only one filter exist!')
             return threshold_data[0].index
@@ -160,9 +160,9 @@ class HitsChecker:
 
         return self._assign_hits_standard(threshold_data)
 
-    def _check_thresholds(self, index, filterer):
+    def _check_thresholds(self, index, hits_manager):
 
-        hits_info = filterer.hits_info
+        hits_info = hits_manager.hits_info
         violated = False
 
         multimaps = hits_info.get_multimaps()

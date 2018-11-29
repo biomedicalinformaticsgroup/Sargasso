@@ -4,7 +4,7 @@ import os.path
 import schema
 import sargasso.separator.options as opts
 
-from sargasso.filter import filterer, hits_checker
+from sargasso.filter import hits_manager, hits_checker
 from sargasso.separator.commandline_parser import CommandlineParser
 from sargasso.separator.parameter_validator import ParameterValidator
 from sargasso.utils import log
@@ -30,9 +30,9 @@ The available commands are:
     SPECIES_INPUT_BAM = "<species-input-bam>"
     SPECIES_OUTPUT_BAM = "<species-output-bam>"
 
-    def __init__(self, filterer_cls, hits_checker_cls, commandline_parser):
+    def __init__(self, hits_manager_cls, hits_checker_cls, commandline_parser):
 
-        self.filterer_cls = filterer_cls
+        self.hits_manager_cls = hits_manager_cls
         self.hits_checker_cls = hits_checker_cls
         self.commandline_parser = commandline_parser
 
@@ -64,74 +64,77 @@ The available commands are:
                 options[opts.REJECT_MULTIMAPS],
                 logger)
 
-        filterers = [self.filterer_cls(i + 1,
-                                       options[SampleFilter.SPECIES_INPUT_BAM][i],
-                                       options[SampleFilter.SPECIES_OUTPUT_BAM][i],
-                                       logger)
+        hits_managers = [self.hits_manager_cls(
+                             i + 1,
+                             options[SampleFilter.SPECIES_INPUT_BAM][i],
+                             options[SampleFilter.SPECIES_OUTPUT_BAM][i],
+                             logger)
                      for i, species in enumerate(options[opts.SPECIES_ARG])]
 
-        all_filterers = filterers
+        all_hits_managers = hits_managers
 
         while True:
-            # Retain only filterers which have hits for the remaining reads
-            filterers = [f for f in filterers if self._get_next_read_name(f) is not None]
+            # Retain only hits managers which have hits for the remaining reads
+            hits_managers = [m for m in hits_managers
+                             if self._get_next_read_name(m) is not None]
 
-            # If no filterers remain, we're done
-            if len(filterers) == 0:
+            # If no hits managers remain, we're done
+            if len(hits_managers) == 0:
                 break
 
-            # If only one filterer remains, all remaining reads in the input file
-            # for that species can be written to the output file for that species
-            # (or discarded as ambiguous, if necessary).
-            if len(filterers) == 1:
-                h_check.check_and_write_hits_for_remaining_reads(filterers[0])
+            # If only one hits manager remains, all remaining reads in the
+            # input file for that species can be written to the output file for
+            # that species (or discarded as ambiguous, if necessary).
+            if len(hits_managers) == 1:
+                h_check.check_and_write_hits_for_remaining_reads(hits_managers[0])
                 break
 
-            # Compare read names for the filterers, and find the set that have the
-            # "lowest" name
-            competing_filterers = [filterers[0]]
-            min_read_name = self._get_next_read_name(filterers[0])
+            # Compare read names for the hits managers, and find the set that
+            # have the "lowest" name
+            competing_hits_managers = [hits_managers[0]]
+            min_read_name = self._get_next_read_name(hits_managers[0])
 
-            for cfilt in filterers[1:]:
-                read_name = self._get_next_read_name(cfilt)
+            for cman in hits_managers[1:]:
+                read_name = self._get_next_read_name(cman)
                 if read_name == min_read_name:
-                    competing_filterers.append(cfilt)
+                    competing_hits_managers.append(cman)
                 elif read_name < min_read_name:
-                    competing_filterers = [cfilt]
+                    competing_hits_managers = [cman]
                     min_read_name = read_name
 
             if __debug__:
-                logger.debug("Read:{}".format(competing_filterers[0].hits_for_read[0].qname))
+                logger.debug("Read:{}".format(competing_hits_managers[0].hits_for_read[0].qname))
 
-            # If there's only one filterer for this read, write hits for that read
-            # to the output file for that species (or discard as ambiguous)
-            if len(competing_filterers) == 1:
+            # If there's only one hits manager for this read, write hits for
+            # that read to the output file for that species (or discard as
+            # ambiguous)
+            if len(competing_hits_managers) == 1:
                 if __debug__:
-                    logger.debug('assigned due to only one competing filterer!')
-                h_check.check_and_write_hits_for_read(competing_filterers[0])
+                    logger.debug('assigned due to only one competing hits manager!')
+                h_check.check_and_write_hits_for_read(competing_hits_managers[0])
                 continue
 
             # Otherwise compare the hits for each species to determine which
             # species to assign the read to.
-            h_check.compare_and_write_hits(competing_filterers)
+            h_check.compare_and_write_hits(competing_hits_managers)
 
-        for filt in all_filterers:
+        for filt in all_hits_managers:
             filt.log_stats()
 
-        self._write_stats(all_filterers, options[SampleFilter.SPECIES_OUTPUT_BAM][0])
+        self._write_stats(all_hits_managers, options[SampleFilter.SPECIES_OUTPUT_BAM][0])
 
     # write filter stats to table in file
     @classmethod
-    def _write_stats(cls, filterers, out_bam):
+    def _write_stats(cls, hits_managers, out_bam):
 
         stats = []
 
-        for filt in filterers:
-            fstats = filt.stats
+        for man in hits_managers:
+            mstats = man.stats
 
-            stats += [fstats.hits_written, fstats.reads_written,
-                      fstats.hits_rejected, fstats.reads_rejected,
-                      fstats.hits_ambiguous, fstats.reads_ambiguous]
+            stats += [mstats.hits_written, mstats.reads_written,
+                      mstats.hits_rejected, mstats.reads_rejected,
+                      mstats.hits_ambiguous, mstats.reads_ambiguous]
 
         out_file = os.path.join(
             os.path.dirname(out_bam), "filtering_result_summary.txt")
@@ -211,7 +214,7 @@ ensure input BAM files are correctly sorted will result in erroneous output.
 
     def __init__(self, commandline_parser):
         SampleFilter.__init__(
-            self, filterer.RnaseqFilterer, hits_checker.RnaseqHitsChecker,
+            self, hits_manager.RnaseqHitsManager, hits_checker.RnaseqHitsChecker,
             commandline_parser)
 
 
@@ -264,5 +267,5 @@ ensure input BAM files are correctly sorted will result in erroneous output.
 
     def __init__(self, commandline_parser):
         SampleFilter.__init__(
-            self, filterer.ChipseqFilterer, hits_checker.ChipseqHitsChecker,
+            self, hits_manager.ChipseqHitsManager, hits_checker.ChipseqHitsChecker,
             commandline_parser)
