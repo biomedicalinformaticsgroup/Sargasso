@@ -8,9 +8,6 @@ from sargasso.utils import log
 
 class ParameterValidator(object):
 
-    def __init__(self):
-        pass
-
     @classmethod
     def validate(cls, options):
         """
@@ -24,16 +21,19 @@ class ParameterValidator(object):
         try:
             cls.validate_log_level(options)
             cls.validate_dir_option(
-                options[opts.READS_BASE_DIR], "Reads base directory does not exist",
+                options[opts.READS_BASE_DIR],
+                "Reads base directory does not exist",
                 nullable=True)
             options[opts.NUM_THREADS] = cls.validate_int_option(
                 options[opts.NUM_THREADS],
                 "Number of threads must be a positive integer",
                 min_val=1, nullable=True)
             cls.validate_file_option(
-                options[opts.SAMPLES_FILE_ARG], "Could not open samples definition file")
+                options[opts.SAMPLES_FILE_ARG],
+                "Could not open samples definition file")
             cls.validate_dir_option(
-                options[opts.OUTPUT_DIR_ARG], "Output directory should not exist",
+                options[opts.OUTPUT_DIR_ARG],
+                "Output directory should not exist",
                 should_exist=False)
 
             cls.validate_threshold_options(
@@ -107,7 +107,8 @@ class ParameterValidator(object):
         Schema(validator, error=msg).validate(dir_option)
 
     @classmethod
-    def validate_file_option(cls, file_option, msg, should_exist=True, nullable=False):
+    def validate_file_option(cls, file_option, msg,
+                             should_exist=True, nullable=False):
         """
         Check if a file specified by a command line option exists or not.
 
@@ -217,7 +218,8 @@ class ParameterValidator(object):
             for reads_file_list in reads_set.values():
                 for reads_file in reads_file_list:
                     if sample_info.base_reads_dir:
-                        reads_file = os.path.join(sample_info.base_reads_dir, reads_file)
+                        reads_file = os.path.join(sample_info.base_reads_dir,
+                                                  reads_file)
                     cls.validate_file_option(
                         reads_file, "Could not open reads file")
 
@@ -231,8 +233,8 @@ class ParameterValidator(object):
         raise NotImplementedError()
 
     @classmethod
-    def validate_threshold_options(cls,
-                                   options, mismatch_opt_name, minmatch_opt_name, multimap_opt_name):
+    def validate_threshold_options(
+        cls, options, mismatch_opt_name, minmatch_opt_name, multimap_opt_name):
 
         options[mismatch_opt_name] = ParameterValidator.validate_float_option(
             options[mismatch_opt_name],
@@ -263,11 +265,13 @@ class RnaseqParameterValidator(ParameterValidator):
             nullable=True)
         cls.validate_dir_option(
             species_options[opts.GENOME_FASTA],
-            "Genome FASTA directory for species {species} should exist".format(species=species),
+            "Genome FASTA directory for species {species} should exist".format(
+                species=species),
             nullable=True)
         cls.validate_dir_option(
             species_options[opts.MAPPER_INDEX],
-            "STAR index directory for species {species} should exist".format(species=species),
+            "STAR index directory for species {species} should exist".format(
+                species=species),
             nullable=True)
 
 
@@ -286,5 +290,6 @@ class ChipseqParameterValidator(ParameterValidator):
             nullable=True)
         cls.validate_dir_option(
             species_options[opts.MAPPER_INDEX],
-            "Bowtie2 index directory for species {species} should exist".format(species=species),
+            "Bowtie2 index directory for species {species} should exist".format(
+                species=species),
             nullable=True)
