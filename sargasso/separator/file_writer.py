@@ -226,6 +226,7 @@ class MakefileWriter(Writer):
                 options[opts.MINMATCH_THRESHOLD],
                 options[opts.MULTIMAP_THRESHOLD],
                 "--reject-multimaps" if options[opts.REJECT_MULTIMAPS] else "\"\"",
+                options[opts.LOG_LEVEL_OPTION],
                 "{sl}".format(sl=" ".join(options[opts.SPECIES_ARG]))])
 
             if options[opts.DELETE_INTERMEDIATE]:

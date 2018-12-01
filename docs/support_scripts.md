@@ -71,7 +71,7 @@ Usage:
     filter_reads
         <input-dir> <output-dir> <num-threads>
         <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
-        <reject-multimaps>
+        <reject-multimaps> <log-level>
         (<species>) (<species>) ...
 
 For each sample, take the RNA-seq reads mapping to each genome, and assign them to their correct species of origin. ``filter_reads`` is called by the species separation Makefile.
@@ -84,6 +84,7 @@ For each sample, take the RNA-seq reads mapping to each genome, and assign them 
 * ``<minmatch-threshold>`` (_float_): Maximum percentage of read length allowed to not be mapped during filtering.
 * ``<multimap-threshold>`` (_integer_): Maximum number of multi-mappings allowed during filtering.
 * ``<reject-multimaps>`` (_text parameter_): If set to "--reject-multimaps", any read which multimaps to any species' genome will be rejected and not be assigned to any species.
+* ``<log-level>`` (_text parameter_): Sets the minimum severity level at which log messages will be output (one of "debug", "info", "warning", "error" or "criticial").
 * ``<species>`` (_text parameter_): Name of nth species.
 
 filter_sample_reads (Python)

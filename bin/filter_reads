@@ -13,8 +13,9 @@ MISMATCH_THRESHOLD=$6
 MINMATCH_THRESHOLD=$7
 MULTIMAP_THRESHOLD=$8
 REJECT_MULTIMAPS=$9
+LOG_LEVEL=${10}
 
-SPECIES=( "${@:10}" )
+SPECIES=( "${@:11}" )
 
 NUM_SPECIES=${#SPECIES[@]}
 BLOCK_DIR=${OUTPUT_DIR}/Blocks
@@ -240,7 +241,7 @@ first_sample=1
 
 for sample in ${SAMPLES}; do
     create_per_thread_input_files ${sample}
-    filter_control ${DATA_TYPE} ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${MISMATCH_THRESHOLD} ${MINMATCH_THRESHOLD} ${MULTIMAP_THRESHOLD} ${REJECT_MULTIMAPS} ${SPECIES[*]}
+    filter_control ${DATA_TYPE} --log-level=${LOG_LEVEL} ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${MISMATCH_THRESHOLD} ${MINMATCH_THRESHOLD} ${MULTIMAP_THRESHOLD} ${REJECT_MULTIMAPS} ${SPECIES[*]}
     merge_per_thread_filtered_files ${sample}
     cleanup_intermediate_files ${sample}
     calculate_filtering_summary ${sample} ${first_sample}
