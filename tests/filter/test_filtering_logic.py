@@ -141,3 +141,59 @@
 #                             ]
 #
 #                     SampleFilterManager.get(data_type='rnaseq').run(args)
+
+
+from pkg_resources import resource_filename
+
+from sargasso.filter.sample_filter import *
+from pkg_resources import resource_filename
+
+from sargasso.filter.sample_filter import *
+
+def test_filter_sample_reads_for_selected_reads(tmpdir):
+    tmpdir.mkdir("debug")
+    sample_name='HA1'
+    strategy='permissive'
+    data_tpye='rnaseq'
+    species=['human', 'mouse', 'rat']
+
+    if strategy=='best':
+        mismatch_threshold = 1
+        minmatch_threshold = 2
+        multimap_threshold = 999999
+        reject_multimaps = False
+    elif strategy=='conservative':
+        mismatch_threshold = 0
+        minmatch_threshold = 0
+        multimap_threshold = 1
+        reject_multimaps = True
+    elif strategy=='recall':
+        mismatch_threshold = 2
+        minmatch_threshold = 10
+        multimap_threshold = 999999
+        reject_multimaps = False
+    elif strategy=='permissive':
+        mismatch_threshold = 25
+        minmatch_threshold = 25
+        multimap_threshold = 999999
+        reject_multimaps = False
+
+    args = [data_tpye,
+            str(mismatch_threshold),
+            str(minmatch_threshold),
+            str(multimap_threshold)]
+    if(reject_multimaps):
+        args.append('--reject-multimaps')
+
+
+    args.append('--log-level=debug')
+
+
+
+    for i in species:
+        args.append(i)
+        args.append(resource_filename("tests.data.tmp.{}_{}.filtered_reads.Blocks".format(sample_name,strategy),
+                                      "{}___{}___BLOCK___1.bam".format(sample_name,i)))
+        args.append( tmpdir.join("{}_{}_0_filtered.bam".format(sample_name,i)).strpath,)
+
+    SampleFilterManager.get(data_type=data_tpye).run(args)

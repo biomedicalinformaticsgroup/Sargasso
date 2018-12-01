@@ -1,6 +1,6 @@
 NUM_THREADS=2
 
-DATA_TYPE=chipseq
+DATA_TYPE=dnaseq
 
 MAPPER_EXECUTABLE=bowtie2
 
@@ -29,7 +29,7 @@ $(FILTERED_READS): $(SORTED_READS)
 	# For each sample, take the reads mapping to each genome and filter them
 	# to their correct species of origin
 	mkdir -p $(FILTERED_READS)
-	filter_reads $(DATA_TYPE) "$(SAMPLES)" $(SORTED_READS) $(FILTERED_READS) $(NUM_THREADS) 1.0 2.0 999999 "" mouse human rat
+	filter_reads $(DATA_TYPE) "$(SAMPLES)" $(SORTED_READS) $(FILTERED_READS) $(NUM_THREADS) 1.0 2.0 999999 "" info mouse human rat
 
 $(SORTED_READS): $(MAPPED_READS)
 	# For each sample, sort the mapped reads into read name order
@@ -39,7 +39,7 @@ $(SORTED_READS): $(MAPPED_READS)
 $(MAPPED_READS): $(MAPPER_INDICES)/mouse $(MAPPER_INDICES)/human $(MAPPER_INDICES)/rat $(COLLATE_RAW_READS)
 	# Map reads for each sample to each species' genome
 	mkdir -p $(MAPPED_READS)
-	map_reads_chipseq "mouse human rat" "$(SAMPLES)" $(MAPPER_INDICES) $(NUM_THREADS) $(COLLATE_RAW_READS) $(MAPPED_READS) paired bowtie2
+	map_reads_dnaseq "mouse human rat" "$(SAMPLES)" $(MAPPER_INDICES) $(NUM_THREADS) $(COLLATE_RAW_READS) $(MAPPED_READS) paired bowtie2
 
 $(COLLATE_RAW_READS): 
 	# Create a directory with sub-directories for each sample, each of which
