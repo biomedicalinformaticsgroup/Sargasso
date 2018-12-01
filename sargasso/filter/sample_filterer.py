@@ -82,6 +82,9 @@ The available commands are:
             if len(hits_managers) == 0:
                 break
 
+            if __debug__:
+                logger.debug("Read:{}".format(hits_managers[0].hits_for_read[0].qname))
+
             # If only one hits manager remains, all remaining reads in the
             # input file for that species can be written to the output file for
             # that species (or discarded as ambiguous, if necessary).
@@ -102,16 +105,11 @@ The available commands are:
                     competing_hits_managers = [cman]
                     min_read_name = read_name
 
-            if __debug__:
-                logger.debug("Read:{}".format(
-                    competing_hits_managers[0].hits_for_read[0].qname))
 
             # If there's only one hits manager for this read, write hits for
             # that read to the output file for that species (or discard as
             # ambiguous)
             if len(competing_hits_managers) == 1:
-                if __debug__:
-                    logger.debug('assigned due to only one competing hits manager!')
                 h_check.check_and_write_hits_for_read(competing_hits_managers[0])
                 continue
 

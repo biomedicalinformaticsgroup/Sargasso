@@ -58,7 +58,9 @@ class HitsChecker:
         else:
             for i, hits_manager in enumerate(hits_managers):
                 if i == assignee:
-                    self.check_and_write_hits_for_read(hits_manager)
+                    hits_manager.add_accepted_hits_to_stats()
+                    hits_manager.write_hits()
+                    # self.check_and_write_hits_for_read(hits_manager)
                 else:
                     hits_manager.add_rejected_hits_to_stats()
 
@@ -82,11 +84,6 @@ class HitsChecker:
             while True:
                 if hits_manager.hits_for_read is None:
                     hits_manager.get_next_read_hits()
-                    if __debug__:
-                        self.logger.debug(
-                            "Read:{}".format(hits_manager.hits_for_read[0].qname))
-                        self.logger.debug(
-                            'assigned due to only one competing hits manager!')
                 self.check_and_write_hits_for_read(hits_manager)
         except StopIteration:
             pass
@@ -108,14 +105,17 @@ class HitsChecker:
             violated = True
             if __debug__:
                 self.logger.debug(
-                    'only one competing hits manager but violated primary " + \
-                    "mismatches.')
+                    'only one competing hits manager but violated primary mismatches.')
 
         if self._check_cigars(hits_info) == self.CIGAR_FAIL:
             violated = True
             if __debug__:
                 self.logger.debug(
                     'only one competing hits manager but violated primary CIGAR.')
+
+        if __debug__:
+            if not violated:
+                self.logger.debug('assigned due to only one competing filterer!')
 
         return not violated
 
@@ -128,7 +128,7 @@ class HitsChecker:
             return self.REJECTED
         elif num_hits_managers == 1:
             if __debug__:
-                self.logger.debug('assigned due to only one filter exist!')
+                self.logger.debug('assigned due to only one filter left after checking threshold!')
             return threshold_data[0].index
 
         min_mismatches = min([m.mismatches for m in threshold_data])
@@ -137,7 +137,7 @@ class HitsChecker:
 
         if len(threshold_data) == 1:
             if __debug__:
-                self.logger.debug('assigned due to primary hit min_mismatches!')
+                self.logger.debug('assigne due to primary hit min_mismatches!')
             return threshold_data[0].index
 
         min_cigar_check = min([m.cigar_check for m in threshold_data])
@@ -146,7 +146,7 @@ class HitsChecker:
 
         if len(threshold_data) == 1:
             if __debug__:
-                self.logger.debug('assigned due to primart hit CIGAR!')
+                self.logger.debug('assigne due to primart hit CIGAR!')
             return threshold_data[0].index
 
         min_multimaps = min([m.multimaps for m in threshold_data])
@@ -160,7 +160,7 @@ class HitsChecker:
             return threshold_data[0].index
 
         if __debug__:
-            self.logger.debug('assigned Ambigous!')
+            self.logger.debug('assigned due to Ambigous!')
         return self.AMBIGUOUS
 
     def _assign_hits_reject_multimaps(self, threshold_data):
