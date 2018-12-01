@@ -1,6 +1,8 @@
 from pkg_resources import resource_filename
 
-from sargasso.filter.sample_filter import *
+from sargasso.filter.sample_filterer import *
+from sargasso.separator.data_types import get_data_type_manager
+from sargasso.separator.separators import *
 
 
 def test_filter_sample_reads_pe_rnaseq(tmpdir):
@@ -23,7 +25,7 @@ def test_filter_sample_reads_pe_rnaseq(tmpdir):
             tmpdir.join("rnaseq_test/rnaseq_mouse_rat_sample_rat_0_filtered.bam").strpath
             ]
 
-    SampleFilterManager.get(data_type='rnaseq').run(args)
+    get_data_type_manager(['rnaseq'], SampleFilterer.DOC).get_sample_filterer().run(args)
 
     mouse_out = tmpdir.join("rnaseq_test/rnaseq_mouse_rat_sample_human_0_filtered.bam").strpath
     rat_out = tmpdir.join("rnaseq_test/rnaseq_mouse_rat_sample_human_0_filtered.bam").strpath
@@ -47,7 +49,7 @@ def test_filter_sample_reads_pe_rnaseq(tmpdir):
 
 
 def test_filter_sample_reads_pe_chipseq(tmpdir):
-    args = ["chipseq",
+    args = ["dnaseq",
             "1.0",
             "2.0",
             "999999",
@@ -65,7 +67,7 @@ def test_filter_sample_reads_pe_chipseq(tmpdir):
             tmpdir.join("chipseq_test_pe/chiseq_mouse_sample_rat_0_filtered.bam").strpath
             ]
 
-    SampleFilterManager.get(data_type='chipseq').run(args)
+    get_data_type_manager(['dnaseq'], SampleFilterer.DOC).get_sample_filterer().run(args)
 
     mouse_out = tmpdir.join("chipseq_test_pe/chiseq_mouse_sample_human_0_filtered.bam").strpath
     rat_out = tmpdir.join("chipseq_test_pe/chiseq_mouse_sample_human_0_filtered.bam").strpath
@@ -89,7 +91,7 @@ def test_filter_sample_reads_pe_chipseq(tmpdir):
 
 
 def test_filter_sample_reads_se_chipseq(tmpdir):
-    args = ["chipseq",
+    args = ["dnaseq",
             "1.0",
             "2.0",
             "999999",
@@ -107,7 +109,7 @@ def test_filter_sample_reads_se_chipseq(tmpdir):
             tmpdir.join("chipseq_test_se/chiseq_mouse_se_sample_rat_0_filtered.bam").strpath
             ]
 
-    SampleFilterManager.get(data_type='chipseq').run(args)
+    get_data_type_manager(['dnaseq'], SampleFilterer.DOC).get_sample_filterer().run(args)
 
     mouse_out = tmpdir.join("chipseq_test_se/chiseq_mouse_se_sample_human_0_filtered.bam").strpath
     rat_out = tmpdir.join("chipseq_test_se/chiseq_mouse_se_sample_human_0_filtered.bam").strpath
