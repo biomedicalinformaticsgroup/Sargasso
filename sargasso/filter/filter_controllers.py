@@ -142,6 +142,7 @@ The available commands are:
             proc_no += 1
 
             commands = ["filter_sample_reads", self.data_type,
+                        "{}={}".format(log.LOG_LEVEL_OPTION,options[log.LOG_LEVEL_OPTION]),
                         options[opts.MISMATCH_THRESHOLD_ARG],
                         options[opts.MINMATCH_THRESHOLD_ARG],
                         options[opts.MULTIMAP_THRESHOLD_ARG]]
