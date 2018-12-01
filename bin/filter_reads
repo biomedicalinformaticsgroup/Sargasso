@@ -133,7 +133,7 @@ function create_per_thread_input_files() {
             while [ ${index} -lt ${NUM_SPECIES} ]; do
                 filter="read_name >= '${block_read_ids[$(( i - 1 ))]}' and read_name ${op} '${block_read_ids[${i}]}'"
                 block_file=$(get_block_file ${SAMPLE} ${SPECIES[index]} ${i})
-                sambamba view --filter "${filter}" ${species_bams[index]} -o ${block_file} -l 1 -h
+                sambamba view -t 1 --filter "${filter}" ${species_bams[index]} -o ${block_file} -l 1 -h
                 index=$((${index} + 1))
             done
             ) &
