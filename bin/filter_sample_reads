@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 
-python -O -c "import sargasso.separator.main as entry_point; import sys; entry_point.filter_sample_reads(sys.argv[1:])" "$@"
+if [ -z "${SARGASS_DEBUG_MODE}" ]; then
+    python -O -c "import sargasso.separator.main as entry_point; import sys; entry_point.filter_sample_reads(sys.argv[1:])" "$@"
+else
+    python -c "import sargasso.separator.main as entry_point; import sys; entry_point.filter_sample_reads(sys.argv[1:])" "$@"
+fi
+
+
+
 
 # For profiling:
 #import cProfile

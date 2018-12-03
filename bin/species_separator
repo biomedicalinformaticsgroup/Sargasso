@@ -1,3 +1,8 @@
 #!/usr/bin/env bash
 
-python -O -c "import sys; import sargasso.separator.main as entry_point; entry_point.separate_species(sys.argv[1:])" "$@"
+    if [ -z "${SARGASS_DEBUG_MODE}" ]; then
+    python -O -c "import sys; import sargasso.separator.main as entry_point; entry_point.separate_species(sys.argv[1:])" "$@"
+else
+    python -c "import sys; import sargasso.separator.main as entry_point; entry_point.separate_species(sys.argv[1:])" "$@"
+fi
+
