@@ -144,17 +144,15 @@
 
 
 from pkg_resources import resource_filename
+from sargasso.separator.data_types import get_data_type_manager
+from sargasso.filter.sample_filterer import *
 
-from sargasso.filter.sample_filter import *
-from pkg_resources import resource_filename
-
-from sargasso.filter.sample_filter import *
 
 def test_filter_sample_reads_for_selected_reads(tmpdir):
     tmpdir.mkdir("debug")
-    sample_name='HA1'
-    strategy='permissive'
-    data_tpye='rnaseq'
+    sample_name='SRR7968966'
+    strategy='best'
+    data_tpye='dnaseq'
     species=['human', 'mouse', 'rat']
 
     if strategy=='best':
@@ -196,4 +194,4 @@ def test_filter_sample_reads_for_selected_reads(tmpdir):
                                       "{}___{}___BLOCK___1.bam".format(sample_name,i)))
         args.append( tmpdir.join("{}_{}_0_filtered.bam".format(sample_name,i)).strpath,)
 
-    SampleFilterManager.get(data_type=data_tpye).run(args)
+    get_data_type_manager([data_tpye], SampleFilterer.DOC).get_sample_filterer().run(args)
