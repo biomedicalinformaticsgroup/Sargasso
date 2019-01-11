@@ -219,11 +219,3 @@ class HitsChecker:
             return self.CIGAR_LESS_GOOD
 
         return response
-
-
-class RnaSeqHitsChecker(HitsChecker):
-    pass
-
-
-class DnaSeqHitsChecker(HitsChecker):
-    pass

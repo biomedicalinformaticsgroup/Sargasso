@@ -30,10 +30,9 @@ The available commands are:
     SPECIES_INPUT_BAM = "<species-input-bam>"
     SPECIES_OUTPUT_BAM = "<species-output-bam>"
 
-    def __init__(self, hits_manager_cls, hits_checker_cls, commandline_parser):
+    def __init__(self, hits_manager_cls, commandline_parser):
 
         self.hits_manager_cls = hits_manager_cls
-        self.hits_checker_cls = hits_checker_cls
         self.commandline_parser = commandline_parser
 
     @classmethod
@@ -57,7 +56,7 @@ The available commands are:
     def _filter_sample_reads(self, logger, options):
         logger.info("Starting species separation.")
 
-        h_check = self.hits_checker_cls(
+        h_check = hits_checker.HitsChecker(
                 options[opts.MISMATCH_THRESHOLD_ARG],
                 options[opts.MINMATCH_THRESHOLD_ARG],
                 options[opts.MULTIMAP_THRESHOLD_ARG],
@@ -214,8 +213,7 @@ ensure input BAM files are correctly sorted will result in erroneous output.
 
     def __init__(self, commandline_parser):
         SampleFilterer.__init__(
-            self, hits_manager.RnaSeqHitsManager, hits_checker.RnaSeqHitsChecker,
-            commandline_parser)
+            self, hits_manager.RnaSeqHitsManager, commandline_parser)
 
 
 class DnaSeqSampleFilterer(SampleFilterer):
@@ -267,5 +265,4 @@ ensure input BAM files are correctly sorted will result in erroneous output.
 
     def __init__(self, commandline_parser):
         SampleFilterer.__init__(
-            self, hits_manager.DnaSeqHitsManager, hits_checker.DnaSeqHitsChecker,
-            commandline_parser)
+            self, hits_manager.DnaSeqHitsManager, commandline_parser)
