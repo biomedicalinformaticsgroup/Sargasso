@@ -106,16 +106,24 @@ Options:
 --mismatch-threshold=<mismatch-threshold>
     Maximum percentage of bases allowed to be mismatches against the genome
     during filtering. For single-end reads, the total number of bases is the
-    read length; for paired-end reads it is twice the read length [default: 0].
+    read length; for paired-end reads it is twice the read length (n.b. this
+    value will be overwritten if any of the options --best, --conservative,
+    --recall or --permissive is specified) [default: 0].
 --minmatch-threshold=<minmatch-threshold>
     Maximum percentage of read length allowed to not be mapped during
     filtering. Read length refers to the length of a single read in both
-    single- and paired-end cases [default: 0].
+    single- and paired-end cases (n.b. this value will be overwritten if any of
+    the options --best, --conservative, --recall or --permissive is specified)
+    [default: 0].
 --multimap-threshold=<multimap-threshold>
-    Maximum number of multiple mappings allowed during filtering [default: 1].
+    Maximum number of multiple mappings allowed during filtering (n.b. this
+    value will be overwritten if any of the options --best, --conservative,
+    --recall or --permissive is specificed) [default: 1].
 --reject-multimaps
     If set, any read which multimaps to either species' genome will be rejected
-    and not be assigned to either species.
+    and not be assigned to either species (n.b. this option will be ignored if
+    any of the options --best, --conservative, --recall or --permissive is
+    specified).
 --best
     Adopt a filtering strategy that provides an excellent balance between
     sensitivity and specificity. Note that specifying this option overrides the
@@ -226,16 +234,24 @@ Options:
 --mismatch-threshold=<mismatch-threshold>
     Maximum percentage of bases allowed to be mismatches against the genome
     during filtering. For single-end reads, the total number of bases is the
-    read length; for paired-end reads it is twice the read length [default: 0].
+    read length; for paired-end reads it is twice the read length (n.b. this
+    value will be ignored if any of the options --best, --conservative,
+    --recall or --permissive are specified) [default: 0].
 --minmatch-threshold=<minmatch-threshold>
     Maximum percentage of read length allowed to not be mapped during
     filtering. Read length refers to the length of a single read in both
-    single- and paired-end cases [default: 0].
+    single- and paired-end cases (n.b. this value will be ignored if any of the
+    options --best, --conservative, --recall or --permissive are specified)
+    [default: 0].
 --multimap-threshold=<multimap-threshold>
-    Maximum number of multiple mappings allowed during filtering [default: 1].
+    Maximum number of multiple mappings allowed during filtering (n.b. this
+    value will be ignored if any of the options --best, --conservative,
+    --recall or --permissive are specified) [default: 1].
 --reject-multimaps
     If set, any read which multimaps to either species' genome will be rejected
-    and not be assigned to either species.
+    and not be assigned to either species (n.b. this option will be ignored if
+    any of the options --best, --conservative, --recall or --permissive are
+    specified).
 --best
     Adopt a filtering strategy that provides an excellent balance between
     sensitivity and specificity. Note that specifying this option overrides the
