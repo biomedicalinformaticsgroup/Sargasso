@@ -207,7 +207,7 @@ Option:
 <output-dir>
     Directory into which species-separated reads will be written.
 <sample-name>
-    Name of RNA-seq sample being processed.
+    Name of sample being processed.
 <species>
     Name of species.
 <mismatch-threshold>
@@ -229,7 +229,7 @@ Option:
     {log_option_description}
 
 filter_control takes a directory containing sets of BAM files as input, each
-set being the result of mapping a set of mixed species RNA-seq reads against
+set being the result of mapping a set of mixed species sequencing reads against
 a number of species' genomes. Each set of BAM files is passed to an instance of
 the script filter_sample_reads, running on a separate thread, which determines
 where possible from which species each read originates. Read mappings for each
@@ -245,52 +245,4 @@ input BAM files are correctly sorted will result in erroneous output.
 
 
 class DnaSeqFilterController(FilterController):
-    DOC = """
-Usage:
-    filter_control <data-type>
-        [--log-level=<log-level>] [--reject-multimaps]
-        <block-dir> <output-dir> <sample-name>
-        <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
-        (<species>) (<species>) ...
-
-Option:
-{help_option_spec}
-    {help_option_description}
-{ver_option_spec}
-    {ver_option_description}
-{log_option_spec}
-    {log_option_description}
-<block-dir>
-    Directory containing pairs of mapped read BAM files.
-<output-dir>
-    Directory into which species-separated reads will be written.
-<sample-name>
-    Name of RNA-seq sample being processed.
-<species>
-    Name of species.
-<mismatch-threshold>
-    Maximum percentage of read bases allowed to be mismatches against the
-    genome during filtering.
-<minmatch-threshold>
-    Maximum percentage of read length allowed to not be mapped during
-    filtering.
-<multimap-threshold>
-    Maximum number of multiple mappings allowed during filtering.
---reject-multimaps
-    If set, any read which multimaps to any species' genome will be rejected
-    and not be assigned to any species.
-
-filter_control takes a directory containing sets of BAM files as input, each
-set being the result of mapping a set of mixed species RNA-seq reads against
-a number of species' genomes. Each set of BAM files is passed to an instance of
-the script filter_sample_reads, running on a separate thread, which determines
-where possible from which species each read originates. Read mappings for each
-pair of input files are written to a set of species-specific output BAM files
-in the specified output directory.
-
-In normal operation, the user should not need to execute this script by hand
-themselves.
-
-Note: the input BAM files MUST be sorted in read name order. Failure to ensure
-input BAM files are correctly sorted will result in erroneous output.
-"""
+    DOC = RnaSeqFilterController.DOC

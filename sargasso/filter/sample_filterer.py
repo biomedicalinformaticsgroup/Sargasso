@@ -200,7 +200,7 @@ Options:
     rejected and not be assigned to either species.
 
 filter_sample_reads takes a set of BAM files as input, the results of mapping a set
-of mixed species RNA-seq reads against a number of species' genomes, and
+of mixed species sequencing reads against a number of species' genomes, and
 determines, if possible, from which species each read originates. Disambiguated
 read mappings are written to species-specific output BAM files.
 
@@ -217,51 +217,7 @@ ensure input BAM files are correctly sorted will result in erroneous output.
 
 
 class DnaSeqSampleFilterer(SampleFilterer):
-    DOC = """
-Usage:
-filter_sample_reads <data-type>
-    [--log-level=<log-level>] [--reject-multimaps]
-    <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
-    (<species> <species-input-bam> <species-output-bam>)
-    (<species> <species-input-bam> <species-output-bam>) ...
-
-Options:
-{help_option_spec}
-    {help_option_description}
-{ver_option_spec}
-    {ver_option_description}
-{log_option_spec}
-    {log_option_description}
-<species>
-    Name of species.
-<species-input-bam>
-    BAM file containing reads mapped against species' genome.
-<species-output-bam>
-    BAM file to which read mappings assigned to species after filtering
-    will be written.
---mismatch-threshold=<mismatch-threshold>
-    Maximum percentage of read bases allowed to be mismatches against the
-    genome during filtering.
---minmatch-threshold=<minmatch-threshold>
-    Maximum percentage of read length allowed to not be mapped during
-    filtering.
-<multimap-threshold>
-    Maximum number of multiple mappings allowed during filtering.
---reject-multimaps
-    If set, any read which multimaps to *either* species' genome will be
-    rejected and not be assigned to either species.
-
-filter_sample_reads takes a set of BAM files as input, the results of mapping a set
-of mixed species RNA-seq reads against a number of species' genomes, and
-determines, if possible, from which species each read originates. Disambiguated
-read mappings are written to species-specific output BAM files.
-
-In normal operation, the user should not need to execute this script by hand
-themselves.
-
-Note: the input BAM files MUST be sorted in read name order. Failure to
-ensure input BAM files are correctly sorted will result in erroneous output.
-"""
+    DOC = RnaSeqSampleFilterer.DOC
 
     def __init__(self, commandline_parser):
         SampleFilterer.__init__(
