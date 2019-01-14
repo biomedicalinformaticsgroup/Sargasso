@@ -225,7 +225,7 @@ Options:
 <species>
     Name of species.
 <species-info>
-    Either a bowtie2 index directory for the species, or a the genome FASTA
+    Either a bowtie2 index directory for the species, or the genome FASTA
     files for the species.
 --reads-base-dir=<reads-base-dir>
     Base directory for raw RNA-seq read data files.
@@ -293,11 +293,29 @@ Options:
 {log_option_spec}
     {log_option_description}
 
-    species_separator dnaseq --reads-base-dir=/home/xinhe/Projects/Sargasso/pipeline_test/data/fastq/ --num-threads 4 \
-                        --run-separation /home/xinhe/Projects/Sargasso/pipeline_test/data/fastq/chipseq.tsv \
-                        my_results \
-                        mouse /srv/data/genome/mouse/ensembl-93/bowtie2_indexes/primary_assembly \
-                        human /srv/data/genome/human/ensembl-93/bowtie2_indexes/primary_assembly \
-                        rat /srv/data/genome/rat/ensembl-93/bowtie2_indexes/toplevel
+Given a set of DNA sequencing samples (for example, from ChIP-seq) containing
+mixed-species read data, determine, where possible, from which species each
+read originated. Mapped reads are written to per-sample and -species specific
+output BAM files.
 
+Species separation of mixed-species read data is performed in a number of
+stages, of which the most important steps are:
+
+1) Mapping of raw sequence data to each species' genome using the Bowtie2 read
+aligner.
+2) Sorting of mapped read data.
+3) Assignment of mapped, sorted reads to their correct species of origin.
+
+If the option "--run-separation" is not specified, a Makefile is written to the
+given output director, via which all stages of species separation can be run
+under the user's control. If "--run-separation" is specified, however, the
+Makefile is both written and executed, and all stages of species separation are
+performed automatically.
+
+n.b. Many stages of species separation can be executed across multiple threads
+by specifying the "--num-threads" option.
+
+e.g.
+
+species_separator --reads-base-dir=/srv/data/rnaseq --num-threads --run-separation samples.tsv my_results mouse /srv/data/genome/mouse/bowtie2_index rat /srv/data/genome/rat/bowtie2-index
 """
