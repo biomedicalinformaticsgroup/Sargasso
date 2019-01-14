@@ -41,7 +41,6 @@ class MakefileWriter(Writer):
 
     DATA_TYPE_VARIABLE = "DATA_TYPE"
     NUM_THREADS_VARIABLE = "NUM_THREADS"
-    MAPPER_EXECUTABLE_VARIABLE = "MAPPER_EXECUTABLE"
     SAMBAMBA_SORT_TMP_DIR_VARIABLE = "SAMBAMBA_SORT_TMP_DIR"
     SAMPLES_VARIABLE = "SAMPLES"
     RAW_READS_DIRECTORY_VARIABLE = "RAW_READS_DIRECTORY"
@@ -126,10 +125,6 @@ class MakefileWriter(Writer):
 
         self.set_variable(MakefileWriter.DATA_TYPE_VARIABLE,
                           options[opts.DATA_TYPE_ARG])
-        self.add_blank_line()
-
-        self.set_variable(MakefileWriter.MAPPER_EXECUTABLE_VARIABLE,
-                          options[opts.MAPPER_EXECUTABLE])
         self.add_blank_line()
 
         self.set_variable(MakefileWriter.SAMBAMBA_SORT_TMP_DIR_VARIABLE,
@@ -504,7 +499,6 @@ class DnaSeqMakefileWriter(MakefileWriter):
         options: dictionary of command-line options
         sample_info: object encapsulating samples and their accompanying read files
         """
-        # todo ask Owen this
         sample_info = options[opts.SAMPLE_INFO_INDEX]
         species_options = options[opts.SPECIES_OPTIONS_INDEX]
         with self.writing_to_file(options[opts.OUTPUT_DIR_ARG], "Makefile"):
