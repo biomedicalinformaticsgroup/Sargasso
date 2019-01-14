@@ -1,14 +1,14 @@
 Pipeline description
 ====================
 
-Separation of mixed-species RNA-seq reads is performed in a number of stages. While in normal usage these steps can be executed with a single command, the *Sargasso* pipeline also affords fine control over execution, should this be desired. Here we describe each stage of species separation in more detail. 
+Separation of mixed-species high-throughput sequencing reads is performed in a number of stages. While in normal usage these steps can be executed with a single command, the *Sargasso* pipeline also affords fine control over execution, should this be desired. Here we describe each stage of species separation in more detail. 
 
 Makefile
 --------
 
 The *Sargasso* pipeline is invoked through execution of its main Python script, ``species_separator``. This writes a Makefile with targets corresponding to all stages of the pipeline, namely:
 
-* building or linking to [``STAR``](references.md) indices
+* building or linking to [``STAR``](references.md) or [``Bowtie2``](references.md)] indexes
 * collating raw reads files
 * mapping reads from all samples to each genome
 * sorting mapped reads in preparation for filtering
@@ -16,27 +16,25 @@ The *Sargasso* pipeline is invoked through execution of its main Python script, 
 
 In this fashion, fine user control over the pipeline is allowed --- processing can be halted and resumed, stages run separately, or particular stages re-run with alterations to parameter values. However, in typical usage, supplying the ``--run-separation`` option to the ``species_separator`` script will cause the the Makefile's main target to be executed immediately after the file has been written.
 
-STAR indices
-------------
+Mapper indexes
+--------------
 
-The *Sargasso* pipeline uses the efficient and accurate ``STAR`` short RNA-seq read aligner to map mixed-species reads to reference genomes. For best speed of operation, paths to pre-existing ``STAR`` indices for each reference genome can be supplied to the ``species_separator``. Alternatively, if paths to directories containing genome FASTA files for each species are supplied and also GTF annotation files, then ``STAR`` will be invoked in index-generation mode to build genome indices for each species.
+The *Sargasso* pipeline uses the ``Bowtie2`` read aligner (for DNA sequencing data) or the ``STAR`` short RNA-seq read aligner to map mixed-species reads to reference genomes. For best speed of operation, paths to pre-existing alignment tool indexes for each reference genome can be supplied to the ``species_separator`` script. Alternatively, if the paths to a FASTA files containing genome sequences for each species are supplied (for ``Bowtie2``), or to directories containing genome FASTA files for each species and also GTF annotation files (for ``STAR``), then the appropriate alignment tool  will be invoked in index-generation mode to build genome indexes for each species.
 
 Collating raw reads
 -------------------
 
-The path to a TSV file specifying, in turn, the paths to the FASTQ files containing raw RNA-seq reads for each sample being studied should be provided to the ``species_separator`` script through the required ``<samples-file>`` parameter. Checks are made that each raw reads file exists, and links are made to these files within the species separation output directory.
+The path to a TSV file specifying, in turn, the paths to the FASTQ files containing raw sequencing reads for each sample being studied should be provided to the ``species_separator`` script through the required ``<samples-file>`` parameter. Checks are made that each raw reads file exists, and links are made to these files within the species separation output directory.
 
 Mapping reads
 -------------
 
-Next, the *Sargasso* pipeline maps all reads to each species' genome using the ``STAR`` read aligner. Although we chose to use ``STAR`` for its speed and the accuracy of alignments produced, it would be possible to substitute another mapping tool by altering the read mapping target in the Makefile --- subsequent analysis steps require only BAM files containing the aligned reads.
-
-Note that when invoking ``STAR``, reads are mapped allowing alignments to multiple locations (``--outFilterMultimapNmax 10000``), however only those mappings with an alignment score equal to the maximum are retained (``--outFilterMultimapScoreRange 0``).
+Next, the *Sargasso* pipeline maps all reads to each species' genome using either the ``Bowtie2`` or ``STAR`` read aligner. Note that when invoking ``STAR``, reads are mapped allowing alignments to multiple locations (``--outFilterMultimapNmax 10000``), however only those mappings with an alignment score equal to the maximum are retained (``--outFilterMultimapScoreRange 0``). When invoking ``Bowtie2`` a maximum of 20 distinct alignments for each read are allowed.
 
 Sorting reads
 -------------
 
-Mapped RNA-seq reads are subsequently sorted into name order, so that, when filtering according to their true species of origin, the mappings for each read (or each read pair, in the case of paired-end reads) to each genome can be assessed together. Reads are sorted using the [``sambamba``](references.md) alignment processing tool.
+Mapped sequencing reads are subsequently sorted into name order, so that, when filtering according to their true species of origin, the mappings for each read (or each read pair, in the case of paired-end reads) to each genome can be assessed together. Reads are sorted using the [``sambamba``](references.md) alignment processing tool.
 
 Filtering reads
 ---------------
@@ -64,13 +62,11 @@ Different filtering strategies, providing a particular balance between sensitivi
 
 On the other hand, in some cases it may be of particular importance to minimise the number of reads mis-assigned to the wrong species, or to prioritise sensitivity over specificity. These two strategies can be adopted via the ``--conservative`` and ``--recall`` command-line options.
 
-At the end of the filtering stage, a BAM file will have been written for each RNA-seq sample, and for each species, containing the genome alignments of the reads from the sample which were assigned to that species.
+At the end of the filtering stage, a BAM file will have been written for each sample, and for each species, containing the genome alignments of the reads from the sample which were assigned to that species.
 
 Efficiency
 ----------
 
-In order that the *Sargasso* pipeline operates efficiently, multiple cores can be used wherever possible. Both the ``STAR`` read aligner and the ``sambamba`` alignment processing tool are multi-threaded, and multiple cores are used during species assignment by splitting the input alignment files in chunks and executing filtering in parallel.
+In order that the *Sargasso* pipeline operates efficiently, multiple cores can be used wherever possible. The ``Bowtie2`` and ``STAR`` read aligners, and the ``sambamba`` alignment processing tool, are multi-threaded, and multiple cores are used during species assignment by splitting the input alignment files in chunks and executing filtering in parallel.
 
 The number of cores available at all stages of the pipeline is specified by the ``--num-threads`` command-line option to the ``species_separator`` script.
-
-[Next: Usage reference](usage_reference.md)

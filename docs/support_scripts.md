@@ -11,7 +11,7 @@ Usage:
     build_star_index
         <sequence-fasta-files> <gtf-file> <num-threads> <index-dir>
 
-Build [``STAR``](references.md) indices for a species' genome. ``build_star_index`` is called from the species separation Makefile.
+Build [``STAR``](references.md) indexes for a species' genome. ``build_star_index`` is called from the species separation Makefile.
 
 Options:
 
@@ -71,7 +71,7 @@ Usage:
     filter_reads
         <input-dir> <output-dir> <num-threads>
         <mismatch-threshold> <minmatch-threshold> <multimap-threshold>
-        <reject-multimaps> <log-level>
+        <reject-multimaps>
         (<species>) (<species>) ...
 
 For each sample, take the RNA-seq reads mapping to each genome, and assign them to their correct species of origin. ``filter_reads`` is called by the species separation Makefile.
@@ -84,7 +84,6 @@ For each sample, take the RNA-seq reads mapping to each genome, and assign them 
 * ``<minmatch-threshold>`` (_float_): Maximum percentage of read length allowed to not be mapped during filtering.
 * ``<multimap-threshold>`` (_integer_): Maximum number of multi-mappings allowed during filtering.
 * ``<reject-multimaps>`` (_text parameter_): If set to "--reject-multimaps", any read which multimaps to any species' genome will be rejected and not be assigned to any species.
-* ``<log-level>`` (_text parameter_): Sets the minimum severity level at which log messages will be output (one of "debug", "info", "warning", "error" or "criticial").
 * ``<species>`` (_text parameter_): Name of nth species.
 
 filter_sample_reads (Python)
@@ -117,14 +116,14 @@ map_reads (Bash)
 Usage:
 
     map_reads
-        <species> <samples> <star-indices-dir> <num-threads>
+        <species> <samples> <star-indexes-dir> <num-threads>
         <input-dir> <output-dir> <reads-type>
 
 For each sample, map raw RNA-seq reads to each species' genome. ``map_reads`` is called by the species separation Makefile.
 
 * ``<species>`` (_text parameter_): Space-separated list of species names.
 * ``<samples>`` (_text parameter_): Space-separated list of sample names.
-* ``<star-indices-dir>`` (_file path_): Directory containing ``STAR`` index directories for each species (or links to index directories).
+* ``<star-indexes-dir>`` (_file path_): Directory containing ``STAR`` index directories for each species (or links to index directories).
 * ``<num-threads>`` (_integer_): Number of threads to be used by ``STAR`` during read mapping.
 * ``<input-dir>`` (_file path_): Directory containing per-sample directories, each of which contains links to the input raw RNA-seq read files for that sample.
 * ``<output-dir>`` (_file path_): Directory into which to write BAM files containing read mappings.
@@ -145,5 +144,3 @@ For each sample, sort mapped reads for each species into name order. ``sort_read
 * ``<num-threads>`` (_integer_): Number of threads to be used by ``sambamba`` [Sambamba]_ during read sorting.
 * ``<input-dir>`` (_file path_): Directory containing BAM files containing read mappings for each sample and species.
 * ``<output-dir>`` (_file path_): Directory into which to write name-ordered BAM files containing read mappings.
-
-[Next: References](references.md)

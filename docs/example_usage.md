@@ -11,9 +11,9 @@ In our example case we have a single sample, with a single pair of paired-end re
 
 where we have assumed that the test FASTQ files have been placed in the directory in which *Sargasso* will be run.
 
-For RNA-seq data, the *Sargasso* pipeline uses [STAR](references.md), an efficient and accurate short RNA-seq read aligner, to map reads to reference genomes. We will assume that STAR indices have already been built for the mouse and rat genomes, and are located in the directories ``~/data/genome/<species>/STAR_index/``. Then the entire species separation pipeline can be executed with the following command::
+For RNA-seq data, the *Sargasso* pipeline uses [STAR](references.md), an efficient and accurate short RNA-seq read aligner, to map reads to reference genomes. We will assume that STAR indexes have already been built for the mouse and rat genomes, and are located in the directories ``~/data/genome/<species>/STAR_index/``. Then the entire species separation pipeline can be executed with the following command::
 
-    species_separator 
+    species_separator rnaseq
         --reads-base-dir=<fastq_files_path> 
         --best --run-separation 
         test_samples.tsv test_results
@@ -26,7 +26,7 @@ This command will execute the species separation pipeline in the background, usi
 
 On this small data set (100,000 paired-end reads), species separation should take a matter of minutes. On completion, the ``test_results`` directory will contain the following sub-directories:
 
-* ``star_indices``: Contains a link to the STAR index directory for each species.
+* ``mapper_indexes``: Contains a link to the STAR index directory for each species.
 * ``raw_reads``: Contains links to the gzipped FASTQ files for each sample.
 * ``mapped_reads``: Contains a BAM file for each sample and species, describing the mapping of the RNA-seq reads in that sample to the species' genome.
 * ``sorted_reads``: Contains a BAM file for each sample and species, where the mapped reads above have been sorted in name order.
