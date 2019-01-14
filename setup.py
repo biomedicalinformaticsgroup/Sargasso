@@ -9,7 +9,6 @@ setup(
     license='MIT License',
     author='Owen Dando',
     author_email='owen.dando@ed.ac.uk',
-    # packages=['sargasso'],
     packages=find_packages(),
     install_requires=[
         'docopt==0.6.2',
