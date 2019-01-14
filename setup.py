@@ -25,7 +25,7 @@ setup(
         'bin/filter_reads',
         'bin/filter_sample_reads',
         'bin/map_reads_rnaseq',
-        'bin/map_reads_chipseq',
+        'bin/map_reads_dnaseq',
         'bin/sort_reads',
         'bin/species_separator',
     ]
