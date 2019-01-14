@@ -1,5 +1,6 @@
 import os
 import sargasso.separator.options as opts
+import subprocess
 
 from sargasso.utils import log
 
@@ -66,7 +67,7 @@ The available data types are:
 
 class RnaSeqSeparator(Separator):
     DOC = """Usage:
-    species_separator rnaseq
+    species_separator <data-type>
         [--help] [--version]
         [--log-level=<log-level>]
         [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>]
@@ -196,7 +197,7 @@ species_separator rnaseq --reads-base-dir=/srv/data/rnaseq --num-threads 4 --run
 class DnaSeqSeparator(Separator):
     DOC = """
 Usage:
-    species_separator dnaseq
+    species_separator <data-type>
         [--log-level=<log-level>]
         [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>]
         [--mismatch-threshold=<mismatch-threshold>]
