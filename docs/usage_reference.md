@@ -62,3 +62,5 @@ These are optional parameters concerning the running of the pipeline.
 * ``--delete-intermediate`` (_flag_): If specified, intermediate BAM files (contain raw mapped and sorted reads) will be deleted.
 * ``--star-executable=<star-executable>`` (_text parameter_): Specifies the path to the STAR executable; this can be used to run Sargasso with a particular version of STAR (default ``STAR``).
 * ``--sambamba-sort-tmp-dir=<sambamba-sort-tmp-dir>`` (_text parameter_): Specify the temporary directory to be used by 'sambamba sort' (default: ``/tmp``).
+
+[Next: Support scripts](support_scripts.md)

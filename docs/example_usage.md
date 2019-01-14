@@ -11,7 +11,7 @@ In our example case we have a single sample, with a single pair of paired-end re
 
 where we have assumed that the test FASTQ files have been placed in the directory in which *Sargasso* will be run.
 
-The *Sargasso* pipeline uses [STAR](references.md), an efficient and accurate short RNA-seq read aligner, to map reads to reference genomes. We will assume that STAR indices have already been built for the mouse and rat genomes, and are located in the directories ``~/data/genome/<species>/STAR_index/``. Then the entire species separation pipeline can be executed with the following command::
+For RNA-seq data, the *Sargasso* pipeline uses [STAR](references.md), an efficient and accurate short RNA-seq read aligner, to map reads to reference genomes. We will assume that STAR indices have already been built for the mouse and rat genomes, and are located in the directories ``~/data/genome/<species>/STAR_index/``. Then the entire species separation pipeline can be executed with the following command::
 
     species_separator 
         --reads-base-dir=<fastq_files_path> 
@@ -35,3 +35,5 @@ On this small data set (100,000 paired-end reads), species separation should tak
 The BAM files in the ``filtered_reads`` directory are the final output of the *Sargasso* pipeline. These can then be taken as input to further downstream analyses, for example for read counting and differential expression.
 
 In addition, two further log files are written. In the ``filtered_reads`` directory, ``overall_filtering_summary.txt`` contains per-sample statistics describing the reads that were assigned to each genome, or were rejected as ambiguous. In the top-level ``test_results`` directory, ``execution_record.txt`` contains a record of the command line options that were passed to *Sargasso*, and the date and time of execution.
+
+[Next: Pipeline description](pipeline.md)

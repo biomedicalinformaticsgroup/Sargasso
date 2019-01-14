@@ -145,3 +145,5 @@ For each sample, sort mapped reads for each species into name order. ``sort_read
 * ``<num-threads>`` (_integer_): Number of threads to be used by ``sambamba`` [Sambamba]_ during read sorting.
 * ``<input-dir>`` (_file path_): Directory containing BAM files containing read mappings for each sample and species.
 * ``<output-dir>`` (_file path_): Directory into which to write name-ordered BAM files containing read mappings.
+
+[Next: References](references.md)
