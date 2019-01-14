@@ -66,7 +66,7 @@ The available data types are:
 
 class RnaSeqSeparator(Separator):
     DOC = """Usage:
-    species_separator <data-type>
+    species_separator rnaseq
         [--help] [--version]
         [--log-level=<log-level>]
         [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>]
@@ -107,22 +107,22 @@ Options:
     Maximum percentage of bases allowed to be mismatches against the genome
     during filtering. For single-end reads, the total number of bases is the
     read length; for paired-end reads it is twice the read length (n.b. this
-    value will be overwritten if any of the options --best, --conservative,
-    --recall or --permissive is specified) [default: 0].
+    value will be overwritten if any of the options "best", "conservative",
+    "recall" or "permissive" is specified) [default: 0].
 --minmatch-threshold=<minmatch-threshold>
     Maximum percentage of read length allowed to not be mapped during
     filtering. Read length refers to the length of a single read in both
     single- and paired-end cases (n.b. this value will be overwritten if any of
-    the options --best, --conservative, --recall or --permissive is specified)
+    the options "best", "conservative", "recall" or "permissive" is specified)
     [default: 0].
 --multimap-threshold=<multimap-threshold>
     Maximum number of multiple mappings allowed during filtering (n.b. this
-    value will be overwritten if any of the options --best, --conservative,
-    --recall or --permissive is specificed) [default: 1].
+    value will be overwritten if any of the options "best", "conservative",
+    "recall" or "permissive" is specified) [default: 1].
 --reject-multimaps
     If set, any read which multimaps to either species' genome will be rejected
     and not be assigned to either species (n.b. this option will be ignored if
-    any of the options --best, --conservative, --recall or --permissive is
+    any of the options "best", "conservative", "recall" or "permissive" is
     specified).
 --best
     Adopt a filtering strategy that provides an excellent balance between
@@ -188,7 +188,7 @@ by specifying the "--num-threads" option.
 
 e.g.:
 
-species_separator --reads-base-dir=/srv/data/rnaseq --num-threads 4 --run-separation samples.tsv my_results mouse /srv/data/genome/mouse/STAR_Index rat /srv/data/genome/rat/STAR_Index
+species_separator rnaseq --reads-base-dir=/srv/data/rnaseq --num-threads 4 --run-separation samples.tsv my_results mouse /srv/data/genome/mouse/STAR_Index rat /srv/data/genome/rat/STAR_Index
 
 """
 
@@ -196,7 +196,7 @@ species_separator --reads-base-dir=/srv/data/rnaseq --num-threads 4 --run-separa
 class DnaSeqSeparator(Separator):
     DOC = """
 Usage:
-    species_separator <data-type>
+    species_separator dnaseq
         [--log-level=<log-level>]
         [--reads-base-dir=<reads-base-dir>] [--num-threads=<num-threads>]
         [--mismatch-threshold=<mismatch-threshold>]
@@ -235,22 +235,22 @@ Options:
     Maximum percentage of bases allowed to be mismatches against the genome
     during filtering. For single-end reads, the total number of bases is the
     read length; for paired-end reads it is twice the read length (n.b. this
-    value will be ignored if any of the options --best, --conservative,
-    --recall or --permissive are specified) [default: 0].
+    value will be ignored if any of the options "best", "conservative",
+    "recall" or "permissive" are specified) [default: 0].
 --minmatch-threshold=<minmatch-threshold>
     Maximum percentage of read length allowed to not be mapped during
     filtering. Read length refers to the length of a single read in both
     single- and paired-end cases (n.b. this value will be ignored if any of the
-    options --best, --conservative, --recall or --permissive are specified)
+    options "best", "conservative", "recall" or "permissive" are specified)
     [default: 0].
 --multimap-threshold=<multimap-threshold>
     Maximum number of multiple mappings allowed during filtering (n.b. this
-    value will be ignored if any of the options --best, --conservative,
-    --recall or --permissive are specified) [default: 1].
+    value will be ignored if any of the options "best", "conservative",
+    "recall" or "permissive" are specified) [default: 1].
 --reject-multimaps
     If set, any read which multimaps to either species' genome will be rejected
     and not be assigned to either species (n.b. this option will be ignored if
-    any of the options --best, --conservative, --recall or --permissive are
+    any of the options "best", "conservative", "recall" or "permissive" are
     specified).
 --best
     Adopt a filtering strategy that provides an excellent balance between
@@ -317,5 +317,5 @@ by specifying the "--num-threads" option.
 
 e.g.
 
-species_separator --reads-base-dir=/srv/data/rnaseq --num-threads --run-separation samples.tsv my_results mouse /srv/data/genome/mouse/bowtie2_index rat /srv/data/genome/rat/bowtie2-index
+species_separator dnaseq --reads-base-dir=/srv/data/rnaseq --num-threads --run-separation samples.tsv my_results mouse /srv/data/genome/mouse/bowtie2_index rat /srv/data/genome/rat/bowtie2-index
 """
