@@ -32,7 +32,7 @@ These parameters are required as the base minimum for the execution of the pipel
 * ``<samples-file>`` (_file path_): TSV file giving paths (relative to ``<reads-base-dir>``) of raw sequencing read data files for each sample.
 * ``<output-dir>`` (_file path_): Output directory into which the Makefile will be written, and in which species separation will be performed.
 * ``<species>`` (_text parameter_): Name of the nth species. Note that at least two species must be specified. While there is no theoretical upper bound on the number of species, the depth of sequencing required to obtain enough reads for each species after separation may impose a practical limit.
-* ``<species-info>`` (_file paths_): Alignment tool information for the nth species. For DNA sequencing data, this parameter should either consist of (i) the path to a ``Bowtie2`` index directory for the species _or_ (ii) a FASTA file containing genome sequences for the species. For RNA sequencing data, the parameter should either consist of (i) the path to the STAR index directory for the species _or_ (ii) a comma separated list of two elements, the first of which is the path to a GTF annotation file for the species, and the second is the path to a directory containing genome FASTA files for the species.
+* ``<species-info>`` (_file paths_): Alignment tool information for the nth species. For DNA sequencing data, this parameter should either consist of (i) the path to a Bowtie2 index directory for the species _or_ (ii) a FASTA file containing genome sequences for the species. For RNA sequencing data, the parameter should either consist of (i) the path to the STAR index directory for the species _or_ (ii) a comma separated list of two elements, the first of which is the path to a GTF annotation file for the species, and the second is the path to a directory containing genome FASTA files for the species.
     
 Mapping
 -------
@@ -40,8 +40,8 @@ Mapping
 These parameters control the mapping of mixed-species RNA-seq reads to reference genomes.
 
 * ``--reads-base-dir=<reads-base-dir>`` (_file path_): Base directory for raw RNA-seq read data files.
-* ``--mapper-executable`` (_file path_): Specifies the alignment tool executable path --- use this option to run Sargasso with a particular version of either ``Bowtie2`` or ``STAR``.
-* ``--mapper-index-executable`` (_file path_): For DNA sequencing data, specifies the ``Bowtie2`` index building tool path --- use this option to run Sargasso with a particular version of ``bowtie2-build`` (n.b. for RNA sequencing data, this option is ignored).
+* ``--mapper-executable`` (_file path_): Specifies the alignment tool executable path --- use this option to run Sargasso with a particular version of either Bowtie2 or STAR.
+* ``--mapper-index-executable`` (_file path_): For DNA sequencing data, specifies the Bowtie2 index building tool path --- use this option to run Sargasso with a particular version of ``bowtie2-build`` (n.b. for RNA sequencing data, this option is ignored).
 
 Assignment criteria and optimisation
 ----------------------------------
