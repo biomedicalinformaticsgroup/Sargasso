@@ -37,7 +37,7 @@ If you make use of *Sargasso* please cite [our protocol paper](https://www.natur
 Changelog
 =========
 
-* 2.0 (16/01/2018): Sargasso now separates reads derived from DNA-based sequencing technologies (for example, ChIP-seq and ATAC-seq), in addition to RNA-seq reads.
+* 2.0 (16/01/2019): Sargasso now separates reads derived from DNA-based sequencing technologies (for example, ChIP-seq and ATAC-seq), in addition to RNA-seq reads.
 * 1.2.2 (11/10/2018): Bugfix release for compatibility with Python 3.
 * 1.2.1 (02/10/2018): Bugfix release for incompatibilities between Mac OS and Linux.
 * 1.2 (16/02/2018): 

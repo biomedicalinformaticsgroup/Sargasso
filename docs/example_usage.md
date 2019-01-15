@@ -5,13 +5,13 @@ To illustrate the usage of the *Sargasso* pipeline, we will process a test data 
 
 We begin by constructing a tab-separated file listing the raw RNA-seq read data files for each sample in our experiment. This should contain one line per-sample, giving a sample name, and two comma-separated lists of FASTQ files containing paired-end RNA-seq reads (or a single comma-separated list in the case of single-end reads). Note that the FASTQ files are assumed to be gzipped.
 
-In our example case we have a single sample, with a single pair of paired-end read files, and hence our ``test_samples.tsv`` file is particularly simple. It contains the single line::
+In our example case we have a single sample, with a single pair of paired-end read files, and hence our ``test_samples.tsv`` file is particularly simple. It contains the single line:
 
     our_sample  mouse_rat_test_1.fastq.gz  mouse_rat_test_2.fastq.gz
 
 where we have assumed that the test FASTQ files have been placed in the directory in which *Sargasso* will be run.
 
-For RNA-seq data, the *Sargasso* pipeline uses [STAR](references.md), an efficient and accurate short RNA-seq read aligner, to map reads to reference genomes. We will assume that STAR indexes have already been built for the mouse and rat genomes, and are located in the directories ``~/data/genome/<species>/STAR_index/``. Then the entire species separation pipeline can be executed with the following command::
+For RNA-seq data, the *Sargasso* pipeline uses [STAR](references.md), an efficient and accurate short RNA-seq read aligner, to map reads to reference genomes. We will assume that STAR indexes have already been built for the mouse and rat genomes, and are located in the directories ``~/data/genome/<species>/STAR_index/``. Then the entire species separation pipeline can be executed with the following command:
 
     species_separator rnaseq
         --reads-base-dir=<fastq_files_path> 

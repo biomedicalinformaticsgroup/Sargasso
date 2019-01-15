@@ -11,7 +11,7 @@ Usage:
     build_bowtie2_index
         <sequence-fasta-file> <num-threads> <index-dir> <bowtie2-build-executable>
 
-Build a [``Bowtie2``](references.md) index for a species' genome. ``build_bowtie2_index`` is called from the species separation Makefile.
+Build a [Bowtie2](references.md) index for a species' genome. ``build_bowtie2_index`` is called from the species separation Makefile.
 
 Options:
 
@@ -28,7 +28,7 @@ Usage:
     build_star_index
         <sequence-fasta-files> <gtf-file> <num-threads> <index-dir> <star-executable>
 
-Build a [``STAR``](references.md) index for a species' genome. ``build_star_index`` is called from the species separation Makefile.
+Build a [STAR](references.md) index for a species' genome. ``build_star_index`` is called from the species separation Makefile.
 
 Options:
 
@@ -36,7 +36,7 @@ Options:
 * ``<gtf-file>`` (_file path_): Path to GTF file containing transcript annotations.
 * ``<num-threads>`` (_integer_): Number of threads to be used for genome generation.
 * ``<index-dir>`` (_file path_): Path to directory where genome index files will be stored.
-* ``<star-executable>`` (_file path_): Path to, or name of, ``STAR`` executable.
+* ``<star-executable>`` (_file path_): Path to, or name of, STAR executable.
 
 collate_raw_reads (Bash)
 ------------------------
@@ -72,9 +72,9 @@ Takes as input a directory containing sets of BAM files, each set being the resu
 ``filter_control`` is called by the script ``filter_reads``.
 
 * ``--log-level=<log-level>`` (_text parameter_): Sets the minimum severity level at which log messages will be output (one of "debug", "info", "warning", "error" or "criticial").
-* ``--reject-multimaps` (_flag_): If set, any read which multimaps to either species' genome will be rejected and not be assigned to either species.
+* ``--reject-multimaps`` (_flag_): If set, any read which multimaps to either species' genome will be rejected and not be assigned to either species.
 * ``<block-dir>`` (_file path_): Directory containing pairs of mapped read BAM files.
-* ``<output-dir>` (_file path_): Directory into which species-separated reads will be written.
+* ``<output-dir>`` (_file path_): Directory into which species-separated reads will be written.
 * ``<sample-name>`` (_text parameter_): Name of sample being processed.
 * ``<mismatch-threshold>`` (_float_): Maximum percentage of read bases allowed to be mismatches against the genome during filtering.
 * ``<minmatch-threshold>`` (_float_): Maximum percentage of read length allowed to not be mapped during filtering.
@@ -145,12 +145,12 @@ For each sample, map raw sequencing reads to each species' genome. ``map_reads_d
 
 * ``<species>`` (_text parameter_): Space-separated list of species names.
 * ``<samples>`` (_text parameter_): Space-separated list of sample names.
-* ``<star-indexes-dir>`` (_file path_): Directory containing ``Bowtie2`` index directories for each species (or links to index directories).
-* ``<num-threads>`` (_integer_): Number of threads to be used by ``Bowtie2`` during read mapping.
+* ``<star-indexes-dir>`` (_file path_): Directory containing Bowtie2 index directories for each species (or links to index directories).
+* ``<num-threads>`` (_integer_): Number of threads to be used by Bowtie2 during read mapping.
 * ``<input-dir>`` (_file path_): Directory containing per-sample directories, each of which contains links to the input raw sequencing read files for that sample.
 * ``<output-dir>`` (_file path_): Directory into which to write BAM files containing read mappings.
 * ``<reads-type>`` (_text parameter_): Either "single" for single-end reads, or "paired" for paired-end reads.
-* ``<bowtie2-executable>`` (_file path_): Path to, or name of, the ``Bowtie2`` executable.
+* ``<bowtie2-executable>`` (_file path_): Path to, or name of, the Bowtie2 executable.
 
 map_reads_rnaseq (Bash)
 -----------------------
@@ -165,12 +165,12 @@ For each sample, map raw RNA-seq reads to each species' genome. ``map_reads_rnas
 
 * ``<species>`` (_text parameter_): Space-separated list of species names.
 * ``<samples>`` (_text parameter_): Space-separated list of sample names.
-* ``<star-indexes-dir>`` (_file path_): Directory containing ``STAR`` index directories for each species (or links to index directories).
-* ``<num-threads>`` (_integer_): Number of threads to be used by ``STAR`` during read mapping.
+* ``<star-indexes-dir>`` (_file path_): Directory containing STAR index directories for each species (or links to index directories).
+* ``<num-threads>`` (_integer_): Number of threads to be used by STAR during read mapping.
 * ``<input-dir>`` (_file path_): Directory containing per-sample directories, each of which contains links to the input raw sequencing read files for that sample.
 * ``<output-dir>`` (_file path_): Directory into which to write BAM files containing read mappings.
 * ``<reads-type>`` (_text parameter_): Either "single" for single-end reads, or "paired" for paired-end reads.
-* ``<star-executable>`` (_file path_): Path to, or name of, the ``STAR`` executable.
+* ``<star-executable>`` (_file path_): Path to, or name of, the STAR executable.
 
 sort_reads (Bash)
 -----------------
@@ -188,3 +188,5 @@ For each sample, sort mapped reads for each species into name order. ``sort_read
 * ``<input-dir>`` (_file path_): Directory containing BAM files containing read mappings for each sample and species.
 * ``<output-dir>`` (_file path_): Directory into which to write name-ordered BAM files containing read mappings.
 * ``<tmp-dir>`` (_file path_): Temporary directory to be used by ``sambamba``.
+
+[Next: References](references.md)
