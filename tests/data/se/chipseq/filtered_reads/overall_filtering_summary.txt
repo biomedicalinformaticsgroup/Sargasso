@@ -1,2 +1,0 @@
-Sample,Assigned-Hits-mouse,Assigned-Reads-mouse,Rejected-Hits-mouse,Rejected-Reads-mouse,Ambiguous-Hits-mouse,Ambiguous-Reads-mouse,Assigned-Hits-human,Assigned-Reads-human,Rejected-Hits-human,Rejected-Reads-human,Ambiguous-Hits-human,Ambiguous-Reads-human,Assigned-Hits-rat,Assigned-Reads-rat,Rejected-Hits-rat,Rejected-Reads-rat,Ambiguous-Hits-rat,Ambiguous-Reads-rat
-chiseq_mouse_se_sample,9186,709,3353,200,3222,54,0,0,984,20,2116,27,168,7,2828,139,3223,54
