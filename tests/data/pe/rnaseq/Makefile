@@ -2,8 +2,6 @@ NUM_THREADS=2
 
 DATA_TYPE=rnaseq
 
-MAPPER_EXECUTABLE=STAR
-
 SAMBAMBA_SORT_TMP_DIR=/tmp
 
 SAMPLES=rnaseq_mouse_rat_sample

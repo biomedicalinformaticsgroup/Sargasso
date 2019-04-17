@@ -71,3 +71,9 @@ class DnaSeqHitsManager(HitsManager):
         HitsManager.__init__(
             self, hits_info.DnaSeqHitsInfo, species_id,
             input_bam, output_bam, logger)
+
+class BisulfiteHitsManager(HitsManager):
+    def __init__(self, species_id, input_bam, output_bam, logger):
+        HitsManager.__init__(
+            self, hits_info.BisulfiteHitsInfo, species_id,
+            input_bam, output_bam, logger)

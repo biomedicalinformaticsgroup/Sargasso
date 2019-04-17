@@ -1,17 +1,18 @@
 NUM_THREADS=2
 
-DATA_TYPE=dnaseq
+
+DATA_TYPE=bisulfite
 
 SAMBAMBA_SORT_TMP_DIR=/tmp
 
-SAMPLES=chiseq_mouse_sample
+SAMPLES=bisulfite_human_pe_sample
 RAW_READS_DIRECTORY=/home/xinhe/Projects/Sargasso/tests/data/raw_reads
-RAW_READS_FILES_1=chipseq_mouse_pe_R1.fastq.gz
-RAW_READS_FILES_2=chipseq_mouse_pe_R2.fastq.gz
+RAW_READS_FILES_1=bisulfite_human_pe_R1.fastq.gz
+RAW_READS_FILES_2=bisulfite_human_pe_R2.fastq.gz
 
-MOUSE_BOWTIE2_DIR=/srv/data/genome/mouse/ensembl-94/bowtie2_indices/primary_assembly
-HUMAN_BOWTIE2_DIR=/srv/data/genome/human/ensembl-94/bowtie2_indices/primary_assembly
-RAT_BOWTIE2_DIR=/srv/data/genome/rat/ensembl-94/bowtie2_indices/toplevel
+MOUSE_BISULFITE_DIR=/srv/data/genome/mouse/ensembl-95
+HUMAN_BISULFITE_DIR=/srv/data/genome/human/ensembl-95
+RAT_BISULFITE_DIR=/srv/data/genome/rat/ensembl-95
 
 MAPPER_INDICES=mapper_indexes
 COLLATE_RAW_READS=raw_reads
@@ -37,7 +38,7 @@ $(SORTED_READS): $(MAPPED_READS)
 $(MAPPED_READS): $(MAPPER_INDICES)/mouse $(MAPPER_INDICES)/human $(MAPPER_INDICES)/rat $(COLLATE_RAW_READS)
 	# Map reads for each sample to each species' genome
 	mkdir -p $(MAPPED_READS)
-	map_reads_dnaseq "mouse human rat" "$(SAMPLES)" $(MAPPER_INDICES) $(NUM_THREADS) $(COLLATE_RAW_READS) $(MAPPED_READS) paired bowtie2
+	map_reads_bisulfite "mouse human rat" "$(SAMPLES)" $(MAPPER_INDICES) $(NUM_THREADS) $(COLLATE_RAW_READS) $(MAPPED_READS) paired bismark
 
 $(COLLATE_RAW_READS): 
 	# Create a directory with sub-directories for each sample, each of which
@@ -47,13 +48,13 @@ $(COLLATE_RAW_READS):
 
 $(MAPPER_INDICES)/mouse: 
 	mkdir -p $(MAPPER_INDICES)
-	ln -s $(MOUSE_BOWTIE2_DIR) $(MAPPER_INDICES)/mouse
+	ln -s $(MOUSE_BISULFITE_DIR) $(MAPPER_INDICES)/mouse
 
 $(MAPPER_INDICES)/human: 
 	mkdir -p $(MAPPER_INDICES)
-	ln -s $(HUMAN_BOWTIE2_DIR) $(MAPPER_INDICES)/human
+	ln -s $(HUMAN_BISULFITE_DIR) $(MAPPER_INDICES)/human
 
 $(MAPPER_INDICES)/rat: 
 	mkdir -p $(MAPPER_INDICES)
-	ln -s $(RAT_BOWTIE2_DIR) $(MAPPER_INDICES)/rat
+	ln -s $(RAT_BISULFITE_DIR) $(MAPPER_INDICES)/rat
 

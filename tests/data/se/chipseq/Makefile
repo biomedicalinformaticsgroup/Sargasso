@@ -2,8 +2,6 @@ NUM_THREADS=2
 
 DATA_TYPE=dnaseq
 
-MAPPER_EXECUTABLE=bowtie2
-
 SAMBAMBA_SORT_TMP_DIR=/tmp
 
 SAMPLES=chiseq_mouse_se_sample

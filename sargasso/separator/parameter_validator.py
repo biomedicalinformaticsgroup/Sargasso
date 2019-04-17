@@ -293,3 +293,21 @@ class DnaSeqParameterValidator(ParameterValidator):
             "Bowtie2 index directory for species {species} should exist".format(
                 species=species),
             nullable=True)
+
+class BisulfiteParameterValidator(DnaSeqParameterValidator):
+    @classmethod
+    def _validate_species_options(cls, species, species_options):
+        """
+        Validate command-line options for a species are correctly specified.
+        species: species identification string
+        species_options: dictionary of options specific to a particular species.
+        """
+        cls.validate_file_option(
+            species_options[opts.GENOME_FASTA],
+            "Could not open species {species} FASTA file".format(species=species),
+            nullable=True)
+        cls.validate_dir_option(
+            species_options[opts.MAPPER_INDEX],
+            "Bisulfite index directory for species {species} should exist".format(
+                species=species),
+            nullable=True)

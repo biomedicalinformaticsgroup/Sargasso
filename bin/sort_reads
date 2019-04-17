@@ -15,5 +15,11 @@ for species in ${SPECIES}; do
     for sample in ${SAMPLES}; do
         sample_bam=${sample}.${species}.bam
         sambamba sort --tmpdir ${TMP_DIR} -t ${NUM_THREADS} -n -o ${OUTPUT_DIR}/${sample_bam} ${INPUT_DIR}/${sample_bam}
+
+        #bismark generate .ambig.bam file. sort it if exist.
+        bismark_ambig_bam=${sample}.${species}.ambig.bam
+        if [[ -e "${INPUT_DIR}/${bismark_ambig_bam}" ]]; then
+            sambamba sort --tmpdir ${TMP_DIR} -t ${NUM_THREADS} -n -o ${OUTPUT_DIR}/${bismark_ambig_bam} ${INPUT_DIR}/${bismark_ambig_bam}
+        fi
     done
 done

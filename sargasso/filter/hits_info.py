@@ -97,3 +97,27 @@ class DnaSeqHitsInfo(HitsInfo):
     @classmethod
     def _get_alignment_scores(cls, hit):
         return hit.get_tag("AS")
+
+
+class BisulfiteHitsInfo(HitsInfo):
+#     Bismark BAM/SAM OUTPUT (default):
+#
+# (1) QNAME  (seq-ID)
+# (2) FLAG   (this flag tries to take the strand a bisulfite read originated from into account (this is different from ordinary DNA alignment flags!))
+# (3) RNAME  (chromosome)
+# (4) POS    (start position)
+# (5) MAPQ   (always 255 for use with Bowtie)
+# (6) CIGAR
+# (7) RNEXT
+# (8) PNEXT
+# (9) TLEN
+# (10) SEQ
+# (11) QUAL   (Phred33 scale)
+# (12) NM-tag (edit distance to the reference)
+# (13) MD-tag (base-by-base mismatches to the reference (handles indels)
+# (14) XM-tag (methylation call string)
+# (15) XR-tag (read conversion state for the alignment)
+# (16) XG-tag (genome conversion state for the alignment)
+# (17) XA/XB-tag (non-bisulfite mismatches) (optional!)
+    #todo bisulfite
+    pass

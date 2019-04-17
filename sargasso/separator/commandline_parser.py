@@ -180,6 +180,11 @@ class DnaSeqCommandlineParser(CommandlineParser):
         return species_options
 
 
+class BisulfiteCommandlineParser(DnaSeqCommandlineParser):
+    #todo bisulfite
+    pass
+
+
 class SampleInfo(object):
     """
     Encapsulates sample names and their accompanying reads files.

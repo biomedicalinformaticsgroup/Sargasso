@@ -246,3 +246,8 @@ input BAM files are correctly sorted will result in erroneous output.
 
 class DnaSeqFilterController(FilterController):
     DOC = RnaSeqFilterController.DOC
+
+
+
+class BisulfiteFilterController(FilterController):
+    DOC = RnaSeqFilterController.DOC

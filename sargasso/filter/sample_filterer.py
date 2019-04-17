@@ -222,3 +222,11 @@ class DnaSeqSampleFilterer(SampleFilterer):
     def __init__(self, commandline_parser):
         SampleFilterer.__init__(
             self, hits_manager.DnaSeqHitsManager, commandline_parser)
+
+
+class BisulfiteSampleFilterer(SampleFilterer):
+    DOC = RnaSeqSampleFilterer.DOC
+
+    def __init__(self, commandline_parser):
+        SampleFilterer.__init__(
+            self, hits_manager.BisulfiteHitsManager, commandline_parser)

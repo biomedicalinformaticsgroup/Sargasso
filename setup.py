@@ -19,12 +19,14 @@ setup(
     scripts=[
         'bin/build_star_index',
         'bin/build_bowtie2_index',
+        'bin/build_bisulfite_index',
         'bin/collate_raw_reads',
         'bin/filter_control',
         'bin/filter_reads',
         'bin/filter_sample_reads',
         'bin/map_reads_rnaseq',
         'bin/map_reads_dnaseq',
+        'bin/map_reads_bisulfite',
         'bin/sort_reads',
         'bin/species_separator',
     ]

@@ -103,3 +103,17 @@ class _DnaSeqDataTypeManager(_BaseDataTypeManager):
                 sfs.DnaSeqSampleFilterer)
 
 
+@_data_type
+class _BisulfiteDataTypeManager(_BaseDataTypeManager):
+    NAME = "bisulfite"
+
+    def __init__(self):
+        _BaseDataTypeManager.__init__(
+            self,
+            clp.BisulfiteCommandlineParser,
+            pv.BisulfiteParameterValidator,
+            fw.BisulfiteMakefileWriter,
+            sps.BisulfiteSeparator,
+            fcs.BisulfiteFilterController,
+            sfs.BisulfiteSampleFilterer)
+

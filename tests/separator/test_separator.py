@@ -60,6 +60,75 @@ def test_run_chipseq_pe_makefile(tmpdir):
             "human", "/srv/data/genome/human/ensembl-94/bowtie2_indices/primary_assembly",
             "rat", "/srv/data/genome/rat/ensembl-94/bowtie2_indices/toplevel"
             ]
+
     get_data_type_manager(['dnaseq'], Separator.DOC).get_separator().run(args)
     assert filecmp.cmp(resource_filename('tests.data.pe.chipseq', 'Makefile'),
                        tmpdir.join("chipseq_test_pe/Makefile").strpath), "Something wrong with chipseq make file!"
+
+
+def test_run_bisulfite_se_makefile(tmpdir):
+    args = ["bisulfite",
+            "--reads-base-dir={}".format(resource_filename("tests.data", "raw_reads")),
+            "--num-threads", "2", "--best",
+            "--sambamba-sort-tmp-dir", "/tmp",
+            resource_filename('tests.data.se.bisulfite', 'bisulfite.tsv'),
+            tmpdir.join("bisulfite_test_se").strpath,
+            "mouse", "/srv/data/genome/mouse/ensembl-95",
+            "human", "/srv/data/genome/human/ensembl-95",
+            "rat", "/srv/data/genome/rat/ensembl-95"
+            ]
+    get_data_type_manager(['bisulfite'], Separator.DOC).get_separator().run(args)
+    print('\n===========')
+
+    with open(tmpdir.join("bisulfite_test_se/Makefile").strpath, 'r') as fin:
+        print fin.read()
+    print(tmpdir.join("bisulfite_test_se").strpath)
+    assert True
+    # assert filecmp.cmp(resource_filename('tests.data.pe.chipseq', 'Makefile'),
+    #                    tmpdir.join("chipseq_test_pe/Makefile").strpath), "Something wrong with chipseq make file!"
+
+
+
+def test_run_bisulfite_pe_makefile(tmpdir):
+    args = ["bisulfite",
+            "--reads-base-dir={}".format(resource_filename("tests.data", "raw_reads")),
+            "--num-threads", "2", "--best",
+            "--sambamba-sort-tmp-dir", "/tmp",
+            resource_filename('tests.data.pe.bisulfite', 'bisulfite.tsv'),
+            tmpdir.join("bisulfite_test_pe").strpath,
+            "mouse", "/srv/data/genome/mouse/ensembl-95",
+            "human", "/srv/data/genome/human/ensembl-95",
+            "rat", "/srv/data/genome/rat/ensembl-95"
+            ]
+    get_data_type_manager(['bisulfite'], Separator.DOC).get_separator().run(args)
+    print('\n===========')
+
+    with open(tmpdir.join("bisulfite_test_pe/Makefile").strpath, 'r') as fin:
+        print fin.read()
+    print(tmpdir.join("bisulfite_test_pe").strpath)
+    assert True
+    # assert filecmp.cmp(resource_filename('tests.data.pe.chipseq', 'Makefile'),
+    #                    tmpdir.join("chipseq_test_pe/Makefile").strpath), "Something wrong with chipseq make file!"
+
+
+
+def test_run_bisulfite_se_makefile_build_index(tmpdir):
+    args = ["bisulfite",
+            "--reads-base-dir={}".format(resource_filename("tests.data", "raw_reads")),
+            "--num-threads", "2", "--best",
+            "--sambamba-sort-tmp-dir", "/tmp",
+            resource_filename('tests.data.se.bisulfite', 'bisulfite.tsv'),
+            tmpdir.join("bisulfite_test_se").strpath,
+            "mouse", "/srv/data/genome/mouse/ensembl-95/mouse_primary_assembly.fa",
+            "human", "/srv/data/genome/human/ensembl-95/human_primary_assembly.fa",
+            "rat", "/srv/data/genome/rat/ensembl-95/rat_toplevel.fa"
+            ]
+    get_data_type_manager(['bisulfite'], Separator.DOC).get_separator().run(args)
+    print('\n===========')
+
+    with open(tmpdir.join("bisulfite_test_se/Makefile").strpath, 'r') as fin:
+        print fin.read()
+    print(tmpdir.join("bisulfite_test_se").strpath)
+    assert True
+    # assert filecmp.cmp(resource_filename('tests.data.pe.chipseq', 'Makefile'),
+    #                    tmpdir.join("chipseq_test_pe/Makefile").strpath), "Something wrong with chipseq make file!"

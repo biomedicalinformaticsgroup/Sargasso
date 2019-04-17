@@ -586,6 +586,104 @@ class DnaSeqMakefileWriter(MakefileWriter):
         return "{species}_GENOME_FASTA_FILE".format(species=species.upper())
 
 
+class BisulfiteMakefileWriter(MakefileWriter):
+    # Write Makefile to output directory
+    def write(self, logger, options):
+        """
+        Write Makefile to results directory to perform species separation.
+        logger: logging object
+        options: dictionary of command-line options
+        sample_info: object encapsulating samples and their accompanying read files
+        """
+        sample_info = options[opts.SAMPLE_INFO_INDEX]
+        species_options = options[opts.SPECIES_OPTIONS_INDEX]
+        with self.writing_to_file(options[opts.OUTPUT_DIR_ARG], "Makefile"):
+            self._write_variable_definitions(options, sample_info, species_options)
+            self._write_target_variable_definitions()
+            self._write_phony_targets()
+            self._write_all_target()
+            self._write_filtered_reads_target(options)
+            self._write_sorted_reads_target(options)
+            self._write_mapped_reads_target(sample_info, options)
+            self._write_collate_raw_reads_target(sample_info)
+            self._write_main_bisulfite_index_targets(options)
+            # self._write_clean_target()
+
+    def _write_species_variable_definitions(self, species, species_options):
+        """
+        Write variable definitions for a particular species.
+
+        logger: logging object
+        writer: Makefile writer object
+        species: species number string
+        species_options: dictionary of options specific to a particular species.
+        """
+        if species_options[opts.GENOME_FASTA] is None:
+            self.set_variable(
+                self._get_bisulfite_index_variable(species),
+                species_options[opts.MAPPER_INDEX])
+        else:
+            self.set_variable(
+                self._get_genome_fasta_variable(species),
+                species_options[opts.GENOME_FASTA])
+
+    @classmethod
+    def _get_bisulfite_index_variable(cls, species):
+        return "{species}_BISULFITE_DIR".format(species=species.upper())
+
+    @classmethod
+    def _get_genome_fasta_variable(cls, species):
+        return "{species}_GENOME_FASTA_FILE".format(species=species.upper())
+
+    def _write_main_bisulfite_index_targets(self, options):
+        """
+        Write targets to create or link to Bowtie indices to Makefile.
+
+        logger: logging object
+        writer: Makefile writer object
+        options: dictionary of command-line options
+        """
+        for i, species in enumerate(options[opts.SPECIES_ARG]):
+            species_options = self._get_species_options(options, i)
+            self._write_species_main_bisulfite_index_target(
+                species, species_options, options[opts.MAPPER_INDEX_EXECUTABLE])
+
+    def _write_species_main_bisulfite_index_target(
+            self, species, species_options, executable):
+        """
+        Write target to create or link to Bowtie index for a species to Makefile.
+
+        logger: logging object
+        writer: Makefile writer object
+        species_var: Makefile variable for species
+        species_options: dictionary of command-line options for the particular
+        species
+        """
+
+        target = "{index}/{spec}".format(
+            index=self.variable_val(MakefileWriter.MAPPER_INDICES_TARGET),
+            spec=species)
+
+        with self.target_definition(target, [], raw_target=True):
+            if species_options[opts.GENOME_FASTA] is None:
+                self.make_target_directory(MakefileWriter.MAPPER_INDICES_TARGET)
+                self.add_command(
+                    "ln",
+                    ["-s",
+                     self.variable_val(self._get_bisulfite_index_variable(species)),
+                     target])
+            else:
+                self.make_target_directory(target, raw_target=True)
+                self.add_command(
+                    "build_bisulfite_index",
+                    [self.variable_val(self._get_genome_fasta_variable(species)),
+                     self.variable_val(MakefileWriter.NUM_THREADS_VARIABLE),
+                     target, executable])
+
+
+
+
+
 class ExecutionRecordWriter(Writer):
     EXECUTION_RECORD_ENTRIES = [
         ["Data Type", opts.DATA_TYPE_ARG],
