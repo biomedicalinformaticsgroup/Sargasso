@@ -1,6 +1,5 @@
 NUM_THREADS=2
 
-
 DATA_TYPE=bisulfite
 
 SAMBAMBA_SORT_TMP_DIR=/tmp

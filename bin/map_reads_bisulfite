@@ -24,14 +24,7 @@ function bisulfite_se_reads {
     ID=${SAMPLE}.${SPECIES}
 
     # This produce two file in the current folder, ${ID}.sam and ${ID}_SE_repoet.txt
-    ${BISMARK_EXECUTABLE} -sam --ambiguous --bowtie2 -p ${NUM_THREADS} --basename ${ID} ${INDEX_DIR} ${READ_FILES} > ${OUTPUT_DIR}/${ID}.log.out 2>&1
-
-    mv ${ID}.sam ${OUTPUT_DIR}
-    mv ${ID}_SE_report.txt ${OUTPUT_DIR}
-
-    sambamba view -S ${OUTPUT_DIR}/${ID}.sam -f bam > ${OUTPUT_DIR}/${ID}.bam
-
-    rm -rf ${OUTPUT_DIR}/${ID}.sam
+    ${BISMARK_EXECUTABLE} --non_bs_mm --ambig_bam --bowtie2 -p ${NUM_THREADS}  --output_dir ${OUTPUT_DIR} --basename ${ID} ${INDEX_DIR} ${READ_FILES} > ${OUTPUT_DIR}/${ID}.log.out 2>&1
 }
 
 function bisulfite_pe_reads {
@@ -46,11 +39,15 @@ function bisulfite_pe_reads {
 
     ID=${SAMPLE}.${SPECIES}
 
-    ${BISMARK_EXECUTABLE} --ambig_bam --bowtie2 -p ${NUM_THREADS} --output_dir ${OUTPUT_DIR} --basename ${ID} ${INDEX_DIR} -1 ${READ_1_FILES} -2 ${READ_2_FILES}  > ${OUTPUT_DIR}/${ID}.log.out 2>&1
+    # This produce three file in the current folder, ${ID}_pe.bam, ${ID}_pe.ambig.bam and ${ID}_PE_repoet.txt
+    ${BISMARK_EXECUTABLE} --non_bs_mm --ambig_bam --bowtie2 -p ${NUM_THREADS} --output_dir ${OUTPUT_DIR} --basename ${ID} ${INDEX_DIR} -1 ${READ_1_FILES} -2 ${READ_2_FILES}  > ${OUTPUT_DIR}/${ID}.log.out 2>&1
 
-    # rename the bam file to our naming convention
     mv ${OUTPUT_DIR}/${ID}_pe.bam ${OUTPUT_DIR}/${ID}.bam
     mv ${OUTPUT_DIR}/${ID}_pe.ambig.bam ${OUTPUT_DIR}/${ID}.ambig.bam
+
+    ## we merge the two bam file ${ID}.bam and ${ID}.ambig.bam into one the bam file with our naming convention
+    #sambamba merge -l 1 ${OUTPUT_DIR}/${ID}.bam ${OUTPUT_DIR}/${ID}_pe.bam ${OUTPUT_DIR}/${ID}_pe.ambig.bam
+    #rm -rf ${OUTPUT_DIR}/${ID}_pe.bam ${OUTPUT_DIR}/${ID}_pe.ambig.bam
 
 }
 

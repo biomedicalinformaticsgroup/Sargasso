@@ -20,6 +20,10 @@ for species in ${SPECIES}; do
         bismark_ambig_bam=${sample}.${species}.ambig.bam
         if [[ -e "${INPUT_DIR}/${bismark_ambig_bam}" ]]; then
             sambamba sort --tmpdir ${TMP_DIR} -t ${NUM_THREADS} -n -o ${OUTPUT_DIR}/${bismark_ambig_bam} ${INPUT_DIR}/${bismark_ambig_bam}
+            ## we merge the sample_bam and the bismark_ambig_bam file
+            mv ${OUTPUT_DIR}/${sample_bam} ${OUTPUT_DIR}/${sample_bam%.bam}.premerge.bam
+            sambamba merge -l 1 ${OUTPUT_DIR}/${sample_bam} ${OUTPUT_DIR}/${sample_bam%.bam}.premerge.bam ${OUTPUT_DIR}/${bismark_ambig_bam}
         fi
+
     done
 done

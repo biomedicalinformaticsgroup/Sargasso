@@ -1,1 +1,0 @@
-Sample,Assigned-Hits-mouse,Assigned-Reads-mouse,Rejected-Hits-mouse,Rejected-Reads-mouse,Ambiguous-Hits-mouse,Ambiguous-Reads-mouse,Assigned-Hits-human,Assigned-Reads-human,Rejected-Hits-human,Rejected-Reads-human,Ambiguous-Hits-human,Ambiguous-Reads-human,Assigned-Hits-rat,Assigned-Reads-rat,Rejected-Hits-rat,Rejected-Reads-rat,Ambiguous-Hits-rat,Ambiguous-Reads-rat

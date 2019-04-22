@@ -1,0 +1,42 @@
+Bismark report for: raw_reads/bisulfite_human_se_sample/reads_1/bisulfite_human_se.fastq.gz (version: v0.21.0)
+Option '--directional' specified (default mode): alignments to complementary strands (CTOT, CTOB) were ignored (i.e. not performed)
+Bismark was run with Bowtie 2 against the bisulfite genome of /srv/data/genome/mouse/ensembl-95/ with the specified options: -q --score-min L,0,-0.2 -p 2 --reorder --ignore-quals
+
+Final Alignment report
+======================
+Sequences analysed in total:	1000
+Number of alignments with a unique best hit from the different alignments:	1
+Mapping efficiency:	0.1%
+Sequences with no alignments under any condition:	994
+Sequences did not map uniquely:	5
+Sequences which were discarded because genomic sequence could not be extracted:	0
+
+Number of sequences with unique best (first) alignment came from the bowtie output:
+CT/CT:	1	((converted) top strand)
+CT/GA:	0	((converted) bottom strand)
+GA/CT:	0	(complementary to (converted) top strand)
+GA/GA:	0	(complementary to (converted) bottom strand)
+
+Number of alignments to (merely theoretical) complementary strands being rejected in total:	0
+
+Final Cytosine Methylation Report
+=================================
+Total number of C's analysed:	16
+
+Total methylated C's in CpG context:	0
+Total methylated C's in CHG context:	0
+Total methylated C's in CHH context:	0
+Total methylated C's in Unknown context:	0
+
+Total unmethylated C's in CpG context:	0
+Total unmethylated C's in CHG context:	3
+Total unmethylated C's in CHH context:	13
+Total unmethylated C's in Unknown context:	0
+
+Can't determine percentage of methylated Cs in CpG context if value was 0
+C methylated in CHG context:	0.0%
+C methylated in CHH context:	0.0%
+Can't determine percentage of methylated Cs in Unknown context (CN or CHN) if value was 0
+
+
+Bismark completed in 0d 0h 1m 28s

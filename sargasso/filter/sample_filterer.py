@@ -2,10 +2,9 @@ import os
 import os.path
 import os.path
 import schema
-import sargasso.separator.options as opts
 
+import sargasso.separator.options as opts
 from sargasso.filter import hits_manager, hits_checker
-from sargasso.separator.commandline_parser import CommandlineParser
 from sargasso.separator.parameter_validator import ParameterValidator
 from sargasso.utils import log
 
@@ -30,9 +29,9 @@ The available commands are:
     SPECIES_INPUT_BAM = "<species-input-bam>"
     SPECIES_OUTPUT_BAM = "<species-output-bam>"
 
-    def __init__(self, hits_manager_cls, commandline_parser):
-
+    def __init__(self, hits_manager_cls, hits_checker_cls, commandline_parser):
         self.hits_manager_cls = hits_manager_cls
+        self.hits_checker_cls = hits_checker_cls
         self.commandline_parser = commandline_parser
 
     @classmethod
@@ -56,19 +55,19 @@ The available commands are:
     def _filter_sample_reads(self, logger, options):
         logger.info("Starting species separation.")
 
-        h_check = hits_checker.HitsChecker(
-                options[opts.MISMATCH_THRESHOLD_ARG],
-                options[opts.MINMATCH_THRESHOLD_ARG],
-                options[opts.MULTIMAP_THRESHOLD_ARG],
-                options[opts.REJECT_MULTIMAPS],
-                logger)
+        h_check = self.hits_checker_cls(
+            options[opts.MISMATCH_THRESHOLD_ARG],
+            options[opts.MINMATCH_THRESHOLD_ARG],
+            options[opts.MULTIMAP_THRESHOLD_ARG],
+            options[opts.REJECT_MULTIMAPS],
+            logger)
 
         hits_managers = [self.hits_manager_cls(
-                             i + 1,
-                             options[SampleFilterer.SPECIES_INPUT_BAM][i],
-                             options[SampleFilterer.SPECIES_OUTPUT_BAM][i],
-                             logger)
-                     for i, species in enumerate(options[opts.SPECIES_ARG])]
+            i + 1,
+            options[SampleFilterer.SPECIES_INPUT_BAM][i],
+            options[SampleFilterer.SPECIES_OUTPUT_BAM][i],
+            logger)
+            for i, species in enumerate(options[opts.SPECIES_ARG])]
 
         all_hits_managers = hits_managers
 
@@ -81,13 +80,12 @@ The available commands are:
             if len(hits_managers) == 0:
                 break
 
-            if __debug__:
-                logger.debug("Read:{}".format(hits_managers[0].hits_for_read[0].qname))
-
             # If only one hits manager remains, all remaining reads in the
             # input file for that species can be written to the output file for
             # that species (or discarded as ambiguous, if necessary).
             if len(hits_managers) == 1:
+                if __debug__:
+                    logger.debug("Read:{}".format(hits_managers[0].hits_for_read[0].qname))
                 h_check.check_and_write_hits_for_remaining_reads(hits_managers[0])
                 break
 
@@ -104,6 +102,17 @@ The available commands are:
                     competing_hits_managers = [cman]
                     min_read_name = read_name
 
+            # # xintodo todo debug remove
+            # # only looking into specific read
+            # if competing_hits_managers[0].hits_for_read[0].qname != 'SRR7461526.1045_1045_length=150':
+            #     for hits_manager in competing_hits_managers:
+            #         hits_manager.clear_hits()
+            #     continue
+
+            if __debug__:
+                logger.debug(
+                    "Checking Read:{} ({} competing manager)".format(competing_hits_managers[0].hits_for_read[0].qname,
+                                                                     len(competing_hits_managers)))
 
             # If there's only one hits manager for this read, write hits for
             # that read to the output file for that species (or discard as
@@ -213,7 +222,7 @@ ensure input BAM files are correctly sorted will result in erroneous output.
 
     def __init__(self, commandline_parser):
         SampleFilterer.__init__(
-            self, hits_manager.RnaSeqHitsManager, commandline_parser)
+            self, hits_manager.RnaSeqHitsManager, hits_checker.RnaSeqHitsChecker, commandline_parser)
 
 
 class DnaSeqSampleFilterer(SampleFilterer):
@@ -221,7 +230,7 @@ class DnaSeqSampleFilterer(SampleFilterer):
 
     def __init__(self, commandline_parser):
         SampleFilterer.__init__(
-            self, hits_manager.DnaSeqHitsManager, commandline_parser)
+            self, hits_manager.DnaSeqHitsManager, hits_checker.DnaSeqHitsChecker, commandline_parser)
 
 
 class BisulfiteSampleFilterer(SampleFilterer):
@@ -229,4 +238,4 @@ class BisulfiteSampleFilterer(SampleFilterer):
 
     def __init__(self, commandline_parser):
         SampleFilterer.__init__(
-            self, hits_manager.BisulfiteHitsManager, commandline_parser)
+            self, hits_manager.BisulfiteHitsManager, hits_checker.BisulfiteHitsChecker, commandline_parser)

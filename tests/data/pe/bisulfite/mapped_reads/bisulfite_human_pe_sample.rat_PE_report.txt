@@ -39,4 +39,4 @@ C methylated in CHH context:	1.3%
 C methylated in unknown context (CN or CHN):	50.0%
 
 
-Bismark completed in 0d 0h 1m 38s
+Bismark completed in 0d 0h 0m 57s

@@ -1,7 +1,7 @@
 from collections import namedtuple
 
 
-class HitsChecker:
+class HitsChecker(object):
     REJECTED = -1
     AMBIGUOUS = -2
 
@@ -91,6 +91,7 @@ class HitsChecker:
     def check_hits(self, hits_info):
         # check that the hits for a read are - in themselves - satisfactory to
         # be assigned to a species.
+        # @xintodo can we return after each IF to skip the result tests
 
         violated = False
 
@@ -98,24 +99,20 @@ class HitsChecker:
             violated = True
             if __debug__:
                 self.logger.debug(
-                    'only one competing hits manager but violated multimap.')
+                    '    violated multimap.')
 
         if hits_info.get_primary_mismatches() > \
                 round(self.mismatch_thresh * hits_info.get_total_length()):
             violated = True
             if __debug__:
                 self.logger.debug(
-                    'only one competing hits manager but violated primary mismatches.')
+                    '    violated primary mismatches.')
 
         if self._check_cigars(hits_info) == self.CIGAR_FAIL:
             violated = True
             if __debug__:
                 self.logger.debug(
-                    'only one competing hits manager but violated primary CIGAR.')
-
-        if __debug__:
-            if not violated:
-                self.logger.debug('assigned due to only one competing filterer!')
+                    '    violated primary CIGAR.')
 
         return not violated
 
@@ -219,3 +216,108 @@ class HitsChecker:
             return self.CIGAR_LESS_GOOD
 
         return response
+
+
+class RnaSeqHitsChecker(HitsChecker):
+    pass
+
+
+class DnaSeqHitsChecker(HitsChecker):
+    pass
+
+
+class BisulfiteHitsChecker(HitsChecker):
+
+    ThresholdData = namedtuple(
+        'ThresholdData',
+        ['index', 'violated', 'multimaps', 'mismatches', 'cigar_check', 'is_ambig'])
+
+    def check_hits(self, hits_info):
+        # check that the hits for a read are - in themselves - satisfactory to
+        # be assigned to a species.
+        violated = not super(self.__class__, self).check_hits(hits_info)
+
+        if hits_info.get_is_ambig_hit():
+            if __debug__:
+                self.logger.debug('    violated ambig.')
+            violated = True
+
+        return not violated
+
+    def _check_thresholds(self, index, hits_manager):
+
+        hits_info = hits_manager.hits_info
+
+        if __debug__:
+            self.logger.debug("  species {}:".format(hits_manager.species_id))
+
+        violated = not self.check_hits(hits_info)
+
+        return self.ThresholdData(
+            index, violated, hits_info.get_multimaps(), hits_info.get_primary_mismatches(),
+            hits_info.get_primary_cigars(), hits_info.get_is_ambig_hit())
+
+    def _assign_hits_standard(self, threshold_data):
+
+        unique = [not t.is_ambig for t in threshold_data]
+        # if any(unique):
+        #     ## we need to keep all the threshold data, is any of it has is_ambig=False
+        #     threshold_data=threshold_data
+        #     if any([t.is_ambig for t in threshold_data]):
+        #         print('debug break point')
+        # else:
+        #     ## all hits are ambig, skip
+        #     threshold_data=[]
+
+        if all(unique):
+            threshold_data = [t for t in threshold_data if not t.violated]
+        else:
+            ## all hits are ambig, skip
+            threshold_data=[]
+
+        num_hits_managers = len(threshold_data)
+
+        if num_hits_managers == 0:
+            return self.REJECTED
+        elif num_hits_managers == 1:
+            if __debug__:
+                self.logger.debug('assigned due to only one filter left after checking threshold!')
+            return threshold_data[0].index
+
+        min_mismatches = min([m.mismatches for m in threshold_data])
+        threshold_data = [t for t in threshold_data
+                          if t.mismatches == min_mismatches]
+
+        if len(threshold_data) == 1:
+            if __debug__:
+                self.logger.debug('assigne due to primary hit min_mismatches!')
+            return threshold_data[0].index
+
+        min_cigar_check = min([m.cigar_check for m in threshold_data])
+        threshold_data = [t for t in threshold_data
+                          if t.cigar_check == min_cigar_check]
+
+        if len(threshold_data) == 1:
+            if __debug__:
+                self.logger.debug('assigne due to primart hit CIGAR!')
+            return threshold_data[0].index
+
+        min_multimaps = min([m.multimaps for m in threshold_data])
+        threshold_data = [t for t in threshold_data
+                          if t.multimaps == min_multimaps]
+
+        if len(threshold_data) == 1:
+            # # todo remove debug multimap
+            if __debug__:
+                self.logger.debug('assigned due to number of multimap!')
+            return threshold_data[0].index
+
+        if __debug__:
+            self.logger.debug('assigned due to Ambigous!')
+        return self.AMBIGUOUS
+
+    def _assign_hits_reject_multimaps(self, threshold_data):
+        if len([t for t in threshold_data if t.multimaps > 1]) > 0:
+            return self.REJECTED
+
+        return self._assign_hits_standard(threshold_data)
