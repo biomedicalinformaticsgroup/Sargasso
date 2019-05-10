@@ -24,7 +24,7 @@ function bisulfite_se_reads {
     ID=${SAMPLE}.${SPECIES}
 
     # This produce two file in the current folder, ${ID}.sam and ${ID}_SE_repoet.txt
-    ${BISMARK_EXECUTABLE} --non_bs_mm --ambig_bam --bowtie2 -p ${NUM_THREADS}  --output_dir ${OUTPUT_DIR} --basename ${ID} ${INDEX_DIR} ${READ_FILES} > ${OUTPUT_DIR}/${ID}.log.out 2>&1
+    ${BISMARK_EXECUTABLE} --non_bs_mm --ambig_bam --bowtie2 --output_dir ${OUTPUT_DIR} --basename ${ID} ${INDEX_DIR} ${READ_FILES} > ${OUTPUT_DIR}/${ID}.log.out 2>&1
 }
 
 function bisulfite_pe_reads {
@@ -40,7 +40,7 @@ function bisulfite_pe_reads {
     ID=${SAMPLE}.${SPECIES}
 
     # This produce three file in the current folder, ${ID}_pe.bam, ${ID}_pe.ambig.bam and ${ID}_PE_repoet.txt
-    ${BISMARK_EXECUTABLE} --non_bs_mm --ambig_bam --bowtie2 -p ${NUM_THREADS} --output_dir ${OUTPUT_DIR} --basename ${ID} ${INDEX_DIR} -1 ${READ_1_FILES} -2 ${READ_2_FILES}  > ${OUTPUT_DIR}/${ID}.log.out 2>&1
+    ${BISMARK_EXECUTABLE} --non_bs_mm --ambig_bam --bowtie2 --output_dir ${OUTPUT_DIR} --basename ${ID} ${INDEX_DIR} -1 ${READ_1_FILES} -2 ${READ_2_FILES}  > ${OUTPUT_DIR}/${ID}.log.out 2>&1
 
     mv ${OUTPUT_DIR}/${ID}_pe.bam ${OUTPUT_DIR}/${ID}.bam
     mv ${OUTPUT_DIR}/${ID}_pe.ambig.bam ${OUTPUT_DIR}/${ID}.ambig.bam

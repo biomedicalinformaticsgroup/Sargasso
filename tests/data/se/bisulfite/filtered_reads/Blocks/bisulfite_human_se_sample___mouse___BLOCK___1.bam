@@ -65,8 +65,5 @@
 @SQ	SN:GL456368.1	LN:20208
 @SQ	SN:JH584292.1	LN:14945
 @SQ	SN:JH584295.1	LN:1976
-@PG	ID:Bismark	CL:"bismark --non_bs_mm --ambig_bam --bowtie2 -p 2 --output_dir mapped_reads --basename bisulfite_human_se_sample.mouse mapper_indexes/mouse raw_reads/bisulfite_human_se_sample/reads_1/bisulfite_human_se.fastq.gz"	VN:v0.21.0
-@PG	ID:sambamba	CL:view -t 1 --filter read_name >= 'SRR7289979.100_D7LYMFP1_0262:5:1101:3963:1976_length=51' and read_name < 'SRR7289979.550_D7LYMFP1_0262:5:1101:16686:1973_length=51' sorted_reads/bisulfite_human_se_sample.mouse.bam -o filtered_reads/Blocks/bisulfite_human_se_sample___mouse___BLOCK___1.bam -l 1 -h	PP:Bismark	VN:0.6.6
-SRR7289979.132_D7LYMFP1_0262:5:1101:5097:1940_length=51	0	16	98107691	1	51M	*	0	0	NGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGG	#4=ADDFFHCFHHJJEGIJJJFHIJJJEGHJJJCGHIJJBGHIJJ?DHIJJ	AS:i:-1	XS:i:-1	XN:i:0	XM:i:1	XO:i:0	XG:i:0	NM:i:1	MD:Z:0G50	YT:Z:UU
-SRR7289979.139_D7LYMFP1_0262:5:1101:5426:1929_length=51	0	18	90602163	1	51M	*	0	0	NGGGTTAGGGTTAGGGTTAAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAG	#4=DDDFFHHCFHJJJEGIJJJJCGIJJJEHIJJJBGHJJJ?FHIJJ=EHH	AS:i:-1	XS:i:-1	XN:i:0	XM:i:1	XO:i:0	XG:i:0	NM:i:1	MD:Z:0A50	YT:Z:UU
-SRR7289979.473_D7LYMFP1_0262:5:1101:14225:1972_length=51	0	2	126147891	3	51M	*	0	0	TAATTTTTTTGTTTTAGTTTTTTGAGTAGTTGGGATTATAGGTATGTATTA	CCCFFFFFHHHHHJJJIHIJJJIIFGDGHIIJJJHJIJJJJJBGIJFHIJC	AS:i:-6	XN:i:0	XM:i:1	XO:i:0	XG:i:0	NM:i:1	MD:Z:1G49	YT:Z:UU
+@PG	ID:Bismark	CL:"bismark --non_bs_mm --ambig_bam --bowtie2 --output_dir mapped_reads --basename bisulfite_human_se_sample.mouse mapper_indexes/mouse raw_reads/bisulfite_human_se_sample/reads_1/bisulfite_human_se.fastq.gz"	VN:v0.21.0
+@PG	ID:sambamba	CL:view -t 1 --filter read_name >= 'ERR2617091.1000_D00535:62:CCH6BANXX:1:1103:3514:2969_length=126' and read_name < 'ERR2617091.542_D00535:62:CCH6BANXX:1:1103:15949:2301_length=126' sorted_reads/bisulfite_human_se_sample.mouse.bam -o filtered_reads/Blocks/bisulfite_human_se_sample___mouse___BLOCK___1.bam -l 1 -h	PP:Bismark	VN:0.6.6

@@ -65,8 +65,5 @@
 @SQ	SN:GL456368.1	LN:20208
 @SQ	SN:JH584292.1	LN:14945
 @SQ	SN:JH584295.1	LN:1976
-@PG	ID:Bismark	CL:"bismark --non_bs_mm --ambig_bam --bowtie2 -p 2 --output_dir mapped_reads --basename bisulfite_human_se_sample.mouse mapper_indexes/mouse raw_reads/bisulfite_human_se_sample/reads_1/bisulfite_human_se.fastq.gz"	VN:v0.21.0
-@PG	ID:sambamba	CL:view -t 1 --filter read_name >= 'SRR7289979.550_D7LYMFP1_0262:5:1101:16686:1973_length=51' and read_name <= 'SRR7289979.9_D7LYMFP1_0262:5:1101:1453:1977_length=51' sorted_reads/bisulfite_human_se_sample.mouse.bam -o filtered_reads/Blocks/bisulfite_human_se_sample___mouse___BLOCK___2.bam -l 1 -h	PP:Bismark	VN:0.6.6
-SRR7289979.602_D7LYMFP1_0262:5:1101:17819:1971_length=51	0	19	7517003	0	51M	*	0	0	TTTTTTTTGTTTGTTTTTTTATTTGTTTTTTTTTTTTTTTTTTTTTTTTTT	CCCFFFFFHHHHHIJJJJJJIJJJIJJJJJJJJFDDDDDDDD05@DDDDDD	AS:i:-6	XS:i:-6	XN:i:0	XM:i:1	XO:i:0	XG:i:0	NM:i:1	MD:Z:20T30	YT:Z:UU
-SRR7289979.853_D7LYMFP1_0262:5:1101:2389:2057_length=51	0	12	116419141	8	51M	*	0	0	TTGTTTTAGTTTTTTGAGTAGTTAGGATTATAGGTGTGTGTTATTATGTTT	CCCFFFFFHHHHHJJJIJHHJIIIJJIJJIIJJJCGFHFHGIIJJJJJIIJ	NM:i:17	MD:Z:0C3C1C2C0C1C0C0C0A5C5C12C2C0C3C0C0C0	XM:Z:x...h.x..hh.hhh......h.....h............h..hh...hhx	XR:Z:CT	XG:Z:CT	XA:Z:1
-SRR7289979.876_D7LYMFP1_0262:5:1101:2516:2040_length=51	0	8	73207712	0	51M	*	0	0	TTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGGGAAAT	CCCFFFFFHHHHHJJJJJFDDDDDDDDD@053<B@################	AS:i:-6	XS:i:-6	XN:i:0	XM:i:1	XO:i:0	XG:i:0	NM:i:1	MD:Z:46A4	YT:Z:UU
+@PG	ID:Bismark	CL:"bismark --non_bs_mm --ambig_bam --bowtie2 --output_dir mapped_reads --basename bisulfite_human_se_sample.mouse mapper_indexes/mouse raw_reads/bisulfite_human_se_sample/reads_1/bisulfite_human_se.fastq.gz"	VN:v0.21.0
+@PG	ID:sambamba	CL:view -t 1 --filter read_name >= 'ERR2617091.542_D00535:62:CCH6BANXX:1:1103:15949:2301_length=126' and read_name <= 'ERR2617091.999_D00535:62:CCH6BANXX:1:1103:3700:2890_length=126' sorted_reads/bisulfite_human_se_sample.mouse.bam -o filtered_reads/Blocks/bisulfite_human_se_sample___mouse___BLOCK___2.bam -l 1 -h	PP:Bismark	VN:0.6.6
