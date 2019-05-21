@@ -37,6 +37,10 @@ def get_logger(stream, level):
     logger = logging.getLogger(__name__)
     logger.setLevel(LEVELS[level])
     logger.addHandler(handler)
+
+    # fhandler = logging.FileHandler("/home/xinhe/tmp/test.log")
+    # fhandler.setFormatter(formatter)
+    # logger.addHandler(fhandler)
     return logger
 
 

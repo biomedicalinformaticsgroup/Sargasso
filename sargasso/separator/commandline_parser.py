@@ -182,6 +182,7 @@ class DnaSeqCommandlineParser(CommandlineParser):
 
 class BisulfiteCommandlineParser(DnaSeqCommandlineParser):
     #todo bisulfite
+    # we might need to change the mismatch threadhold
     pass
 
 

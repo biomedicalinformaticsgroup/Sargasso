@@ -255,22 +255,19 @@ class BisulfiteHitsChecker(HitsChecker):
 
         return self.ThresholdData(
             index, violated, hits_info.get_multimaps(), hits_info.get_primary_mismatches(),
-            hits_info.get_primary_cigars(), hits_info.get_is_ambig_hit())
+            self._check_cigars(hits_info), hits_info.get_is_ambig_hit())
+
+
 
     def _assign_hits_standard(self, threshold_data):
 
         unique = [not t.is_ambig for t in threshold_data]
-        # if any(unique):
-        #     ## we need to keep all the threshold data, is any of it has is_ambig=False
-        #     threshold_data=threshold_data
-        #     if any([t.is_ambig for t in threshold_data]):
-        #         print('debug break point')
-        # else:
-        #     ## all hits are ambig, skip
-        #     threshold_data=[]
-
-        if all(unique):
-            threshold_data = [t for t in threshold_data if not t.violated]
+        if any(unique):
+            ## we need to keep all the threshold data, if any of it has is_ambig=False
+            ## in order to apply the following logic for the separation
+            ## check here for the logic https://github.com/statbio/Sargasso/wiki/Bisulfite-sequencing
+            if any([t.is_ambig for t in threshold_data]):
+                print('debug break point')
         else:
             ## all hits are ambig, skip
             threshold_data=[]
@@ -289,35 +286,50 @@ class BisulfiteHitsChecker(HitsChecker):
                           if t.mismatches == min_mismatches]
 
         if len(threshold_data) == 1:
-            if __debug__:
-                self.logger.debug('assigne due to primary hit min_mismatches!')
-            return threshold_data[0].index
+            ## if the better read is from the ambig species, we reject
+            if threshold_data[0].is_ambig:
+                return self.REJECTED
+            else:
+                if __debug__:
+                    self.logger.debug('assigne due to primary hit min_mismatches!')
+                return threshold_data[0].index
 
         min_cigar_check = min([m.cigar_check for m in threshold_data])
         threshold_data = [t for t in threshold_data
                           if t.cigar_check == min_cigar_check]
 
         if len(threshold_data) == 1:
-            if __debug__:
-                self.logger.debug('assigne due to primart hit CIGAR!')
-            return threshold_data[0].index
+            ## if the better read is from the ambig species, we reject
+            if threshold_data[0].is_ambig:
+                return self.REJECTED
+            else:
+                if __debug__:
+                    self.logger.debug('assigne due to primart hit CIGAR!')
+                return threshold_data[0].index
 
-        min_multimaps = min([m.multimaps for m in threshold_data])
-        threshold_data = [t for t in threshold_data
-                          if t.multimaps == min_multimaps]
-
-        if len(threshold_data) == 1:
-            # # todo remove debug multimap
-            if __debug__:
-                self.logger.debug('assigned due to number of multimap!')
-            return threshold_data[0].index
+        ## bismark only return A best hit, so the number of multimap will always be 1.
+        ## The actural number of multimap is unknown.
+        ## Thus we do not need to check multimap for bismark output
+        # min_multimaps = min([m.multimaps for m in threshold_data])
+        # threshold_data = [t for t in threshold_data
+        #                   if t.multimaps == min_multimaps]
+        #
+        # if len(threshold_data) == 1:
+        #     ## if the better read is from the ambig species, we reject
+        #     if threshold_data[0].is_ambig:
+        #         return self.REJECTED
+        #     else:
+        #         if __debug__:
+        #             self.logger.debug('assigned due to number of multimap!')
+        #         return threshold_data[0].index
 
         if __debug__:
             self.logger.debug('assigned due to Ambigous!')
         return self.AMBIGUOUS
 
     def _assign_hits_reject_multimaps(self, threshold_data):
-        if len([t for t in threshold_data if t.multimaps > 1]) > 0:
+        ## for bisulfite, the reject_multimaps means the reads is ambigours
+        if any([t for t in threshold_data if t.is_ambig]):
             return self.REJECTED
 
         return self._assign_hits_standard(threshold_data)
