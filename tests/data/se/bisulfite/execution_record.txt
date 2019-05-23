@@ -1,7 +1,7 @@
-Execution Record - 2019-04-22T16:45:16.059431
+Execution Record - 2019-05-15T13:14:55.975558
 Data Type: bisulfite
 Samples File: /home/xinhe/Projects/Sargasso/tests/data/se/bisulfite/bisulfite.tsv
-Output Dir: /tmp/pytest-of-xinhe/pytest-150/test_run_bisulfite_se_makefile0/bisulfite_test_se
+Output Dir: /home/xinhe/tmp/bisulfite_test_se
 Species: ['mouse', 'human', 'rat']
 Species info: ['/srv/data/genome/mouse/ensembl-95', '/srv/data/genome/human/ensembl-95', '/srv/data/genome/rat/ensembl-95']
 Reads Base Dir: /home/xinhe/Projects/Sargasso/tests/data/raw_reads

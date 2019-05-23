@@ -27,7 +27,7 @@ $(FILTERED_READS): $(SORTED_READS)
 	# For each sample, take the reads mapping to each genome and filter them
 	# to their correct species of origin
 	mkdir -p $(FILTERED_READS)
-	filter_reads $(DATA_TYPE) "$(SAMPLES)" $(SORTED_READS) $(FILTERED_READS) $(NUM_THREADS) 1.0 2.0 999999 "" info mouse human rat
+	filter_reads $(DATA_TYPE) "$(SAMPLES)" $(SORTED_READS) $(FILTERED_READS) $(NUM_THREADS) 1.0 2.0 999999 "" debug mouse human rat
 
 $(SORTED_READS): $(MAPPED_READS)
 	# For each sample, sort the mapped reads into read name order
