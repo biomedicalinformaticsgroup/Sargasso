@@ -95,7 +95,7 @@ The available commands are:
                 # continue
                 if __debug__:
                     logger.debug("(1) Read:{}, Species:{}".format(hits_managers[0].hits_for_read[0].qname,
-                                                                  hits_manager.species_id))
+                                                                  hits_managers[0].species_id))
                 h_check.check_and_write_hits_for_remaining_reads(hits_managers[0])
                 break
 
