@@ -81,13 +81,21 @@ The available commands are:
                 break
 
 
-            if __debug__:
-                logger.debug("Read:{}".format(hits_managers[0].hits_for_read[0].qname))
-
             # If only one hits manager remains, all remaining reads in the
             # input file for that species can be written to the output file for
             # that species (or discarded as ambiguous, if necessary).
             if len(hits_managers) == 1:
+                ## xintodo debug remove
+                ## to ignore one hits_manager case
+                # hits_managers[0].clear_hits()
+                # continue
+                ## only look into specific read
+                # if hits_managers[0].hits_for_read[0].qname != 'SRR5467502.10000_10000_length=100':
+                #    hits_managers[0].clear_hits()
+                # continue
+                if __debug__:
+                    logger.debug("(1) Read:{}, Species:{}".format(hits_managers[0].hits_for_read[0].qname,
+                                                                  hits_manager.species_id))
                 h_check.check_and_write_hits_for_remaining_reads(hits_managers[0])
                 break
 
@@ -103,18 +111,24 @@ The available commands are:
                 elif read_name < min_read_name:
                     competing_hits_managers = [cman]
                     min_read_name = read_name
-            #
-            # # xintodo todo debug remove
-            # # only looking into specific read
-            # # if competing_hits_managers[0].hits_for_read[0].qname != 'SRR5467502.19913_19913_length=37':
-            # #     for hits_manager in competing_hits_managers:
-            # #         hits_manager.clear_hits()
-            # #     continue
-            #
-            # if __debug__:
-            #     logger.debug(
-            #         "Checking Read:{} ({} competing manager)".format(competing_hits_managers[0].hits_for_read[0].qname,
-            #                                                          len(competing_hits_managers)))
+
+            ## xintodo debug remove
+            ## only look into specific read
+            # if min_read_name != 'SRR5467502.28463_28463_length=100':
+            #     for hits_manager in competing_hits_managers:
+            #         hits_manager.clear_hits()
+            #     continue
+            # only look into multiple competing_hits_managers
+            # if len(competing_hits_managers) < 2:
+            #     for hits_manager in competing_hits_managers:
+            #         hits_manager.clear_hits()
+            #     continue
+
+            if __debug__: logger.debug("({}) Read:{}, Species:{}".format(
+                len(competing_hits_managers),
+                competing_hits_managers[0].hits_for_read[0].qname,
+                [m.species_id for m in competing_hits_managers]))
+
 
             # If there's only one hits manager for this read, write hits for
             # that read to the output file for that species (or discard as

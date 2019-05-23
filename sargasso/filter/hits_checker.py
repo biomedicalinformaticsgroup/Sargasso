@@ -1,3 +1,6 @@
+from sargasso.filter.threshold_checker import *
+
+
 class HitsChecker(object):
     REJECTED = -1
     AMBIGUOUS = -2
@@ -10,7 +13,7 @@ class HitsChecker(object):
         self.multimap_thresh = multimap_thresh
         self._assign_hits = self._assign_hits_reject_multimaps \
             if reject_multimaps else self._assign_hits_standard
-        self.threshold_data_cls = ThresholdData
+        self.threshold_checker_cls = ThresholdChecker
 
         logger.debug(("PARAMS: mismatch - {mism}, minmatch - {minm}, " +
                       "multimap - {mult}").format(
@@ -82,9 +85,10 @@ class HitsChecker(object):
         num_hits_managers = len(threshold_data)
 
         if num_hits_managers == 0:
+            if __debug__: self.logger.debug('Reject: All violated!')
             return self.REJECTED
         elif num_hits_managers == 1:
-            if __debug__: self.logger.debug('assigned due to only one filter left after checking threshold!')
+            if __debug__: self.logger.debug('Assign {}: only valid threshold'.format(threshold_data[0].species_id))
             return threshold_data[0].species_id
 
         min_mismatches = min([m.mismatches for m in threshold_data])
@@ -92,7 +96,7 @@ class HitsChecker(object):
                           if t.mismatches == min_mismatches]
 
         if len(threshold_data) == 1:
-            if __debug__: self.logger.debug('assigne due to primary hit min_mismatches!')
+            if __debug__: self.logger.debug('Assign {}: min_mismatches!'.format(threshold_data[0].species_id))
             return threshold_data[0].species_id
 
         min_cigar_check = min([m.cigar_check for m in threshold_data])
@@ -100,7 +104,7 @@ class HitsChecker(object):
                           if t.cigar_check == min_cigar_check]
 
         if len(threshold_data) == 1:
-            if __debug__: self.logger.debug('assigne due to primart hit CIGAR!')
+            if __debug__: self.logger.debug('Assign {}: CIGAR!'.format(threshold_data[0].species_id))
             return threshold_data[0].species_id
 
         min_multimaps = min([m.multimaps for m in threshold_data])
@@ -108,24 +112,28 @@ class HitsChecker(object):
                           if t.multimaps == min_multimaps]
 
         if len(threshold_data) == 1:
-            # # todo remove debug multimap
-            if __debug__:
-                self.logger.debug('assigned due to number of multimap!')
+            if __debug__: self.logger.debug('Assign {}: number of multimap!'.format(threshold_data[0].species_id))
             return threshold_data[0].species_id
 
         if __debug__:
-            self.logger.debug('assigned due to Ambigous!')
+            self.logger.debug('Reject: Ambigous!')
         return self.AMBIGUOUS
 
     def _assign_hits_reject_multimaps(self, threshold_data):
         if len([t for t in threshold_data if t.multimaps > 1]) > 0:
+            if __debug__: self.logger.debug('Reject: is multimap!')
             return self.REJECTED
 
         return self._assign_hits_standard(threshold_data)
 
     def _check_thresholds(self, hits_manager):
-        return self.threshold_data_cls(hits_manager, self.mismatch_thresh, self.minmatch_thresh, self.multimap_thresh,
-                                       self.logger)
+        thc = self.threshold_checker_cls(hits_manager,
+                                         self.mismatch_thresh,
+                                         self.minmatch_thresh,
+                                         self.multimap_thresh)
+        if __debug__:
+            self.logger.debug(thc.to_debug_string())
+        return thc
 
 
 class RnaSeqHitsChecker(HitsChecker):
@@ -137,25 +145,11 @@ class DnaSeqHitsChecker(HitsChecker):
 
 
 class BisulfiteHitsChecker(HitsChecker):
-
-    def _check_thresholds(self, hits_manager):
-        # check that the hits for a read are - in themselves - satisfactory to
-        # be assigned to a species.
-        # return True if valid
-        threshold_data = super(self.__class__, self)._check_thresholds(hits_manager)
-
-        violated_ambig = False
-
-        is_ambig = hits_manager.hits_info.get_is_ambig_hit()
-        if is_ambig:
-            if __debug__: self.logger.debug('    violated ambig.')
-            violated_ambig = True
-
-        threshold_data.violated = threshold_data.violated or violated_ambig
-        threshold_data.is_ambig = is_ambig
-        threshold_data.violated_ambig = violated_ambig
-
-        return threshold_data
+    def __init__(self, mismatch_thresh, minmatch_thresh, multimap_thresh,
+                 reject_multimaps, logger):
+        super(self.__class__, self).__init__(mismatch_thresh, minmatch_thresh, multimap_thresh,
+                                             reject_multimaps, logger)
+        self.threshold_checker_cls = BisulfiteThresholdChecker
 
     def _assign_hits_standard(self, threshold_data):
         ## we need to keep all the threshold data, if any of it has is_ambig=False
@@ -168,10 +162,11 @@ class BisulfiteHitsChecker(HitsChecker):
         num_hits_managers = len(threshold_data)
 
         if num_hits_managers == 0:
+            if __debug__: self.logger.debug('Reject: All ambig!')
             return self.REJECTED
         elif num_hits_managers == 1:
-            if __debug__: self.logger.debug('assigned due to only one filter left after checking threshold!')
-            return threshold_data[0].index
+            if __debug__: self.logger.debug('Assign {}: only valid threshold'.format(threshold_data[0].species_id))
+            return threshold_data[0].species_id
 
         min_mismatches = min([m.mismatches for m in threshold_data])
         threshold_data = [t for t in threshold_data
@@ -180,9 +175,12 @@ class BisulfiteHitsChecker(HitsChecker):
         if len(threshold_data) == 1:
             ## if the better read is from the ambig species, we reject
             if threshold_data[0].is_ambig:
+                if __debug__: self.logger.debug(
+                    'Reject: ambig has a better min_mismatches!'.format(threshold_data[0].species_id))
                 return self.REJECTED
             else:
-                return threshold_data[0].index
+                if __debug__: self.logger.debug('Assign {}: min_mismatches!'.format(threshold_data[0].species_id))
+                return threshold_data[0].species_id
 
         min_cigar_check = min([m.cigar_check for m in threshold_data])
         threshold_data = [t for t in threshold_data
@@ -191,9 +189,12 @@ class BisulfiteHitsChecker(HitsChecker):
         if len(threshold_data) == 1:
             ## if the better read is from the ambig species, we reject
             if threshold_data[0].is_ambig:
+                if __debug__: self.logger.debug(
+                    'Reject: ambig has a better CIGAR!'.format(threshold_data[0].species_id))
                 return self.REJECTED
             else:
-                return threshold_data[0].index
+                if __debug__: self.logger.debug('Assign {}: CIGAR!'.format(threshold_data[0].species_id))
+                return threshold_data[0].species_id
 
         ## bismark only return A best hit, so the number of multimap will always be 1.
         ## The actural number of multimap is unknown.
@@ -209,92 +210,13 @@ class BisulfiteHitsChecker(HitsChecker):
         #     else:
         #         if __debug__:
         #             self.logger.debug('assigned due to number of multimap!')
-        #         return threshold_data[0].index
+        #         return threshold_data[0].species_id
+        if __debug__: self.logger.debug('Ambiguous!')
         return self.AMBIGUOUS
 
     def _assign_hits_reject_multimaps(self, threshold_data):
         ## for bisulfite, the reject_multimaps means the reads is ambigours
-        if any([t for t in threshold_data if t.is_ambig]):
-            return self.REJECTED
-
+        ## This is check first by the _assign_hits_standard, thus no need to check here
         return self._assign_hits_standard(threshold_data)
 
 
-class ThresholdData(object):
-    CIGAR_GOOD = 0
-    CIGAR_LESS_GOOD = 1
-    CIGAR_FAIL = 2
-
-    CIGAR_OP_MATCH = 0  # From pysam
-    CIGAR_OP_REF_INSERTION = 1  # From pysam
-    CIGAR_OP_REF_DELETION = 2  # From pysam
-    CIGAR_OP_REF_SKIP = 3  # From pysam
-
-    def __init__(self, hits_manager, mismatch_thresh, minmatch_thresh, multimap_thresh, logger):
-
-        # check that the hits for a read are - in themselves - satisfactory to
-        # be assigned to a species.
-        # return True if valid
-
-        self.species_id = hits_manager.species_id
-
-        hits_info = hits_manager.hits_info
-
-        self.violated_multimaps = False
-        self.violated_mismatches = False
-        self.violated_cigar_check = False
-
-        self.multimaps = hits_info.get_multimaps()
-        if self.multimaps > multimap_thresh:
-            if __debug__: logger.debug('violated due to multimap!')
-            self.violated_multimaps = True
-
-        self.mismatches = hits_info.get_primary_mismatches()
-        if self.mismatches > round(mismatch_thresh *
-                                   hits_info.get_total_length()):
-            if __debug__: logger.debug('violated due to primary mismatches!')
-            self.violated_mismatches = True
-
-        self.cigar_check = self._check_cigars(hits_info, minmatch_thresh)
-        if self.cigar_check == self.CIGAR_FAIL:
-            if __debug__: logger.debug('violated due to primary CIGAR!')
-            self.violated_cigar_check = True
-
-        self.violated = any([self.violated_multimaps, self.violated_mismatches, self.violated_cigar_check])
-
-    def _check_cigars(self, hits_info, minmatch_thresh):
-        total_length = hits_info.get_total_length()
-        min_match = total_length - round(minmatch_thresh * total_length)
-
-        cigars = hits_info.get_primary_cigars()
-        response = self.CIGAR_GOOD
-
-        num_matches = 0
-        for cigar in cigars:
-            for operation, length in cigar:
-                if operation == self.CIGAR_OP_MATCH:
-                    num_matches += length
-                elif operation == self.CIGAR_OP_REF_INSERTION or \
-                        operation == self.CIGAR_OP_REF_DELETION:
-                    response = self.CIGAR_LESS_GOOD
-
-        if num_matches < min_match:
-            return self.CIGAR_FAIL
-        elif num_matches < total_length:
-            return self.CIGAR_LESS_GOOD
-
-        return response
-
-# class BisulfiteThresholdData(object):
-# #     def __init__(self, index, violated, multimaps, mismatches, cigar_check,
-# #                  violated_multimaps, violated_mismatches, violated_cigar_check):
-# #         self.index = index
-# #         self.violated = violated
-# #         self.multimaps = multimaps
-# #         self.mismatches = mismatches
-# #         self.cigar_check = cigar_check
-# #         self.violated_multimaps = violated_multimaps
-# #         self.violated_mismatches = violated_mismatches
-# #         self.violated_cigar_check = violated_cigar_check
-# #         self.is_ambig = is_ambig
-# #         self.violated_ambig = violated_ambig
