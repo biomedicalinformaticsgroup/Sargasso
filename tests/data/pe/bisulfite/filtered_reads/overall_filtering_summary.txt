@@ -1,0 +1,2 @@
+Sample,Assigned-Hits-mouse,Assigned-Reads-mouse,Rejected-Hits-mouse,Rejected-Reads-mouse,Ambiguous-Hits-mouse,Ambiguous-Reads-mouse,Assigned-Hits-human,Assigned-Reads-human,Rejected-Hits-human,Rejected-Reads-human,Ambiguous-Hits-human,Ambiguous-Reads-human,Assigned-Hits-rat,Assigned-Reads-rat,Rejected-Hits-rat,Rejected-Reads-rat,Ambiguous-Hits-rat,Ambiguous-Reads-rat
+bisulfite_human_pe_sample,0,0,44,22,18,9,124518,62259,75354,37677,20,10,6,3,174,87,8,4
