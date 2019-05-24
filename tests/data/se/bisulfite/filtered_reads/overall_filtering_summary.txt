@@ -1,2 +1,2 @@
 Sample,Assigned-Hits-mouse,Assigned-Reads-mouse,Rejected-Hits-mouse,Rejected-Reads-mouse,Ambiguous-Hits-mouse,Ambiguous-Reads-mouse,Assigned-Hits-human,Assigned-Reads-human,Rejected-Hits-human,Rejected-Reads-human,Ambiguous-Hits-human,Ambiguous-Reads-human,Assigned-Hits-rat,Assigned-Reads-rat,Rejected-Hits-rat,Rejected-Reads-rat,Ambiguous-Hits-rat,Ambiguous-Reads-rat
-bisulfite_human_se_sample,3,3,86,86,30,30,53311,53311,12397,12397,40,40,3,3,259,259,38,38
+bisulfite_human_se_sample,10,10,1,1,0,0,491,491,128,128,1,1,9,9,5,5,1,1

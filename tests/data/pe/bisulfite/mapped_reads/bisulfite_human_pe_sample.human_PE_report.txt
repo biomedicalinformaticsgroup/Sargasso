@@ -4,39 +4,39 @@ Option '--directional' specified (default mode): alignments to complementary str
 
 Final Alignment report
 ======================
-Sequence pairs analysed in total:	100000
-Number of paired-end alignments with a unique best hit:	99276
-Mapping efficiency:	99.3% 
-Sequence pairs with no alignments under any condition:	48
-Sequence pairs did not map uniquely:	676
+Sequence pairs analysed in total:	1022
+Number of paired-end alignments with a unique best hit:	951
+Mapping efficiency:	93.1% 
+Sequence pairs with no alignments under any condition:	4
+Sequence pairs did not map uniquely:	67
 Sequence pairs which were discarded because genomic sequence could not be extracted:	0
 
 Number of sequence pairs with unique best (first) alignment came from the bowtie output:
-CT/GA/CT:	48067	((converted) top strand)
+CT/GA/CT:	390	((converted) top strand)
 GA/CT/CT:	0	(complementary to (converted) top strand)
 GA/CT/GA:	0	(complementary to (converted) bottom strand)
-CT/GA/GA:	51209	((converted) bottom strand)
+CT/GA/GA:	561	((converted) bottom strand)
 
 Number of alignments to (merely theoretical) complementary strands being rejected in total:	0
 
 Final Cytosine Methylation Report
 =================================
-Total number of C's analysed:	3429997
+Total number of C's analysed:	34032
 
-Total methylated C's in CpG context:	254542
-Total methylated C's in CHG context:	42875
-Total methylated C's in CHH context:	39833
-Total methylated C's in Unknown context:	13
+Total methylated C's in CpG context:	2040
+Total methylated C's in CHG context:	179
+Total methylated C's in CHH context:	234
+Total methylated C's in Unknown context:	0
 
-Total unmethylated C's in CpG context:	43820
-Total unmethylated C's in CHG context:	909747
-Total unmethylated C's in CHH context:	2139180
-Total unmethylated C's in Unknown context:	447
+Total unmethylated C's in CpG context:	635
+Total unmethylated C's in CHG context:	9137
+Total unmethylated C's in CHH context:	21807
+Total unmethylated C's in Unknown context:	2
 
-C methylated in CpG context:	85.3%
-C methylated in CHG context:	4.5%
-C methylated in CHH context:	1.8%
-C methylated in unknown context (CN or CHN):	2.8%
+C methylated in CpG context:	76.3%
+C methylated in CHG context:	1.9%
+C methylated in CHH context:	1.1%
+C methylated in unknown context (CN or CHN):	0.0%
 
 
-Bismark completed in 0d 0h 2m 35s
+Bismark completed in 0d 0h 1m 6s
