@@ -79,7 +79,9 @@ The available commands are:
 
     @classmethod
     def _get_block_files(cls, block_dir, sp1):
-        is_block_file = lambda bf: not os.path.isdir(os.path.join(block_dir, bf))
+        ## Block file looks like this: samplename___human___BLOCK___1.bam
+        is_block_file = lambda bf: \
+            ( not os.path.isdir(os.path.join(block_dir, bf)) ) and "_BLOCK_" in bf
         block_files = [f for f in os.listdir(block_dir) if is_block_file(f)]
         block_files_out = []
 

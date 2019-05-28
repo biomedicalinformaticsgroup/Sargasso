@@ -67,6 +67,9 @@ class HitsChecker(object):
             while True:
                 if hits_manager.hits_for_read is None:
                     hits_manager.get_next_read_hits()
+                    if __debug__:
+                        self.logger.debug("(only 1 remains) Read:{}, Species:[{}]".format(hits_manager.hits_for_read[0].qname,
+                                                                                   hits_manager.species_id))
                 self.check_and_write_hits_for_read(hits_manager)
         except StopIteration:
             pass
@@ -76,6 +79,12 @@ class HitsChecker(object):
         # be assigned to a species.
         # return True if valid
         threshold_data = self._check_thresholds(hits_manager)
+        if __debug__:
+            if threshold_data.violated:
+                self.logger.debug("Violated: {}".format(threshold_data.species_id))
+            else:
+                self.logger.debug("Accepted: {}".format(threshold_data.species_id))
+
         return not threshold_data.violated
 
     def _assign_hits_standard(self, threshold_data):

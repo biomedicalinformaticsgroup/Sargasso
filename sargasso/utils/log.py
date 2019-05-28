@@ -38,9 +38,6 @@ def get_logger(stream, level):
     logger.setLevel(LEVELS[level])
     logger.addHandler(handler)
 
-    # fhandler = logging.FileHandler("/home/xinhe/tmp/test.log")
-    # fhandler.setFormatter(formatter)
-    # logger.addHandler(fhandler)
     return logger
 
 
@@ -54,3 +51,11 @@ def get_logger_for_options(options):
     values.
     """
     return get_logger(sys.stderr, options[LOG_LEVEL_OPTION])
+
+
+def get_debug_file_handler(output_file):
+    formatter = logging.Formatter(fmt='%(asctime)s %(levelname)s: %(message)s',
+                                  datefmt='%Y-%m-%d %H:%M:%S')
+    fhandler = logging.FileHandler(output_file)
+    fhandler.setFormatter(formatter)
+    return fhandler

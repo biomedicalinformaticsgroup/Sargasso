@@ -55,6 +55,12 @@ The available commands are:
     def _filter_sample_reads(self, logger, options):
         logger.info("Starting species separation.")
 
+        if __debug__:
+            outlog = os.path.join( os.path.dirname(options[SampleFilterer.SPECIES_OUTPUT_BAM][0]),
+                                   os.path.basename(options[SampleFilterer.SPECIES_OUTPUT_BAM][0]).split('___')[-2] + '.log')
+            fhandler = log.get_debug_file_handler(outlog)
+            logger.addHandler(fhandler)
+
         h_check = self.hits_checker_cls(
             options[opts.MISMATCH_THRESHOLD_ARG],
             options[opts.MINMATCH_THRESHOLD_ARG],
@@ -93,9 +99,6 @@ The available commands are:
                 # if hits_managers[0].hits_for_read[0].qname != 'SRR5467502.10000_10000_length=100':
                 #    hits_managers[0].clear_hits()
                 # continue
-                if __debug__:
-                    logger.debug("(1) Read:{}, Species:{}".format(hits_managers[0].hits_for_read[0].qname,
-                                                                  hits_managers[0].species_id))
                 h_check.check_and_write_hits_for_remaining_reads(hits_managers[0])
                 break
 
