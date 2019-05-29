@@ -150,27 +150,27 @@ from sargasso.filter.sample_filterer import *
 
 def test_filter_sample_reads_for_selected_reads(tmpdir):
     tmpdir.mkdir("debug")
-    sample_name='SRR7968966'
-    strategy='best'
-    data_tpye='dnaseq'
-    species=['human', 'mouse', 'rat']
+    sample_name = 'SRR7968966'
+    strategy = 'best'
+    data_tpye = 'dnaseq'
+    species = ['human', 'mouse', 'rat']
 
-    if strategy=='best':
+    if strategy == 'best':
         mismatch_threshold = 1
         minmatch_threshold = 2
         multimap_threshold = 999999
         reject_multimaps = False
-    elif strategy=='conservative':
+    elif strategy == 'conservative':
         mismatch_threshold = 0
         minmatch_threshold = 0
         multimap_threshold = 1
         reject_multimaps = True
-    elif strategy=='recall':
+    elif strategy == 'recall':
         mismatch_threshold = 2
         minmatch_threshold = 10
         multimap_threshold = 999999
         reject_multimaps = False
-    elif strategy=='permissive':
+    elif strategy == 'permissive':
         mismatch_threshold = 25
         minmatch_threshold = 25
         multimap_threshold = 999999
@@ -180,18 +180,15 @@ def test_filter_sample_reads_for_selected_reads(tmpdir):
             str(mismatch_threshold),
             str(minmatch_threshold),
             str(multimap_threshold)]
-    if(reject_multimaps):
+    if (reject_multimaps):
         args.append('--reject-multimaps')
-
 
     args.append('--log-level=debug')
 
-
-
     for i in species:
         args.append(i)
-        args.append(resource_filename("tests.data.tmp.{}_{}.filtered_reads.Blocks".format(sample_name,strategy),
-                                      "{}___{}___BLOCK___1.bam".format(sample_name,i)))
-        args.append( tmpdir.join("{}_{}_0_filtered.bam".format(sample_name,i)).strpath,)
+        args.append(resource_filename("tests.data.tmp.{}_{}.filtered_reads.Blocks".format(sample_name, strategy),
+                                      "{}___{}___BLOCK___1.bam".format(sample_name, i)))
+        args.append(tmpdir.join("{}_{}_0_filtered.bam".format(sample_name, i)).strpath, )
 
     get_data_type_manager([data_tpye], SampleFilterer.DOC).get_sample_filterer().run(args)

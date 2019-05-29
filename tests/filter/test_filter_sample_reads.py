@@ -14,22 +14,22 @@ def test_filter_sample_reads_pe_rnaseq(tmpdir):
             "mouse",
             resource_filename("tests.data.pe.rnaseq.filtered_reads.Blocks",
                               "rnaseq_mouse_rat_sample___mouse___BLOCK___1.bam"),
-            tmpdir.mkdir("rnaseq_test").join("rnaseq_mouse_rat_sample_mouse_0_filtered.bam").strpath,
+            tmpdir.mkdir("rnaseq_test").join("rnaseq_mouse_rat_sample_mouse___0___filtered.bam").strpath,
             "human",
             resource_filename("tests.data.pe.rnaseq.filtered_reads.Blocks",
                               "rnaseq_mouse_rat_sample___human___BLOCK___1.bam"),
-            tmpdir.join("rnaseq_test/rnaseq_mouse_rat_sample_human_0_filtered.bam").strpath,
+            tmpdir.join("rnaseq_test/rnaseq_mouse_rat_sample_human___0___filtered.bam").strpath,
             "rat",
             resource_filename("tests.data.pe.rnaseq.filtered_reads.Blocks",
                               "rnaseq_mouse_rat_sample___rat___BLOCK___1.bam"),
-            tmpdir.join("rnaseq_test/rnaseq_mouse_rat_sample_rat_0_filtered.bam").strpath
+            tmpdir.join("rnaseq_test/rnaseq_mouse_rat_sample_rat___0___filtered.bam").strpath
             ]
 
     get_data_type_manager(['rnaseq'], SampleFilterer.DOC).get_sample_filterer().run(args)
 
-    mouse_out = tmpdir.join("rnaseq_test/rnaseq_mouse_rat_sample_human_0_filtered.bam").strpath
-    rat_out = tmpdir.join("rnaseq_test/rnaseq_mouse_rat_sample_human_0_filtered.bam").strpath
-    human_out = tmpdir.join("rnaseq_test/rnaseq_mouse_rat_sample_human_0_filtered.bam").strpath
+    mouse_out = tmpdir.join("rnaseq_test/rnaseq_mouse_rat_sample_human___0___filtered.bam").strpath
+    rat_out = tmpdir.join("rnaseq_test/rnaseq_mouse_rat_sample_human___0___filtered.bam").strpath
+    human_out = tmpdir.join("rnaseq_test/rnaseq_mouse_rat_sample_human___0___filtered.bam").strpath
     summary_file = tmpdir.join("rnaseq_test/filtering_result_summary.txt").strpath
 
     assert os.path.isfile(mouse_out)
@@ -56,22 +56,22 @@ def test_filter_sample_reads_pe_chipseq(tmpdir):
             "mouse",
             resource_filename("tests.data.pe.chipseq.filtered_reads.Blocks",
                               "chiseq_mouse_sample___mouse___BLOCK___1.bam"),
-            tmpdir.mkdir("chipseq_test_pe").join("chiseq_mouse_sample_mouse_0_filtered.bam").strpath,
+            tmpdir.mkdir("chipseq_test_pe").join("chiseq_mouse_sample_mouse___0___filtered.bam").strpath,
             "human",
             resource_filename("tests.data.pe.chipseq.filtered_reads.Blocks",
                               "chiseq_mouse_sample___human___BLOCK___1.bam"),
-            tmpdir.join("chipseq_test_pe/chiseq_mouse_sample_human_0_filtered.bam").strpath,
+            tmpdir.join("chipseq_test_pe/chiseq_mouse_sample_human___0___filtered.bam").strpath,
             "rat",
             resource_filename("tests.data.pe.chipseq.filtered_reads.Blocks",
                               "chiseq_mouse_sample___rat___BLOCK___1.bam"),
-            tmpdir.join("chipseq_test_pe/chiseq_mouse_sample_rat_0_filtered.bam").strpath
+            tmpdir.join("chipseq_test_pe/chiseq_mouse_sample_rat___0___filtered.bam").strpath
             ]
 
     get_data_type_manager(['dnaseq'], SampleFilterer.DOC).get_sample_filterer().run(args)
 
-    mouse_out = tmpdir.join("chipseq_test_pe/chiseq_mouse_sample_mouse_0_filtered.bam").strpath
-    rat_out = tmpdir.join("chipseq_test_pe/chiseq_mouse_sample_rat_0_filtered.bam").strpath
-    human_out = tmpdir.join("chipseq_test_pe/chiseq_mouse_sample_human_0_filtered.bam").strpath
+    mouse_out = tmpdir.join("chipseq_test_pe/chiseq_mouse_sample_mouse___0___filtered.bam").strpath
+    rat_out = tmpdir.join("chipseq_test_pe/chiseq_mouse_sample_rat___0___filtered.bam").strpath
+    human_out = tmpdir.join("chipseq_test_pe/chiseq_mouse_sample_human___0___filtered.bam").strpath
     summary_file = tmpdir.join("chipseq_test_pe/filtering_result_summary.txt").strpath
 
     assert os.path.isfile(mouse_out)
@@ -100,23 +100,23 @@ def test_filter_sample_reads_se_chipseq(tmpdir):
             "mouse",
             resource_filename("tests.data.se.chipseq.filtered_reads.Blocks",
                               "chiseq_mouse_se_sample___mouse___BLOCK___1.bam"),
-            tmpdir.mkdir("chipseq_test_se").join("chiseq_mouse_se_sample_mouse_0_filtered.bam").strpath,
+            tmpdir.mkdir("chipseq_test_se").join("chiseq_mouse_se_sample_mouse___0___filtered.bam").strpath,
             "human",
             resource_filename("tests.data.se.chipseq.filtered_reads.Blocks",
                               "chiseq_mouse_se_sample___human___BLOCK___1.bam"),
-            tmpdir.join("chipseq_test_se/chiseq_mouse_se_sample_human_0_filtered.bam").strpath,
+            tmpdir.join("chipseq_test_se/chiseq_mouse_se_sample_human___0___filtered.bam").strpath,
             "rat",
             resource_filename("tests.data.se.chipseq.filtered_reads.Blocks",
                               "chiseq_mouse_se_sample___rat___BLOCK___1.bam"),
-            tmpdir.join("chipseq_test_se/chiseq_mouse_se_sample_rat_0_filtered.bam").strpath
+            tmpdir.join("chipseq_test_se/chiseq_mouse_se_sample_rat___0___filtered.bam").strpath
             ]
 
     os.environ['SARGASSO_DEBUG_MODE'] = 'true'
     get_data_type_manager(['dnaseq'], SampleFilterer.DOC).get_sample_filterer().run(args)
 
-    mouse_out = tmpdir.join("chipseq_test_se/chiseq_mouse_se_sample_human_0_filtered.bam").strpath
-    rat_out = tmpdir.join("chipseq_test_se/chiseq_mouse_se_sample_human_0_filtered.bam").strpath
-    human_out = tmpdir.join("chipseq_test_se/chiseq_mouse_se_sample_human_0_filtered.bam").strpath
+    mouse_out = tmpdir.join("chipseq_test_se/chiseq_mouse_se_sample_human___0___filtered.bam").strpath
+    rat_out = tmpdir.join("chipseq_test_se/chiseq_mouse_se_sample_human___0___filtered.bam").strpath
+    human_out = tmpdir.join("chipseq_test_se/chiseq_mouse_se_sample_human___0___filtered.bam").strpath
     summary_file = tmpdir.join("chipseq_test_se/filtering_result_summary.txt").strpath
 
     assert os.path.isfile(mouse_out)
@@ -135,8 +135,6 @@ def test_filter_sample_reads_se_chipseq(tmpdir):
     assert os.stat(summary_file).st_size != 0
 
 
-
-
 def test_filter_sample_reads_pe_bisulfite(tmpdir):
     args = ["bisulfite",
             "--log-level=debug",
@@ -146,23 +144,23 @@ def test_filter_sample_reads_pe_bisulfite(tmpdir):
             "mouse",
             resource_filename("tests.data.pe.bisulfite.filtered_reads.Blocks",
                               "bisulfite_human_pe_sample___mouse___BLOCK___1.bam"),
-            tmpdir.mkdir("bisulfite_test_pe").join("bisulfite_human_pe_sample_mouse_0_filtered.bam").strpath,
+            tmpdir.mkdir("bisulfite_test_pe").join("bisulfite_human_pe_sample_mouse___0___filtered.bam").strpath,
             "human",
             resource_filename("tests.data.pe.bisulfite.filtered_reads.Blocks",
                               "bisulfite_human_pe_sample___human___BLOCK___1.bam"),
-            tmpdir.join("bisulfite_test_pe/bisulfite_human_pe_sample_human_0_filtered.bam").strpath,
+            tmpdir.join("bisulfite_test_pe/bisulfite_human_pe_sample_human___0___filtered.bam").strpath,
             "rat",
             resource_filename("tests.data.pe.bisulfite.filtered_reads.Blocks",
                               "bisulfite_human_pe_sample___rat___BLOCK___1.bam"),
-            tmpdir.join("bisulfite_test_pe/bisulfite_human_pe_sample_rat_0_filtered.bam").strpath
+            tmpdir.join("bisulfite_test_pe/bisulfite_human_pe_sample_rat___0___filtered.bam").strpath
             ]
 
     os.environ['SARGASSO_DEBUG_MODE'] = 'true'
     get_data_type_manager(['bisulfite'], SampleFilterer.DOC).get_sample_filterer().run(args)
 
-    mouse_out = tmpdir.join("bisulfite_test_pe/bisulfite_human_pe_sample_human_0_filtered.bam").strpath
-    rat_out = tmpdir.join("bisulfite_test_pe/bisulfite_human_pe_sample_human_0_filtered.bam").strpath
-    human_out = tmpdir.join("bisulfite_test_pe/bisulfite_human_pe_sample_human_0_filtered.bam").strpath
+    mouse_out = tmpdir.join("bisulfite_test_pe/bisulfite_human_pe_sample_human___0___filtered.bam").strpath
+    rat_out = tmpdir.join("bisulfite_test_pe/bisulfite_human_pe_sample_human___0___filtered.bam").strpath
+    human_out = tmpdir.join("bisulfite_test_pe/bisulfite_human_pe_sample_human___0___filtered.bam").strpath
     summary_file = tmpdir.join("bisulfite_test_pe/filtering_result_summary.txt").strpath
 
     assert os.path.isfile(mouse_out)
@@ -181,8 +179,6 @@ def test_filter_sample_reads_pe_bisulfite(tmpdir):
     assert os.stat(summary_file).st_size != 0
 
 
-
-
 def test_filter_sample_reads_se_bisulfite(tmpdir):
     args = ["bisulfite",
             "--log-level=debug",
@@ -193,23 +189,23 @@ def test_filter_sample_reads_se_bisulfite(tmpdir):
             "mouse",
             resource_filename("tests.data.se.bisulfite.filtered_reads.Blocks",
                               "bisulfite_human_se_sample___mouse___BLOCK___1.bam"),
-            tmpdir.mkdir("bisulfite_test_se").join("bisulfite_human_se_sample_mouse_0_filtered.bam").strpath,
+            tmpdir.mkdir("bisulfite_test_se").join("bisulfite_human_se_sample_mouse___0___filtered.bam").strpath,
             "human",
             resource_filename("tests.data.se.bisulfite.filtered_reads.Blocks",
                               "bisulfite_human_se_sample___human___BLOCK___1.bam"),
-            tmpdir.join("bisulfite_test_se/bisulfite_human_se_sample_human_0_filtered.bam").strpath,
+            tmpdir.join("bisulfite_test_se/bisulfite_human_se_sample_human___0___filtered.bam").strpath,
             "rat",
             resource_filename("tests.data.se.bisulfite.filtered_reads.Blocks",
                               "bisulfite_human_se_sample___rat___BLOCK___1.bam"),
-            tmpdir.join("bisulfite_test_se/bisulfite_human_se_sample_rat_0_filtered.bam").strpath
+            tmpdir.join("bisulfite_test_se/bisulfite_human_se_sample_rat___0___filtered.bam").strpath
             ]
 
     os.environ['SARGASSO_DEBUG_MODE'] = 'true'
     get_data_type_manager(['bisulfite'], SampleFilterer.DOC).get_sample_filterer().run(args)
 
-    mouse_out = tmpdir.join("bisulfite_test_se/bisulfite_human_se_sample_human_0_filtered.bam").strpath
-    rat_out = tmpdir.join("bisulfite_test_se/bisulfite_human_se_sample_human_0_filtered.bam").strpath
-    human_out = tmpdir.join("bisulfite_test_se/bisulfite_human_se_sample_human_0_filtered.bam").strpath
+    mouse_out = tmpdir.join("bisulfite_test_se/bisulfite_human_se_sample_human___0___filtered.bam").strpath
+    rat_out = tmpdir.join("bisulfite_test_se/bisulfite_human_se_sample_human___0___filtered.bam").strpath
+    human_out = tmpdir.join("bisulfite_test_se/bisulfite_human_se_sample_human___0___filtered.bam").strpath
     summary_file = tmpdir.join("bisulfite_test_se/filtering_result_summary.txt").strpath
 
     # with open(summary_file, 'r') as fin:

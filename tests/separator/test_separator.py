@@ -49,7 +49,6 @@ def test_run_chipseq_se_makefile(tmpdir):
     #                    tmpdir.join("chipseq_test_se/Makefile").strpath), "Something wrong with chipseq make file!"
 
 
-
 def test_run_chipseq_pe_makefile(tmpdir):
     args = ["dnaseq",
             "--reads-base-dir={}".format(resource_filename("tests.data", "raw_reads")),
@@ -92,7 +91,6 @@ def test_run_bisulfite_se_makefile(tmpdir):
     #                    tmpdir.join("chipseq_test_pe/Makefile").strpath), "Something wrong with chipseq make file!"
 
 
-
 def test_run_bisulfite_pe_makefile(tmpdir):
     args = ["bisulfite",
             "--reads-base-dir={}".format(resource_filename("tests.data", "raw_reads")),
@@ -100,8 +98,8 @@ def test_run_bisulfite_pe_makefile(tmpdir):
             "--sambamba-sort-tmp-dir", "/tmp",
             "--log-level", "debug",
             resource_filename('tests.data.pe.bisulfite', 'bisulfite.tsv'),
-            # tmpdir.join("bisulfite_test_pe").strpath,
-            "/home/xinhe/tmp/bisulfite_test_pe",
+            tmpdir.join("bisulfite_test_pe").strpath,
+            # "/home/xinhe/tmp/bisulfite_test_pe",
             "mouse", "/srv/data/genome/mouse/ensembl-95",
             "human", "/srv/data/genome/human/ensembl-95",
             "rat", "/srv/data/genome/rat/ensembl-95"
@@ -115,7 +113,6 @@ def test_run_bisulfite_pe_makefile(tmpdir):
     assert True
     # assert filecmp.cmp(resource_filename('tests.data.pe.chipseq', 'Makefile'),
     #                    tmpdir.join("chipseq_test_pe/Makefile").strpath), "Something wrong with chipseq make file!"
-
 
 
 def test_run_bisulfite_se_makefile_build_index(tmpdir):
@@ -142,11 +139,11 @@ def test_run_bisulfite_se_makefile_build_index(tmpdir):
 
 def test_run_bisulfite_pe_makefile_real_data(tmpdir):
     args = ["bisulfite",
-            "--reads-base-dir=/home/xinhe/tmp/sargasso_test_bisulfite_data/SRR5467502",
+            "--reads-base-dir=/srv/data/sargasso/data/bisulfite_data/human/pe/SRR5467502",
             "--num-threads", "2", "--best",
             "--log-level", "debug",
             "--sambamba-sort-tmp-dir", "/home/xinhe/tmp",
-            "/home/xinhe/tmp/sargasso_test_bisulfite_data/SRR5467502.tsv",
+            "/srv/data/sargasso/data/bisulfite_data/human/pe/SRR5467502.tsv",
             "/home/xinhe/tmp/SRR5467502_test",
             "mouse", "/srv/data/genome/mouse/ensembl-95",
             "human", "/srv/data/genome/human/ensembl-95",
@@ -156,7 +153,25 @@ def test_run_bisulfite_pe_makefile_real_data(tmpdir):
 
     assert True
 
-def test_run_bisulfite_se_makefile_build_index_real_data(tmpdir):
+
+def test_run_bisulfite_pe_makefile_real_data_con(tmpdir):
+    args = ["bisulfite",
+            "--reads-base-dir=/srv/data/sargasso/data/bisulfite_data/human/pe/SRR5467502",
+            "--num-threads", "2", "--conservative",
+            "--log-level", "debug",
+            "--sambamba-sort-tmp-dir", "/home/xinhe/tmp",
+            "/srv/data/sargasso/data/bisulfite_data/human/pe/SRR5467502.tsv",
+            "/home/xinhe/tmp/SRR5467502_test_cons",
+            "mouse", "/srv/data/genome/mouse/ensembl-95",
+            "human", "/srv/data/genome/human/ensembl-95",
+            "rat", "/srv/data/genome/rat/ensembl-95"
+            ]
+    get_data_type_manager(['bisulfite'], Separator.DOC).get_separator().run(args)
+
+    assert True
+
+
+def test_run_bisulfite_se_makefile_real_data(tmpdir):
     args = ["bisulfite",
             "--reads-base-dir=/home/xinhe/tmp/sargasso_test_bisulfite_data/ERR2617091",
             "--num-threads", "2", "--best",
@@ -171,23 +186,8 @@ def test_run_bisulfite_se_makefile_build_index_real_data(tmpdir):
     get_data_type_manager(['bisulfite'], Separator.DOC).get_separator().run(args)
     assert True
 
-def test_run_bisulfite_pe_makefile_real_data_cons(tmpdir):
-    args = ["bisulfite",
-            "--reads-base-dir=/home/xinhe/tmp/sargasso_test_bisulfite_data/SRR5467502",
-            "--num-threads", "2", "--conservative",
-            "--log-level", "debug",
-            "--sambamba-sort-tmp-dir", "/home/xinhe/tmp",
-            "/home/xinhe/tmp/sargasso_test_bisulfite_data/SRR5467502.tsv",
-            "/home/xinhe/tmp/SRR5467502_test_cons",
-            "mouse", "/srv/data/genome/mouse/ensembl-95",
-            "human", "/srv/data/genome/human/ensembl-95",
-            "rat", "/srv/data/genome/rat/ensembl-95"
-            ]
-    get_data_type_manager(['bisulfite'], Separator.DOC).get_separator().run(args)
 
-    assert True
-
-def test_run_bisulfite_se_makefile_build_index_real_data_cons(tmpdir):
+def test_run_bisulfite_se_makefile_real_data_cons(tmpdir):
     args = ["bisulfite",
             "--reads-base-dir=/home/xinhe/tmp/sargasso_test_bisulfite_data/ERR2617091",
             "--num-threads", "2", "--conservative",
@@ -195,6 +195,22 @@ def test_run_bisulfite_se_makefile_build_index_real_data_cons(tmpdir):
             "--sambamba-sort-tmp-dir", "/home/xinhe/tmp",
             "/home/xinhe/tmp/sargasso_test_bisulfite_data/ERR2617091.tsv",
             "/home/xinhe/tmp/ERR2617091_test_cons",
+            "mouse", "/srv/data/genome/mouse/ensembl-95",
+            "human", "/srv/data/genome/human/ensembl-95",
+            "rat", "/srv/data/genome/rat/ensembl-95"
+            ]
+    get_data_type_manager(['bisulfite'], Separator.DOC).get_separator().run(args)
+    assert True
+
+
+def test_run_bisulfite_se_makefile_build_index_real_data(tmpdir):
+    args = ["bisulfite",
+            "--reads-base-dir=/home/xinhe/tmp/sargasso_test_bisulfite_data/ERR2617091",
+            "--num-threads", "2", "--best",
+            "--log-level", "debug",
+            "--sambamba-sort-tmp-dir", "/home/xinhe/tmp",
+            "/home/xinhe/tmp/sargasso_test_bisulfite_data/ERR2617091.tsv",
+            "/home/xinhe/tmp/ERR2617091_test",
             "mouse", "/srv/data/genome/mouse/ensembl-95",
             "human", "/srv/data/genome/human/ensembl-95",
             "rat", "/srv/data/genome/rat/ensembl-95"
