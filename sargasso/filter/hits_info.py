@@ -93,7 +93,9 @@ class DnaSeqHitsInfo(HitsInfo):
     @classmethod
     def _get_mismatches(cls, hits ):
         # https://github.com/statbio/Sargasso/issues/96
-        return max([hit.get_tag("XM") for hit in hits])
+        if cls._is_paired_hit(hits[0]):
+            return (hits[0].get_tag("XM") + hits[1].get_tag("XM"))/2
+        return hits[0].get_tag("XM")
 
     @classmethod
     def _get_alignment_scores(cls, hit):
