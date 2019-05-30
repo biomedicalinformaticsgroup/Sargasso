@@ -94,7 +94,7 @@ class DnaSeqHitsInfo(HitsInfo):
     def _get_mismatches(cls, hits ):
         # https://github.com/statbio/Sargasso/issues/96
         if cls._is_paired_hit(hits[0]):
-            return (hits[0].get_tag("XM") + hits[1].get_tag("XM"))/2
+            return float(hits[0].get_tag("XM") + hits[1].get_tag("XM"))/2
         return hits[0].get_tag("XM")
 
     @classmethod
