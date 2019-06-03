@@ -79,8 +79,6 @@ class RnaSeqHitsInfo(HitsInfo):
         return hits[0].get_tag("nM")
 
 
-
-
 class DnaSeqHitsInfo(HitsInfo):
     @classmethod
     def _get_num_multimaps(cls, hits):
@@ -91,7 +89,6 @@ class DnaSeqHitsInfo(HitsInfo):
     @classmethod
     def _get_mismatches(cls, hits):
         return hits[0].get_tag("XM")
-
 
 
 class BisulfiteHitsInfo(HitsInfo):
@@ -116,13 +113,12 @@ class BisulfiteHitsInfo(HitsInfo):
     # (17) XA/XB-tag (non-bisulfite mismatches) (optional!)
 
     def __init__(self, hits):
-        HitsInfo.__init__(self,hits)
+        HitsInfo.__init__(self, hits)
         # @xintodo The reads in the pair can have a different NM field.
         # self.primary_edit_distance = self._get_edit_distance(self.primary_hits)
-        self.is_ambig_hit=self._is_ambig_hit(self.primary_hits[0])
+        self.is_ambig_hit = self._is_ambig_hit(self.primary_hits[0])
 
 
-    #todo bisulfite
     # This should always be 1 as bowtie2 return only the best hit as configured by bismark
     @classmethod
     def _get_num_multimaps(cls, hits):
@@ -137,8 +133,7 @@ class BisulfiteHitsInfo(HitsInfo):
     def _is_ambig_hit(cls, hit):
         return hit.has_tag("AS")
 
-
-    #NM:i:<N> The edit distance; that is, the minimal number of one-nucleotide edits (substitutions, insertions and deletions) needed to transform the read string into the reference string. Only present if SAM record is for an aligned read.
+    # NM:i:<N> The edit distance; that is, the minimal number of one-nucleotide edits (substitutions, insertions and deletions) needed to transform the read string into the reference string. Only present if SAM record is for an aligned read.
     # @classmethod
     # def _get_edit_distance(cls, hits):
     #     if cls._is_paired_hit(hits[0]):
@@ -153,11 +148,11 @@ class BisulfiteHitsInfo(HitsInfo):
     #               'XB:Z:number of mismatches' for read 2 of paired-end reads.
     @classmethod
     def _get_mismatches(cls, hits):
-        return max([cls._get_mismatches_by_hit(hit) for hit in hits])
-
+        mismatches=[cls._get_mismatches_by_hit(hit) for hit in hits]
+        return float(sum(mismatches))/len(mismatches)
 
     @classmethod
-    def _get_mismatches_by_hit(cls,hit):
+    def _get_mismatches_by_hit(cls, hit):
         if cls._is_ambig_hit(hit):
             return cls._get_mismatches_ambig(hit)
 
@@ -167,15 +162,15 @@ class BisulfiteHitsInfo(HitsInfo):
         return cls._get_mismatches_read2(hit)
 
     @classmethod
-    def _get_mismatches_read1(cls,hit):
+    def _get_mismatches_read1(cls, hit):
         return int(hit.get_tag("XA"))
 
     @classmethod
-    def _get_mismatches_read2(cls,hit):
+    def _get_mismatches_read2(cls, hit):
         return int(hit.get_tag("XB"))
 
     @classmethod
-    def _get_mismatches_ambig(cls,hit):
+    def _get_mismatches_ambig(cls, hit):
         return int(hit.get_tag("XM"))
 
     def get_is_ambig_hit(self):
