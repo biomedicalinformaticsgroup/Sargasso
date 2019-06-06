@@ -157,16 +157,8 @@ class BisulfiteHitsInfo(HitsInfo):
             return cls._get_mismatches_ambig(hit)
 
         if hit.is_read1 or not cls._is_paired_hit(hit):
-            return cls._get_mismatches_read1(hit)
+            return int(hit.get_tag("XA"))
 
-        return cls._get_mismatches_read2(hit)
-
-    @classmethod
-    def _get_mismatches_read1(cls, hit):
-        return int(hit.get_tag("XA"))
-
-    @classmethod
-    def _get_mismatches_read2(cls, hit):
         return int(hit.get_tag("XB"))
 
     @classmethod

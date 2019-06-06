@@ -1,5 +1,6 @@
 import json
 
+
 class ThresholdChecker(object):
     CIGAR_GOOD = 0
     CIGAR_LESS_GOOD = 1
@@ -74,15 +75,19 @@ class ThresholdChecker(object):
     def _to_debug_dict(self):
         return {'species_id': self.species_id, 'violated': self.violated,
                 'multimaps': self.multimaps, 'mismatches': self.mismatches, 'cigar_check': self.cigar_check,
-                'violated_multimaps': self.violated_multimaps, 'violated_mismatches': self.violated_mismatches,
+                'violated_multimaps': self.violated_multimaps,
+                'violated_mismatches': self.violated_mismatches,
                 'violated_cigar_check': self.violated_cigar_check
                 }
+
 
 class RnaThresholdChecker(ThresholdChecker):
     pass
 
+
 class DnaThresholdChecker(ThresholdChecker):
     pass
+
 
 class BisulfiteThresholdChecker(ThresholdChecker):
     def __init__(self, hits_manager, mismatch_thresh, minmatch_thresh, multimap_thresh):
@@ -96,9 +101,7 @@ class BisulfiteThresholdChecker(ThresholdChecker):
         self.violated_ambig = self.is_ambig
 
     def _to_debug_dict(self):
-        return {'species_id': self.species_id, 'violated': self.violated,
-                'multimaps': self.multimaps, 'mismatches': self.mismatches, 'cigar_check': self.cigar_check,
-                'violated_multimaps': self.violated_multimaps, 'violated_mismatches': self.violated_mismatches,
-                'violated_cigar_check': self.violated_cigar_check,
-                'is_ambig': self.is_ambig, 'violated_ambig': self.violated_ambig
-                }
+        debug_list = super(self.__class__, self)._to_debug_dict()
+        debug_list['violated_ambig'] = self.violated_ambig
+        debug_list['is_ambig'] = self.is_ambig
+        return debug_list
