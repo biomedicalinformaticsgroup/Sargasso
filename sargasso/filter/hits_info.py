@@ -5,7 +5,7 @@ class HitsInfo:
         self.total_length = self._get_total_length(self.primary_hits)
         self.primary_cigars = [self._get_cigar(h) for h in self.primary_hits]
         self.multimaps = self._get_multimaps(self.hits)
-        self.primary_mismatches = self._get_mismatches(self.primary_hits[0])
+        self.primary_mismatches = self._get_mismatches(self.primary_hits)
 
     def get_total_length(self):
         return self.total_length
@@ -75,8 +75,8 @@ class RnaSeqHitsInfo(HitsInfo):
         return hits[0].get_tag("NH")
 
     @classmethod
-    def _get_mismatches(cls, hit):
-        return hit.get_tag("nM")
+    def _get_mismatches(cls, hits):
+        return hits[0].get_tag("nM")
 
     @classmethod
     def _get_alignment_scores(cls, hit):
@@ -91,8 +91,11 @@ class DnaSeqHitsInfo(HitsInfo):
         return len(hits)
 
     @classmethod
-    def _get_mismatches(cls, hit):
-        return hit.get_tag("XM")
+    def _get_mismatches(cls, hits ):
+        # https://github.com/statbio/Sargasso/issues/96
+        if cls._is_paired_hit(hits[0]):
+            return float(hits[0].get_tag("XM") + hits[1].get_tag("XM"))/2
+        return hits[0].get_tag("XM")
 
     @classmethod
     def _get_alignment_scores(cls, hit):
