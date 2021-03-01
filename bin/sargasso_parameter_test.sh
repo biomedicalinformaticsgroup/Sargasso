@@ -1,20 +1,19 @@
 #!/usr/bin/env bash
-
-
-#bash ./sargasso_parameter_test.sh --output_dir ~/tmp/sargasso_test2 \
+#bash /home/xinhe/Projects/Sargasso/bin/sargasso_parameter_test.sh --output_dir ~/tmp/sargasso_test2 \
 #--rnaseq_dir '/srv/data/ghardingham/snakemake_test' \
 #--read1_identifier '01_1' \
 #--read2_identifier '01_2' \
 #--fastq_suffix 'fastq.gz' \
-#--samples '1467_A' \
-#--samples_origin 'mouse' \
-#--mismatch_setting '0 2 4 6 8 10' \
-#--minmatch_setting '0 2 5 10' \
+#--samples '1467_A 1467_V 1468_P' \
+#--samples_origin 'mouse human rat' \
+#--mismatch_setting '0 2 4 ' \
+#--minmatch_setting '0 2 5' \
 #--mutlimap_setting '1' \
 #--mapper_executable STAR2.7.0f \
 #--num_total_threads 16 \
 #--species_para 'human /srv/data/genome/human/ensembl-99/STAR_indices/primary_assembly' \
-#--species_para 'mouse /srv/data/genome/mouse/ensembl-99/STAR_indices/primary_assembly'
+#--species_para 'mouse /srv/data/genome/mouse/ensembl-99/STAR_indices/primary_assembly' \
+#--species_para 'rat /srv/data/genome/rat/ensembl-99/STAR_indices/toplevel'
 
 function usage {
   cat <<EOT
@@ -32,16 +31,21 @@ bash ./sargasso_parameter_test.sh --output_dir ~/tmp/sargasso_test \
 --mutlimap_setting '1' \
 --mapper_executable STAR2.7.0f \
 --num_total_threads 16 \
+--plot_format pdf \
 --species_para 'human /srv/data/genome/human/ensembl-99/STAR_indices/primary_assembly' \
 --species_para 'mouse /srv/data/genome/mouse/ensembl-99/STAR_indices/primary_assembly' \
 --species_para 'rat /srv/data/genome/rat/ensembl-99/STAR_indices/toplevel'
 
 Usage:
   $(basename $0)
+    [--help]
     --output_dir /tmp/sargasso_test
     --rnaseq_dir '/srv/data/ghardingham/snakemake_test'
     --samples '1467_A 1467_V 1468_P'
     --samples_origin 'mouse mouse rat'
+    --species_para 'human /srv/data/genome/human/ensembl-99/STAR_indices/primary_assembly'
+    --species_para 'mouse /srv/data/genome/mouse/ensembl-99/STAR_indices/primary_assembly'
+    --species_para 'rat /srv/data/genome/rat/ensembl-99/STAR_indices/toplevel'
     [--read1_identifier '01_1']
     [--read2_identifier '01_2']
     [--fastq_suffix 'fastq.gz']
@@ -50,81 +54,71 @@ Usage:
     [--mismatch_setting '0 2 4']
     [--minmatch_setting '0 2 5']
     [--mutlimap_setting '1']
-    [--mapper_executable=STAR2.7.0f]
+    [--mapper_executable=STAR]
     [--num_total_threads=4]
-    [--help]
-    --species_para 'human /srv/data/genome/human/ensembl-99/STAR_indices/primary_assembly'
-    --species_para 'mouse /srv/data/genome/mouse/ensembl-99/STAR_indices/primary_assembly'
-    --species_para 'rat /srv/data/genome/rat/ensembl-99/STAR_indices/toplevel'
+    [--plot_format pdf]
 
+--help
+        see this help message
 
+--output_dir
+        all output file will be stored in this folder.
 
-The dir structure is as following:
+--samples
+        quoted space separated sample names. Example "sample1 sample2 sample3"
 
-|-/srv/data/results
-|---zoeb_trap       ( --project-name: correspond to the prohject github name)
-|-----init_results_0e426f4      (--results-name --project-github-commit-hash:  correspond to the prohject github commit hash)
-|-------20180405        (corespond to the prohject github name)
-|---------initial_setup.sh
-|---------run_analysis.sh
-|---------...
-|-----with_new_samples_5esf6f4
-|-------20180723
-|---------initial_setup.sh
-|---------run_analysis.sh
-|---------...
-|---zoeb_trap_neuron_astrocyte_activity
-|-----init_results_1eas6f4
-|-------20180405
-|---------initial_setup.sh
-|---------run_analysis.sh
-|---------...
+--samples_origin
+        quoted space separated sample original species. Example "mouse mouse rat"
 
---help see this help message
+--species_para
+        quoted space separated species/genome index pair. Example: 'human /srv/data/genome/human/ensembl-99/STAR_indices/primary_assembly'
 
---project-name
-        The name of the project. This needs to be the same as the
-        project github repository name.
-        Example: zoeb_trap_neuron_astrocyte_activity
+        this parameter can be provided multiple times to test sargasso on multiple species
+        Example:        --species_para 'human genome/human/ensembl-99/STAR_indices/primary_assembly'
+                        --species_para 'mouse genome/mouse/ensembl-99/STAR_indices/primary_assembly'
+                        --species_para 'rat genome/rat/ensembl-99/STAR_indices/toplevel'
 
---results-name
-        A descriptive name for the project docker run result.
+--read1_identifier
+        pattern to identify raw read file. [default 001_1]
 
---project-github-commit-hash (0e426f4/master)
-        The commit hash/tag/branch of the project repository. default [master hash]
+--read2_identifier
+        pattern to identify raw read file for the second pair of reads in a paird_end_read data set. [default 001_2]
 
---container-name
-        Docker container name for this project. default [{project-name}-{results_name}-{github-commit-hash}-{date}]
+--fastq_suffix
+        [default fastq.gz]
 
---sidb-base-exec-image
-        The sidb-base-exec-image used to start the container. default [the lastest sidb_executable on server]
+--paired_end_read
+        is the data pair_end_read
 
---host-results-dir
-        The results folder on sidb. Most likely to be /srv/data/results.
+--skip_init_run
+        with multiple parameter to be tested, the script only create one initial mapping to save time
+        if provide, the script will skip the initial run and directly perform the parameter test
 
---host-data-dir
-        The data folder on sidb. Most likely to be /srv all the time. read-only. default [/srv]
+--mismatch_setting
+--minmatch_setting
+--mutlimap_setting
+        quoted space separated numbers to be tested. Example: "0 2 4 6"
 
---max-cores
-         1024 means 100% of the CPU, so if you want the container to take 50% of all CPU cores, you should specify 512.
-         See https://goldmann.pl/blog/2014/09/11/resource-management-in-docker/#_cpu for more. default [1024]
+--mapper_executable
+        [default STAR]
 
---max-mem
-         Memory constraints of container.  default [450g]
+--num_total_threads
+        [default 1]
 
---force-remove
-         Force remove container/result folder if exist.
+--plot_format
+        can be one of pdf, png
+        [default pdf]
 
 
 EOT
 }
 
-#set -o nounset
-set -o errexit
+set -o nounset
+#set -o errexit
 #set -o xtrace
 
 
-OPTS="$(getopt -o h -l help,output_dir:,rnaseq_dir:,samples:,samples_origin:,read1_identifier:,read2_identifier:,fastq_suffix:,paired_end_read,skip_init_run,mismatch_setting:,minmatch_setting:,mutlimap_setting:,mapper_executable:,num_total_threads:,species_para: --name "$(basename "$0")" -- "$@")"
+OPTS="$(getopt -o h -l help,output_dir:,rnaseq_dir:,samples:,samples_origin:,read1_identifier:,read2_identifier:,fastq_suffix:,paired_end_read,skip_init_run,mismatch_setting:,minmatch_setting:,mutlimap_setting:,mapper_executable:,num_total_threads:,plot_format:,species_para: --name "$(basename "$0")" -- "$@")"
 
 if [ $? != 0 ] ; then echo "Failed parsing options." >&2 ; exit 1 ; fi
 if [ "$#" -eq  "0"  ] ; then usage ; exit 1 ; fi
@@ -141,6 +135,7 @@ MINMATCH_SETTING='0 2 5 10 '
 MUTLIMAP_SETTING='1'
 MAPPER_EXECUTABLE=STAR2.7.0f
 NUM_TOTAL_THREADS=1
+PLOT_FORMAT=pdf
 SPECIES_PARA=()
 
 eval set -- "$OPTS"
@@ -161,6 +156,7 @@ while true; do
     --mutlimap_setting ) MUTLIMAP_SETTING=$2; shift 2 ;;
     --mapper_executable ) MAPPER_EXECUTABLE=$2; shift 2 ;;
     --num_total_threads ) NUM_TOTAL_THREADS=$2; shift 2 ;;
+    --plot_format ) PLOT_FORMAT=$2; shift 2 ;;
     --species_para ) SPECIES_PARA+=($2); shift 2 ;;
     -- ) shift; break  ;;
     * ) usage ;;
@@ -182,18 +178,26 @@ done
 #echo MAPPER_EXECUTABLE: $MAPPER_EXECUTABLE
 #echo NUM_TOTAL_THREADS: $NUM_TOTAL_THREADS
 #echo SPECIES_PARA: ${SPECIES_PARA[@]}
+#echo PLOT_FORMAT: ${PLOT_FORMAT}
 
 
-[[ -z ${OUTPUT_DIR} ]] && echo "Error: please specific an output directory with --output_dir" && exit 1
-[[ -z ${RNASEQ_DIR} ]] && echo "Error: please specific an output directory with --rnaseq_dir" && exit 1
-[[ -z ${SAMPLES} ]] && echo "Error: please specific an output directory with --samples" && exit 1
-[[ -z ${SAMPLES_ORIGIN} ]] && echo "Error: please specific an output directory with --samples_origin" && exit 1
-[[ -z ${SPECIES_PARA} ]] && echo "Error: please specific an output directory with --species_para" && exit 1
+## we check mandatory parameters
+[[ -z ${OUTPUT_DIR} ]] && echo "Error: --output_dir is missing!" && exit 1
+[[ -z ${RNASEQ_DIR} ]] && echo "Error: --rnaseq_dir is missing!" && exit 1
+[[ -z ${SAMPLES} ]] && echo "Error: --samples is missing!" && exit 1
+[[ -z ${SAMPLES_ORIGIN} ]] && echo "Error: --samples_origin is missing!" && exit 1
+[[ -z ${SPECIES_PARA} ]] && echo "Error: --species_para is missing!" && exit 1
 
+## we check --samples" and "--samples_origin" have the same number of elements
+number_sample=`echo "${SAMPLES}" | awk -F' ' '{print NF}'`
+number_sample_origin=`echo "${SAMPLES_ORIGIN}" | awk -F' ' '{print NF}'`
+[[ ${number_sample} -ne ${number_sample} ]] && echo "Error: number of sample does not equal to number of sample origin." && exit 1
+
+## we only support png and pdf for now
+[[ ! "${PLOT_FORMAT}" =~ ^(pdf|png)$ ]] && echo "Error: --plot_format can only be one of pdf/png!" && exit 1
 
 
 mkdir -p ${OUTPUT_DIR}
-
 
 function listFilesNoNewLine {
     local DELIMITER=$1
@@ -238,6 +242,7 @@ addSample2tsv ${SAMPLE_TSV} ${RNASEQ_DIR} ${READ1_IDENTIFIER} ${READ2_IDENTIFIER
 
 
 if [  "${SKIP_INIT_RUN}" == "no"  ]; then
+    echo "Running Sargasso initial mapping...."
     ## we run the first sargasso run to get the mapped reads
     species_separator rnaseq --mapper-executable ${MAPPER_EXECUTABLE}  --sambamba-sort-tmp-dir=${TMP_DIR} \
                     --mismatch-threshold 0 --minmatch-threshold 0 --multimap-threshold 1 --reject-multimaps \
@@ -248,10 +253,11 @@ fi
 
 ####################################################################################
 #### MAPPING
-echo "Running Sargasso ...."
+echo "Running Sargasso parameter tests...."
 for mismatch in ${MISMATCH_SETTING}; do
     for minmatch in ${MINMATCH_SETTING}; do
         for multimap in ${MUTLIMAP_SETTING}; do
+            echo "testing ${mismatch}_${minmatch}_${multimap}"
             out_dir=${OUTPUT_DIR}/${mismatch}_${minmatch}_${multimap}
             species_separator rnaseq --mapper-executable ${MAPPER_EXECUTABLE}  --sambamba-sort-tmp-dir=${TMP_DIR} \
                     --mismatch-threshold ${mismatch} --minmatch-threshold ${minmatch} --multimap-threshold ${multimap} --reject-multimaps \
@@ -288,7 +294,7 @@ tb <- lapply(c("`echo ${MISMATCH_SETTING} | sed 's/ /,/g'`"),function(number_mis
             lapply(c("`echo ${MUTLIMAP_SETTING} | sed 's/ /,/g'`"),function(number_multimap){
                 file=file.path(result_dir,str_c(number_mismatch,'_',min_match,'_',number_multimap),'filtered_reads','overall_filtering_summary.txt')
                 read_csv(file) %>% dplyr::select(Sample,contains('Reads')) %>%
-                  mutate(Par=str_c(number_mismatch,min_match,number_multimap,sep = '_')) %>%
+                  mutate(Parameters=str_c(number_mismatch,min_match,number_multimap,sep = '_')) %>%
                   tidyr::pivot_longer(cols=contains('Reads'),names_to='type',values_to = 'count') %>%
                   mutate(origin=origin[Sample])
             }) %>% purrr::reduce(rbind)
@@ -302,24 +308,34 @@ count_table <- lapply(c(\""`echo ${SAMPLES} | sed 's/ /","/g'`"\")%>%set_names(.
 })
 
 tb %<>% mutate(total_count=count_table[Sample] %>% unlist() %>% as.numeric()) %>%
-  mutate(prec=count/total_count) %>%
-  mutate_at(vars(one_of(c('Par','type'))),as.factor) %>%
-  mutate(Par=factor(Par,level=unique(Par)))
+  mutate(Percentage=count/total_count) %>%
+  mutate_at(vars(one_of(c('Parameters','type'))),as.factor) %>%
+  mutate(Parameters=factor(Parameters,level=unique(Parameters)))
 
-tb %>%
-  ggplot(aes(x=Par, y=count)) +
+.adjust_plot_size<-function(num_plots){
+  num_row<-sqrt(num_plots) %>% ceiling()
+  num_column<-num_plots/num_row %>% ceiling()
+  c('width'= max(num_row/2,1),'height'=max(num_column/2,1))
+}
+sf <- .adjust_plot_size(length(origin)*3)
+
+p_count <- tb %>%
+  ggplot(aes(x=Parameters, y=count)) +
   geom_point(aes(color=Sample)) +
   facet_wrap(~origin + type,scales='free')+ coord_flip()
-ggsave(file.path(result_dir,'counts.png'))
+ggsave(file.path(result_dir,'counts.${PLOT_FORMAT}'),plot=p_count,width=12*sf,height=12*sf)
 
-tb %>%
-  ggplot(aes(x=Par, y=prec)) +
+p_percentage <-tb %>%
+  ggplot(aes(x=Parameters, y=Percentage)) +
   geom_point(aes(color=Sample)) +
   facet_wrap(~origin + type,scales='free')+ coord_flip() +
     scale_y_continuous(labels = scales::percent_format(accuracy = 0.01))
-ggsave(file.path(result_dir,'prec.png'))
+ggsave(file.path(result_dir,'percentage.${PLOT_FORMAT}'),plot=p_percentage,width=12*sf,height=12*sf)
 " > ${OUTPUT_DIR}/plot.R
 
 Rscript ${OUTPUT_DIR}/plot.R
+
+echo "Test finish!"
+echo "Please check result at: ${OUTPUT_DIR}/percentage.${PLOT_FORMAT} and ${OUTPUT_DIR}/counts.${PLOT_FORMAT}"
 
 
