@@ -11,10 +11,10 @@ setup(
     author_email='owen.dando@ed.ac.uk',
     packages=find_packages(),
     install_requires=[
-        'docopt==0.6.2',
-        'pysam==0.8.2.1',
-        'schema==0.3.1',
-        'pytest==3.9.1',
+        'docopt',
+        'pysam',
+        'schema',
+        'pytest',
     ],
     scripts=[
         'bin/build_star_index',
