@@ -88,7 +88,7 @@ done
 ## we check --samples" and "--samples_origin" have the same number of elements
 number_sample=`echo "${SAMPLES}" | awk -F' ' '{print NF}'`
 number_sample_origin=`echo "${SAMPLES_ORIGIN}" | awk -F' ' '{print NF}'`
-[[ ${number_sample} -ne ${number_sample} ]] && echo "Error: number of sample does not equal to number of sample origin." && exit 1
+[[ ${number_sample} -ne ${number_sample_origin} ]] && echo "Error: number of sample does not equal to number of sample origin." && exit 1
 
 ## check sample csv has same number of same as samples parameter
 number_sample_in_sample_file=`wc -l "${SAMPLES_FILE}" | awk '{print $1}'`
