@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #bash /home/xinhe/Projects/Sargasso/bin/sargasso_parameter_test.sh rnaseq \
-#--mapper_executable STAR2.7.0f \
-#--samples_origin 'mouse mouse rat' \
-#--mismatch_setting '0 2' \
-#--minmatch_setting '0 2' \
-#--multimap_setting '1' \
-#--num_total_threads 16 \
-#--plot_format png \
-#--skip_init_run \
+#--mapper-executable STAR2.7.0f \
+#--samples-origin 'mouse mouse rat' \
+#--mismatch-setting '0 2' \
+#--minmatch-setting '0 2' \
+#--multimap-setting '1' \
+#--num-total-threads 16 \
+#--plot-format png \
+#--skip-init-run \
 #'/home/xinhe/tmp/sargasso_test/sample.tsv' \
 #~/tmp/sargasso_test \
 #mouse /srv/data/genome/mouse/ensembl-99/STAR_indices/primary_assembly \
@@ -22,14 +22,14 @@ function usage {
   cat <<EOT
 
 bash /home/xinhe/Projects/Sargasso/bin/sargasso_parameter_test.sh <data-type>
-<--samples_origin 'mouse mouse rat'>
-[--mapper_executable STAR2.7.0f]
-[--mismatch_setting '0 2']
-[--minmatch_setting '0 2']
-[--multimap_setting '1']
-[--num_total_threads 16]
-[--plot_format png]
-[--skip_init_run]
+<--samples-origin 'mouse mouse rat'>
+[--mapper-executable STAR2.7.0f]
+[--mismatch-setting '0 2']
+[--minmatch-setting '0 2']
+[--multimap-setting '1']
+[--num-total-threads 16]
+[--plot-format png]
+[--skip-init-run]
  <samples-file> <output-dir>
 (<species> <species-info>)
 (<species> <species-info>)
@@ -60,7 +60,7 @@ case $subcommand in
 esac
 
 
-OPTS="$(getopt -o h -l help,samples_origin:,skip_init_run,mismatch_setting:,minmatch_setting:,multimap_setting:,mapper_executable:,num_total_threads:,plot_format: --name "$(basename "$0")" -- "$@")"
+OPTS="$(getopt -o h -l help,samples-origin:,skip-init-run,mismatch-setting:,minmatch-setting:,multimap-setting:,mapper-executable:,num-total-threads:,plot-format: --name "$(basename "$0")" -- "$@")"
 if [ $? != 0 ] ; then echo "Failed parsing options." >&2 ; exit 1 ; fi
 if [ "$#" -eq  "0"  ] ; then usage ; exit 1 ; fi
 
@@ -79,19 +79,19 @@ eval set -- "$OPTS"
 while true; do
   case $1 in
     -h | --help ) usage;;
-    --samples_origin ) SAMPLES_ORIGIN=$2; shift 2 ;;
-    --skip_init_run ) SKIP_INIT_RUN='yes'; shift ;;
-    --mismatch_setting ) MISMATCH_SETTING=$2; shift 2 ;;
-    --minmatch_setting ) MINMATCH_SETTING=$2; shift 2 ;;
-    --multimap_setting ) MULTIMAP_SETTING=$2; shift 2 ;;
-    --mapper_executable ) MAPPER_EXECUTABLE=$2; shift 2 ;;
-    --num_total_threads ) NUM_TOTAL_THREADS=$2; shift 2 ;;
-    --plot_format ) PLOT_FORMAT=$2; shift 2 ;;
+    --samples-origin ) SAMPLES_ORIGIN=$2; shift 2 ;;
+    --skip-init-run ) SKIP_INIT_RUN='yes'; shift ;;
+    --mismatch-setting ) MISMATCH_SETTING=$2; shift 2 ;;
+    --minmatch-setting ) MINMATCH_SETTING=$2; shift 2 ;;
+    --multimap-setting ) MULTIMAP_SETTING=$2; shift 2 ;;
+    --mapper-executable ) MAPPER_EXECUTABLE=$2; shift 2 ;;
+    --num-total-threads ) NUM_TOTAL_THREADS=$2; shift 2 ;;
+    --plot-format ) PLOT_FORMAT=$2; shift 2 ;;
     -- ) shift; break  ;;
     * ) usage ;;
   esac
 done
-[[ -z ${SAMPLES_ORIGIN} ]] && echo "Error: --samples_origin is missing!" && exit 1
+[[ -z ${SAMPLES_ORIGIN} ]] && echo "Error: --samples-origin is missing!" && exit 1
 
 ##we pass  samples_file output_dir and species_para
 [[ "$#" -lt 6 ]] && usage && exit 1
@@ -105,13 +105,13 @@ SPECIES_PARA+=($@)
 ## extract sample from sample file
 SAMPLES=`cut -d ' ' -f -1 ${SAMPLES_FILE} | paste -d " " -s`
 
-## we check samples" and "--samples_origin" have the same number of elements
+## we check samples" and "--samples-origin" have the same number of elements
 number_sample=`echo "${SAMPLES}" | awk -F' ' '{print NF}'`
 number_sample_origin=`echo "${SAMPLES_ORIGIN}" | awk -F' ' '{print NF}'`
 [[ ${number_sample} -ne ${number_sample_origin} ]] && echo "Error: number of sample does not equal to number of sample origin." && exit 1
 
 ## we only support png and pdf for now
-[[ ! "${PLOT_FORMAT}" =~ ^(pdf|png)$ ]] && echo "Error: --plot_format can only be one of pdf/png!" && exit 1
+[[ ! "${PLOT_FORMAT}" =~ ^(pdf|png)$ ]] && echo "Error: --plot-format can only be one of pdf/png!" && exit 1
 
 
 mkdir -p ${OUTPUT_DIR}
