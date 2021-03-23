@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 #bash /home/xinhe/Projects/Sargasso/bin/sargasso_parameter_test.sh rnaseq \
-#--output_dir ~/tmp/sargasso_test \
-#--reads_base_dir '/srv/data/ghardingham/snakemake_test' \
 #--mapper_executable STAR2.7.0f \
-#--samples_file 'sample.tsv' \
 #--samples_origin 'mouse mouse rat' \
 #--mismatch_setting '0 2' \
 #--minmatch_setting '0 2' \
@@ -11,9 +8,11 @@
 #--num_total_threads 16 \
 #--plot_format png \
 #--skip_init_run \
-#--species_para 'mouse /srv/data/genome/mouse/ensembl-99/STAR_indices/primary_assembly' \
-#--species_para 'rat /srv/data/genome/rat/ensembl-99/STAR_indices/toplevel' \
-#--species_para 'human /srv/data/genome/human/ensembl-99/STAR_indices/primary_assembly'
+#'/home/xinhe/tmp/sargasso_test/sample.tsv' \
+#~/tmp/sargasso_test \
+#mouse /srv/data/genome/mouse/ensembl-99/STAR_indices/primary_assembly \
+#rat /srv/data/genome/rat/ensembl-99/STAR_indices/toplevel \
+#human /srv/data/genome/human/ensembl-99/STAR_indices/primary_assembly
 
 set -o nounset
 #set -o errexit
@@ -22,7 +21,19 @@ set -o nounset
 function usage {
   cat <<EOT
 
-
+bash /home/xinhe/Projects/Sargasso/bin/sargasso_parameter_test.sh <data-type>
+<--samples_origin 'mouse mouse rat'>
+[--mapper_executable STAR2.7.0f]
+[--mismatch_setting '0 2']
+[--minmatch_setting '0 2']
+[--mutlimap_setting '1']
+[--num_total_threads 16]
+[--plot_format png]
+[--skip_init_run]
+ <samples-file> <output-dir>
+(<species> <species-info>)
+(<species> <species-info>)
+...
 
 EOT
 exit
@@ -49,7 +60,7 @@ case $subcommand in
 esac
 
 
-OPTS="$(getopt -o h -l help,output_dir:,reads_base_dir:,samples_file:,samples_origin:,skip_init_run,mismatch_setting:,minmatch_setting:,mutlimap_setting:,mapper_executable:,num_total_threads:,plot_format:,species_para: --name "$(basename "$0")" -- "$@")"
+OPTS="$(getopt -o h -l help,samples_origin:,skip_init_run,mismatch_setting:,minmatch_setting:,mutlimap_setting:,mapper_executable:,num_total_threads:,plot_format: --name "$(basename "$0")" -- "$@")"
 if [ $? != 0 ] ; then echo "Failed parsing options." >&2 ; exit 1 ; fi
 if [ "$#" -eq  "0"  ] ; then usage ; exit 1 ; fi
 
@@ -59,7 +70,6 @@ SKIP_INIT_RUN='no'
 MISMATCH_SETTING='0 2 4 6 8 10'
 MINMATCH_SETTING='0 2 5 10 '
 MUTLIMAP_SETTING='1'
-SAMPLES_FILE='sample.tsv'
 MAPPER_EXECUTABLE=STAR2.7.0f
 NUM_TOTAL_THREADS=1
 PLOT_FORMAT=pdf
@@ -69,9 +79,6 @@ eval set -- "$OPTS"
 while true; do
   case $1 in
     -h | --help ) usage;;
-    --output_dir ) OUTPUT_DIR=$2; shift 2 ;;
-    --reads_base_dir ) READ_DIR=$2; shift 2 ;;
-    --samples_file ) SAMPLES_FILE=$2; shift 2 ;;
     --samples_origin ) SAMPLES_ORIGIN=$2; shift 2 ;;
     --skip_init_run ) SKIP_INIT_RUN='yes'; shift ;;
     --mismatch_setting ) MISMATCH_SETTING=$2; shift 2 ;;
@@ -80,33 +87,28 @@ while true; do
     --mapper_executable ) MAPPER_EXECUTABLE=$2; shift 2 ;;
     --num_total_threads ) NUM_TOTAL_THREADS=$2; shift 2 ;;
     --plot_format ) PLOT_FORMAT=$2; shift 2 ;;
-    --species_para ) SPECIES_PARA+=($2); shift 2 ;;
     -- ) shift; break  ;;
     * ) usage ;;
   esac
 done
-
-#echo "$#"
-#exit 1
-
-
-## we check mandatory parameters
-[[ -z ${OUTPUT_DIR} ]] && echo "Error: --output_dir is missing!" && exit 1
-[[ -z ${READ_DIR} ]] && echo "Error: --reads_base_dir is missing!" && exit 1
 [[ -z ${SAMPLES_ORIGIN} ]] && echo "Error: --samples_origin is missing!" && exit 1
-[[ -z ${SPECIES_PARA} ]] && echo "Error: --species_para is missing!" && exit 1
 
+##we pass  samples_file output_dir and species_para
+[[ "$#" -lt 6 ]] && usage && exit 1
+
+SAMPLES_FILE=$1 && shift
 [[ ! -s ${SAMPLES_FILE} ]] && echo "Error: sample_file(${SAMPLES_FILE}) is empty or cannot be found!" && exit 1
+OUTPUT_DIR=$1 && shift
+SPECIES_PARA+=($@)
+
+
+## extract sample from sample file
 SAMPLES=`cut -d ' ' -f -1 ${SAMPLES_FILE} | paste -d " " -s`
 
-## we check --samples" and "--samples_origin" have the same number of elements
+## we check samples" and "--samples_origin" have the same number of elements
 number_sample=`echo "${SAMPLES}" | awk -F' ' '{print NF}'`
 number_sample_origin=`echo "${SAMPLES_ORIGIN}" | awk -F' ' '{print NF}'`
 [[ ${number_sample} -ne ${number_sample_origin} ]] && echo "Error: number of sample does not equal to number of sample origin." && exit 1
-
-## check sample csv has same number of same as samples parameter
-number_sample_in_sample_file=`wc -l "${SAMPLES_FILE}" | awk '{print $1}'`
-[[ ${number_sample} -ne ${number_sample_in_sample_file} ]] && echo "Error: number of sample does not equal to number of sample in sample file." && exit 1
 
 ## we only support png and pdf for now
 [[ ! "${PLOT_FORMAT}" =~ ^(pdf|png)$ ]] && echo "Error: --plot_format can only be one of pdf/png!" && exit 1
@@ -116,7 +118,7 @@ mkdir -p ${OUTPUT_DIR}
 
 TMP_DIR=${OUTPUT_DIR}/tmp
 init_dir=${OUTPUT_DIR}/init_run
-mkdir -p  ${TMP_DIR}
+mkdir -p ${TMP_DIR}
 
 
 if [  "${SKIP_INIT_RUN}" == "no"  ]; then
@@ -211,7 +213,8 @@ p_percentage <-tb %>%
 ggsave(file.path(result_dir,'percentage.${PLOT_FORMAT}'),plot=p_percentage,width=12*sf,height=12*sf)
 " > ${OUTPUT_DIR}/plot.R
 
-Rscript ${OUTPUT_DIR}/plot.R > ${OUTPUT_DIR}/plot.log
+echo "Making plots..."
+Rscript ${OUTPUT_DIR}/plot.R  >${OUTPUT_DIR}/plot.log 2>&1
 
 echo "Test finish!"
 echo "Please check result at: ${OUTPUT_DIR}/percentage.${PLOT_FORMAT} and ${OUTPUT_DIR}/counts.${PLOT_FORMAT}"
