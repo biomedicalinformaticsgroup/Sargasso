@@ -1,18 +1,4 @@
 #!/usr/bin/env bash
-#bash /home/xinhe/Projects/Sargasso/bin/sargasso_parameter_test.sh rnaseq \
-#--mapper-executable STAR2.7.0f \
-#--samples-origin 'mouse mouse rat' \
-#--mismatch-setting '0 2' \
-#--minmatch-setting '0 2' \
-#--multimap-setting '1' \
-#--num-threads 16 \
-#--plot-format png \
-#--skip-init-run \
-#'/home/xinhe/tmp/sargasso_test/sample.tsv' \
-#~/tmp/sargasso_test \
-#mouse /srv/data/genome/mouse/ensembl-99/STAR_indices/primary_assembly \
-#rat /srv/data/genome/rat/ensembl-99/STAR_indices/toplevel \
-#human /srv/data/genome/human/ensembl-99/STAR_indices/primary_assembly
 
 set -o nounset
 #set -o errexit
@@ -21,9 +7,9 @@ set -o nounset
 function usage {
   cat <<EOT
 
-bash /home/xinhe/Projects/Sargasso/bin/sargasso_parameter_test.sh <data-type>
-<--samples-origin 'mouse mouse rat'>
+sargasso_parameter_test.sh <data-type> <--samples-origin 'mouse mouse rat'>
 [--mapper-executable STAR2.7.0f]
+[--reads-base-dir /home/user/]]
 [--mismatch-setting '0 2']
 [--minmatch-setting '0 2']
 [--multimap-setting '1']
@@ -39,34 +25,19 @@ EOT
 exit
 }
 
-function sub_help {
-  cat <<EOT
-    $(basename $0) <subcommand> [options]\n
-
-    Subcommands:
-        rnaseq     doc
-        dnaseq     doc
-
-EOT
-exit
-}
-
-
 subcommand=$1
 case $subcommand in
-    "" | "-h" | "--help") sub_help;;
+    "" | "-h" | "--help") usage;;
     "rnaseq" |"dnaseq") DATA_TYPE=$1; shift;;
-    * ) sub_help ;;
+    * ) usage ;;
 esac
 
-
-OPTS="$(getopt -o h -l help,samples-origin:,skip-init-run,mismatch-setting:,minmatch-setting:,multimap-setting:,mapper-executable:,num-threads:,plot-format: --name "$(basename "$0")" -- "$@")"
+OPTS="$(getopt -o h -l help,samples-origin:,skip-init-run,reads-base-dir:,mismatch-setting:,minmatch-setting:,multimap-setting:,mapper-executable:,num-threads:,plot-format: --name "$(basename "$0")" -- "$@")"
 if [ $? != 0 ] ; then echo "Failed parsing options." >&2 ; exit 1 ; fi
 if [ "$#" -eq  "0"  ] ; then usage ; exit 1 ; fi
 
-
-
 SKIP_INIT_RUN='no'
+READS_BASE_DIR='/'
 MISMATCH_SETTING='0 2 4 6 8 10'
 MINMATCH_SETTING='0 2 5 10 '
 MULTIMAP_SETTING='1'
@@ -81,6 +52,7 @@ while true; do
     -h | --help ) usage;;
     --samples-origin ) SAMPLES_ORIGIN=$2; shift 2 ;;
     --skip-init-run ) SKIP_INIT_RUN='yes'; shift ;;
+    --reads-base-dir ) READS_BASE_DIR=$2; shift 2 ;;
     --mismatch-setting ) MISMATCH_SETTING=$2; shift 2 ;;
     --minmatch-setting ) MINMATCH_SETTING=$2; shift 2 ;;
     --multimap-setting ) MULTIMAP_SETTING=$2; shift 2 ;;
@@ -93,7 +65,7 @@ while true; do
 done
 [[ -z ${SAMPLES_ORIGIN} ]] && echo "Error: --samples-origin is missing!" && exit 1
 
-##we pass  samples_file output_dir and species_para
+# We pass samples_file, output_dir and species_para
 [[ "$#" -lt 6 ]] && usage && exit 1
 
 SAMPLES_FILE=$1 && shift
@@ -101,16 +73,15 @@ SAMPLES_FILE=$1 && shift
 OUTPUT_DIR=$1 && shift
 SPECIES_PARA+=($@)
 
-
-## extract sample from sample file
+## Extract samples from sample file
 SAMPLES=`cut -d ' ' -f -1 ${SAMPLES_FILE} | paste -d " " -s`
 
-## we check samples" and "--samples-origin" have the same number of elements
+# Check "samples" and "--samples-origin" have the same number of elements
 number_sample=`echo "${SAMPLES}" | awk -F' ' '{print NF}'`
 number_sample_origin=`echo "${SAMPLES_ORIGIN}" | awk -F' ' '{print NF}'`
 [[ ${number_sample} -ne ${number_sample_origin} ]] && echo "Error: number of sample does not equal to number of sample origin." && exit 1
 
-## we only support png and pdf for now
+# Only support png and pdf for now
 [[ ! "${PLOT_FORMAT}" =~ ^(pdf|png)$ ]] && echo "Error: --plot-format can only be one of pdf/png!" && exit 1
 
 
@@ -123,27 +94,27 @@ mkdir -p ${TMP_DIR}
 
 if [  "${SKIP_INIT_RUN}" == "no"  ]; then
     echo "Running Sargasso initial mapping...."
-    ## we run the first sargasso run to get the mapped reads
-    species_separator ${DATA_TYPE} --mapper-executable ${MAPPER_EXECUTABLE}  --sambamba-sort-tmp-dir=${TMP_DIR} \
-                    --mismatch-threshold 0 --minmatch-threshold 0 --multimap-threshold 1 --reject-multimaps \
-                    --num-threads ${NUM_THREADS} \
-                    ${SAMPLES_FILE} ${init_dir} ${SPECIES_PARA[@]}
+    # Execute the first sargasso run to get the mapped reads
+    species_separator ${DATA_TYPE} --mapper-executable ${MAPPER_EXECUTABLE}  \
+        --reads-base-dir=${READS_BASE_DIR} --sambamba-sort-tmp-dir=${TMP_DIR} \
+        --mismatch-threshold 0 --minmatch-threshold 0 --multimap-threshold 1 --reject-multimaps \
+        --num-threads ${NUM_THREADS} \
+        ${SAMPLES_FILE} ${init_dir} ${SPECIES_PARA[@]}
     (cd ${init_dir} && make sorted_reads | tee sargasso.log  2>&1)
 fi
 
-####################################################################################
-#### MAPPING
 echo "Running Sargasso parameter tests...."
 for mismatch in ${MISMATCH_SETTING}; do
     for minmatch in ${MINMATCH_SETTING}; do
         for multimap in ${MULTIMAP_SETTING}; do
             echo "testing ${mismatch}_${minmatch}_${multimap}"
             out_dir=${OUTPUT_DIR}/${mismatch}_${minmatch}_${multimap}
-            species_separator ${DATA_TYPE} --mapper-executable ${MAPPER_EXECUTABLE}  --sambamba-sort-tmp-dir=${TMP_DIR} \
-                    --mismatch-threshold ${mismatch} --minmatch-threshold ${minmatch} --multimap-threshold ${multimap} --reject-multimaps \
-                    --num-threads ${NUM_THREADS} \
-                    ${SAMPLES_FILE} ${out_dir} ${SPECIES_PARA[@]}
-            ## we link what we need
+            species_separator ${DATA_TYPE} --mapper-executable ${MAPPER_EXECUTABLE} \
+               --reads-base-dir=${READS_BASE_DIR} --sambamba-sort-tmp-dir=${TMP_DIR} \
+               --mismatch-threshold ${mismatch} --minmatch-threshold ${minmatch} --multimap-threshold ${multimap} --reject-multimaps \
+               --num-threads ${NUM_THREADS} \
+               ${SAMPLES_FILE} ${out_dir} ${SPECIES_PARA[@]}
+            # Link what we need from the first Sargasso run
             ln -s -f ${init_dir}/mapper_indexes ${out_dir}
             ln -s -f ${init_dir}/raw_reads ${out_dir}
             ln -s -f ${init_dir}/mapped_reads ${out_dir}
@@ -153,8 +124,6 @@ for mismatch in ${MISMATCH_SETTING}; do
     done
     wait $(jobs -p)
 done
-
-
 
 
 echo "
@@ -216,7 +185,6 @@ ggsave(file.path(result_dir,'percentage.${PLOT_FORMAT}'),plot=p_percentage,width
 echo "Making plots..."
 Rscript ${OUTPUT_DIR}/plot.R  >${OUTPUT_DIR}/plot.log 2>&1
 
-echo "Test finish!"
-echo "Please check result at: ${OUTPUT_DIR}/percentage.${PLOT_FORMAT} and ${OUTPUT_DIR}/counts.${PLOT_FORMAT}"
-
+echo "Test finished!"
+echo "Please check results: ${OUTPUT_DIR}/percentage.${PLOT_FORMAT} and ${OUTPUT_DIR}/counts.${PLOT_FORMAT}"
 
