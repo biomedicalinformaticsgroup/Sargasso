@@ -1,21 +1,23 @@
 #!/usr/bin/env bash
-#bash /home/xinhe/Projects/Sargasso/bin/sargasso_parameter_test.sh --data_type=rnaseq \
+#bash /home/xinhe/Projects/Sargasso/bin/sargasso_parameter_test.sh rnaseq \
 #--output_dir ~/tmp/sargasso_test \
 #--reads_base_dir '/srv/data/ghardingham/snakemake_test' \
 #--mapper_executable STAR2.7.0f \
 #--samples_file 'sample.tsv' \
-#--samples '1467_A 1467_V 1468_P' \
-#--samples_origin 'mouse human rat' \
+#--samples_origin 'mouse mouse rat' \
 #--mismatch_setting '0 2' \
 #--minmatch_setting '0 2' \
 #--mutlimap_setting '1' \
 #--num_total_threads 16 \
 #--plot_format png \
 #--skip_init_run \
-#--species_para 'human /srv/data/genome/human/ensembl-99/STAR_indices/primary_assembly' \
 #--species_para 'mouse /srv/data/genome/mouse/ensembl-99/STAR_indices/primary_assembly' \
-#--species_para 'rat /srv/data/genome/rat/ensembl-99/STAR_indices/toplevel'
+#--species_para 'rat /srv/data/genome/rat/ensembl-99/STAR_indices/toplevel' \
+#--species_para 'human /srv/data/genome/human/ensembl-99/STAR_indices/primary_assembly'
 
+set -o nounset
+#set -o errexit
+#set -o xtrace
 
 function usage {
   cat <<EOT
@@ -23,15 +25,31 @@ function usage {
 
 
 EOT
+exit
 }
 
-set -o nounset
-#set -o errexit
-#set -o xtrace
+function sub_help {
+  cat <<EOT
+    $(basename $0) <subcommand> [options]\n
+
+    Subcommands:
+        rnaseq     doc
+        dnaseq     doc
+
+EOT
+exit
+}
 
 
-OPTS="$(getopt -o h -l help,output_dir:,data_type:,reads_base_dir:,samples_file:,samples:,samples_origin:,skip_init_run,mismatch_setting:,minmatch_setting:,mutlimap_setting:,mapper_executable:,num_total_threads:,plot_format:,species_para: --name "$(basename "$0")" -- "$@")"
+subcommand=$1
+case $subcommand in
+    "" | "-h" | "--help") sub_help;;
+    "rnaseq" |"dnaseq") DATA_TYPE=$1; shift;;
+    * ) sub_help ;;
+esac
 
+
+OPTS="$(getopt -o h -l help,output_dir:,reads_base_dir:,samples_file:,samples_origin:,skip_init_run,mismatch_setting:,minmatch_setting:,mutlimap_setting:,mapper_executable:,num_total_threads:,plot_format:,species_para: --name "$(basename "$0")" -- "$@")"
 if [ $? != 0 ] ; then echo "Failed parsing options." >&2 ; exit 1 ; fi
 if [ "$#" -eq  "0"  ] ; then usage ; exit 1 ; fi
 
@@ -42,7 +60,6 @@ MISMATCH_SETTING='0 2 4 6 8 10'
 MINMATCH_SETTING='0 2 5 10 '
 MUTLIMAP_SETTING='1'
 SAMPLES_FILE='sample.tsv'
-DATA_TYPE=RNA
 MAPPER_EXECUTABLE=STAR2.7.0f
 NUM_TOTAL_THREADS=1
 PLOT_FORMAT=pdf
@@ -52,11 +69,9 @@ eval set -- "$OPTS"
 while true; do
   case $1 in
     -h | --help ) usage;;
-    --data_type ) DATA_TYPE=$2; shift 2 ;;
     --output_dir ) OUTPUT_DIR=$2; shift 2 ;;
     --reads_base_dir ) READ_DIR=$2; shift 2 ;;
     --samples_file ) SAMPLES_FILE=$2; shift 2 ;;
-    --samples ) SAMPLES=$2; shift 2 ;;
     --samples_origin ) SAMPLES_ORIGIN=$2; shift 2 ;;
     --skip_init_run ) SKIP_INIT_RUN='yes'; shift ;;
     --mismatch_setting ) MISMATCH_SETTING=$2; shift 2 ;;
@@ -71,19 +86,18 @@ while true; do
   esac
 done
 
+#echo "$#"
+#exit 1
+
 
 ## we check mandatory parameters
-[[ ! "${DATA_TYPE}" =~ ^(rnaseq|dnaseq)$ ]] && echo "Error: --data_type can only be one of rna/dna!" && exit 1
 [[ -z ${OUTPUT_DIR} ]] && echo "Error: --output_dir is missing!" && exit 1
 [[ -z ${READ_DIR} ]] && echo "Error: --reads_base_dir is missing!" && exit 1
-[[ -z ${SAMPLES} ]] && echo "Error: --samples is missing!" && exit 1
 [[ -z ${SAMPLES_ORIGIN} ]] && echo "Error: --samples_origin is missing!" && exit 1
 [[ -z ${SPECIES_PARA} ]] && echo "Error: --species_para is missing!" && exit 1
 
 [[ ! -s ${SAMPLES_FILE} ]] && echo "Error: sample_file(${SAMPLES_FILE}) is empty or cannot be found!" && exit 1
-
-
-
+SAMPLES=`cut -d ' ' -f -1 ${SAMPLES_FILE} | paste -d " " -s`
 
 ## we check --samples" and "--samples_origin" have the same number of elements
 number_sample=`echo "${SAMPLES}" | awk -F' ' '{print NF}'`
@@ -99,8 +113,6 @@ number_sample_in_sample_file=`wc -l "${SAMPLES_FILE}" | awk '{print $1}'`
 
 
 mkdir -p ${OUTPUT_DIR}
-
-
 
 TMP_DIR=${OUTPUT_DIR}/tmp
 init_dir=${OUTPUT_DIR}/init_run
@@ -199,7 +211,7 @@ p_percentage <-tb %>%
 ggsave(file.path(result_dir,'percentage.${PLOT_FORMAT}'),plot=p_percentage,width=12*sf,height=12*sf)
 " > ${OUTPUT_DIR}/plot.R
 
-Rscript ${OUTPUT_DIR}/plot.R
+Rscript ${OUTPUT_DIR}/plot.R > ${OUTPUT_DIR}/plot.log
 
 echo "Test finish!"
 echo "Please check result at: ${OUTPUT_DIR}/percentage.${PLOT_FORMAT} and ${OUTPUT_DIR}/counts.${PLOT_FORMAT}"
