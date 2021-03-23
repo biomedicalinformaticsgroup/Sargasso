@@ -5,7 +5,7 @@
 #--mismatch-setting '0 2' \
 #--minmatch-setting '0 2' \
 #--multimap-setting '1' \
-#--num-total-threads 16 \
+#--num-threads 16 \
 #--plot-format png \
 #--skip-init-run \
 #'/home/xinhe/tmp/sargasso_test/sample.tsv' \
@@ -27,7 +27,7 @@ bash /home/xinhe/Projects/Sargasso/bin/sargasso_parameter_test.sh <data-type>
 [--mismatch-setting '0 2']
 [--minmatch-setting '0 2']
 [--multimap-setting '1']
-[--num-total-threads 16]
+[--num-threads 16]
 [--plot-format png]
 [--skip-init-run]
  <samples-file> <output-dir>
@@ -60,7 +60,7 @@ case $subcommand in
 esac
 
 
-OPTS="$(getopt -o h -l help,samples-origin:,skip-init-run,mismatch-setting:,minmatch-setting:,multimap-setting:,mapper-executable:,num-total-threads:,plot-format: --name "$(basename "$0")" -- "$@")"
+OPTS="$(getopt -o h -l help,samples-origin:,skip-init-run,mismatch-setting:,minmatch-setting:,multimap-setting:,mapper-executable:,num-threads:,plot-format: --name "$(basename "$0")" -- "$@")"
 if [ $? != 0 ] ; then echo "Failed parsing options." >&2 ; exit 1 ; fi
 if [ "$#" -eq  "0"  ] ; then usage ; exit 1 ; fi
 
@@ -71,7 +71,7 @@ MISMATCH_SETTING='0 2 4 6 8 10'
 MINMATCH_SETTING='0 2 5 10 '
 MULTIMAP_SETTING='1'
 MAPPER_EXECUTABLE=STAR2.7.0f
-NUM_TOTAL_THREADS=1
+NUM_THREADS=1
 PLOT_FORMAT=pdf
 SPECIES_PARA=()
 
@@ -85,7 +85,7 @@ while true; do
     --minmatch-setting ) MINMATCH_SETTING=$2; shift 2 ;;
     --multimap-setting ) MULTIMAP_SETTING=$2; shift 2 ;;
     --mapper-executable ) MAPPER_EXECUTABLE=$2; shift 2 ;;
-    --num-total-threads ) NUM_TOTAL_THREADS=$2; shift 2 ;;
+    --num-threads ) NUM_THREADS=$2; shift 2 ;;
     --plot-format ) PLOT_FORMAT=$2; shift 2 ;;
     -- ) shift; break  ;;
     * ) usage ;;
@@ -126,7 +126,7 @@ if [  "${SKIP_INIT_RUN}" == "no"  ]; then
     ## we run the first sargasso run to get the mapped reads
     species_separator ${DATA_TYPE} --mapper-executable ${MAPPER_EXECUTABLE}  --sambamba-sort-tmp-dir=${TMP_DIR} \
                     --mismatch-threshold 0 --minmatch-threshold 0 --multimap-threshold 1 --reject-multimaps \
-                    --num-threads ${NUM_TOTAL_THREADS} \
+                    --num-threads ${NUM_THREADS} \
                     ${SAMPLES_FILE} ${init_dir} ${SPECIES_PARA[@]}
     (cd ${init_dir} && make sorted_reads | tee sargasso.log  2>&1)
 fi
@@ -141,7 +141,7 @@ for mismatch in ${MISMATCH_SETTING}; do
             out_dir=${OUTPUT_DIR}/${mismatch}_${minmatch}_${multimap}
             species_separator ${DATA_TYPE} --mapper-executable ${MAPPER_EXECUTABLE}  --sambamba-sort-tmp-dir=${TMP_DIR} \
                     --mismatch-threshold ${mismatch} --minmatch-threshold ${minmatch} --multimap-threshold ${multimap} --reject-multimaps \
-                    --num-threads ${NUM_TOTAL_THREADS} \
+                    --num-threads ${NUM_THREADS} \
                     ${SAMPLES_FILE} ${out_dir} ${SPECIES_PARA[@]}
             ## we link what we need
             ln -s -f ${init_dir}/mapper_indexes ${out_dir}
