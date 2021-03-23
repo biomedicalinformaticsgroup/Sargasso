@@ -128,7 +128,7 @@ if [  "${SKIP_INIT_RUN}" == "no"  ]; then
                     --mismatch-threshold 0 --minmatch-threshold 0 --multimap-threshold 1 --reject-multimaps \
                     --num-threads ${NUM_TOTAL_THREADS} \
                     ${SAMPLES_FILE} ${init_dir} ${SPECIES_PARA[@]}
-    cd ${init_dir} && make sorted_reads | tee sargasso.log  2>&1
+    (cd ${init_dir} && make sorted_reads | tee sargasso.log  2>&1)
 fi
 
 ####################################################################################
