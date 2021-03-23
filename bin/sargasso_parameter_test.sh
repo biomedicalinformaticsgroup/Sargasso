@@ -4,7 +4,7 @@
 #--samples_origin 'mouse mouse rat' \
 #--mismatch_setting '0 2' \
 #--minmatch_setting '0 2' \
-#--mutlimap_setting '1' \
+#--multimap_setting '1' \
 #--num_total_threads 16 \
 #--plot_format png \
 #--skip_init_run \
@@ -26,7 +26,7 @@ bash /home/xinhe/Projects/Sargasso/bin/sargasso_parameter_test.sh <data-type>
 [--mapper_executable STAR2.7.0f]
 [--mismatch_setting '0 2']
 [--minmatch_setting '0 2']
-[--mutlimap_setting '1']
+[--multimap_setting '1']
 [--num_total_threads 16]
 [--plot_format png]
 [--skip_init_run]
@@ -60,7 +60,7 @@ case $subcommand in
 esac
 
 
-OPTS="$(getopt -o h -l help,samples_origin:,skip_init_run,mismatch_setting:,minmatch_setting:,mutlimap_setting:,mapper_executable:,num_total_threads:,plot_format: --name "$(basename "$0")" -- "$@")"
+OPTS="$(getopt -o h -l help,samples_origin:,skip_init_run,mismatch_setting:,minmatch_setting:,multimap_setting:,mapper_executable:,num_total_threads:,plot_format: --name "$(basename "$0")" -- "$@")"
 if [ $? != 0 ] ; then echo "Failed parsing options." >&2 ; exit 1 ; fi
 if [ "$#" -eq  "0"  ] ; then usage ; exit 1 ; fi
 
@@ -69,7 +69,7 @@ if [ "$#" -eq  "0"  ] ; then usage ; exit 1 ; fi
 SKIP_INIT_RUN='no'
 MISMATCH_SETTING='0 2 4 6 8 10'
 MINMATCH_SETTING='0 2 5 10 '
-MUTLIMAP_SETTING='1'
+MULTIMAP_SETTING='1'
 MAPPER_EXECUTABLE=STAR2.7.0f
 NUM_TOTAL_THREADS=1
 PLOT_FORMAT=pdf
@@ -83,7 +83,7 @@ while true; do
     --skip_init_run ) SKIP_INIT_RUN='yes'; shift ;;
     --mismatch_setting ) MISMATCH_SETTING=$2; shift 2 ;;
     --minmatch_setting ) MINMATCH_SETTING=$2; shift 2 ;;
-    --mutlimap_setting ) MUTLIMAP_SETTING=$2; shift 2 ;;
+    --multimap_setting ) MULTIMAP_SETTING=$2; shift 2 ;;
     --mapper_executable ) MAPPER_EXECUTABLE=$2; shift 2 ;;
     --num_total_threads ) NUM_TOTAL_THREADS=$2; shift 2 ;;
     --plot_format ) PLOT_FORMAT=$2; shift 2 ;;
@@ -136,7 +136,7 @@ fi
 echo "Running Sargasso parameter tests...."
 for mismatch in ${MISMATCH_SETTING}; do
     for minmatch in ${MINMATCH_SETTING}; do
-        for multimap in ${MUTLIMAP_SETTING}; do
+        for multimap in ${MULTIMAP_SETTING}; do
             echo "testing ${mismatch}_${minmatch}_${multimap}"
             out_dir=${OUTPUT_DIR}/${mismatch}_${minmatch}_${multimap}
             species_separator ${DATA_TYPE} --mapper-executable ${MAPPER_EXECUTABLE}  --sambamba-sort-tmp-dir=${TMP_DIR} \
@@ -171,7 +171,7 @@ origin=c(\""`echo ${SAMPLES_ORIGIN} | sed 's/ /","/g'`"\") %>% set_names(samples
 result_dir=\""${OUTPUT_DIR}"\"
 tb <- lapply(c("`echo ${MISMATCH_SETTING} | sed 's/ /,/g'`"),function(number_mismatch){
           lapply(c("`echo ${MINMATCH_SETTING} | sed 's/ /,/g'`"),function(min_match){
-            lapply(c("`echo ${MUTLIMAP_SETTING} | sed 's/ /,/g'`"),function(number_multimap){
+            lapply(c("`echo ${MULTIMAP_SETTING} | sed 's/ /,/g'`"),function(number_multimap){
                 file=file.path(result_dir,str_c(number_mismatch,'_',min_match,'_',number_multimap),'filtered_reads','overall_filtering_summary.txt')
                 read_csv(file) %>% dplyr::select(Sample,contains('Reads')) %>%
                   mutate(Parameters=str_c(number_mismatch,min_match,number_multimap,sep = '_')) %>%
