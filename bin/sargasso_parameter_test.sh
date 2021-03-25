@@ -166,7 +166,11 @@ tb %<>% mutate(total_count=count_table[Sample] %>% unlist() %>% as.numeric()) %>
   num_column<-num_plots/num_row %>% ceiling()
   c('width'= max(num_row/2,1),'height'=max(num_column/2,1))
 }
-sf <- .adjust_plot_size(length(origin)*3)
+
+target_species <- tb %>% pull(type) %>% levels %>% strsplit('-') %>% sapply(extract,3) %>% unique()
+type_order <- c('Assigned-Reads','Ambiguous-Reads','Rejected-Reads') %>%  outer(target_species,str_c,sep='-') %>% as.vector()
+tb %<>% mutate(type=factor(type, levels = type_order))
+sf <- .adjust_plot_size(length(unique(origin))*3*length(target_species))
 
 p_count <- tb %>%
   ggplot(aes(x=Parameters, y=count)) +
