@@ -130,3 +130,27 @@ def test_filter_sample_reads_se_chipseq(tmpdir):
     assert os.stat(rat_out).st_size != 0
     assert os.stat(human_out).st_size != 0
     assert os.stat(summary_file).st_size != 0
+
+
+def test_filter_sample_reads_medseq(tmpdir):
+    args = ["dnaseq",
+            "--log-level=debug",
+            "--reject-multimaps",
+            "0",
+            "0",
+            "1",
+            "mouse",
+            '/home/xinhe/projects/glucose_epigenetics/medipseq/results_debug/sargasso/filtered_reads/Blocks/20PN.1___mouse___BLOCK___1.bam',
+            tmpdir.mkdir("medip_test").join("mouse___0___filtered.bam").strpath,
+            "rat",
+            '/home/xinhe/projects/glucose_epigenetics/medipseq/results_debug/sargasso/filtered_reads/Blocks/20PN.1___rat___BLOCK___1.bam',
+            tmpdir.join("medip_test/rat___0___filtered.bam").strpath
+            ]
+
+    os.environ['SARGASSO_DEBUG_MODE'] = 'true'
+    get_data_type_manager(['dnaseq'], SampleFilterer.DOC).get_sample_filterer().run(args)
+
+    # mouse_out = tmpdir.join("bisulfite_test_se/bisulfite_human_se_sample_human___0___filtered.bam").strpath
+    # rat_out = tmpdir.join("bisulfite_test_se/bisulfite_human_se_sample_human___0___filtered.bam").strpath
+    # human_out = tmpdir.join("bisulfite_test_se/bisulfite_human_se_sample_human___0___filtered.bam").strpath
+    # summary_file = tmpdir.join("bisulfite_test_se/filtering_result_summary.txt").strpath
