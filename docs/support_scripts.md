@@ -189,4 +189,4 @@ For each sample, sort mapped reads for each species into name order. ``sort_read
 * ``<output-dir>`` (_file path_): Directory into which to write name-ordered BAM files containing read mappings.
 * ``<tmp-dir>`` (_file path_): Temporary directory to be used by ``sambamba``.
 
-[Next: References](references.md)
+[Next: Choosing parameters](choosing_parameters.md)

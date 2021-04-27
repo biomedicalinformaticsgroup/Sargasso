@@ -11,6 +11,7 @@ For further details, please see below:
 3. [Pipeline description](pipeline.md)
 4. [Usage reference](usage_reference.md)
 5. [Support scripts](support_scripts.md)
-6. [References](references.md)
+6. [Choosing parameters](choosing_parameters.md)
+7. [References](references.md)
 
 <sup>* **S**argasso **A**ssigns **R**eads to **G**enomes **A**ccording to **S**pecies-**S**pecific **O**rigin</sup>
