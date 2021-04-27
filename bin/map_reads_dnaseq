@@ -24,7 +24,7 @@ function bowtie_se_reads {
     ID=${SAMPLE}.${SPECIES}
 
 
-    ${BOWTIE2_EXECUTABLE} --no-unal --no-discordant --no-mixed -p ${NUM_THREADS} -k ${MULTI_READ_LIMIT} \
+    ${BOWTIE2_EXECUTABLE} --no-unal --no-discordant --no-mixed -p ${NUM_THREADS}  \
     -x ${INDEX_DIR}/bt2index -U ${READ_FILES} -S ${OUTPUT_DIR}/${ID}.sam > ${OUTPUT_DIR}/${ID}.log.out 2>&1
 
     sambamba view -S ${OUTPUT_DIR}/${ID}.sam -f bam > ${OUTPUT_DIR}/${ID}.bam
@@ -44,7 +44,7 @@ function bowtie_pe_reads {
 
     ID=${SAMPLE}.${SPECIES}
 
-    ${BOWTIE2_EXECUTABLE} --no-unal --no-discordant --no-mixed -p ${NUM_THREADS} -k ${MULTI_READ_LIMIT} \
+    ${BOWTIE2_EXECUTABLE} --no-unal --no-discordant --no-mixed -p ${NUM_THREADS} \
     -x ${INDEX_DIR}/bt2index -1 ${READ_1_FILES} -2 ${READ_2_FILES} -S ${OUTPUT_DIR}/${ID}.sam > ${OUTPUT_DIR}/${ID}.log.out 2>&1
 
     sambamba view -S ${OUTPUT_DIR}/${ID}.sam -f bam > ${OUTPUT_DIR}/${ID}.bam

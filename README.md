@@ -25,7 +25,7 @@ Then install the *Sargasso* package and its Python package dependencies into the
 pip install git+https://github.com/statbio/sargasso.git
 ```
 
-Note that Sargasso v2.0 should work with Python versions >= 2.6 (including Python 3). Versions before v1.2.2 will only work with Python 2.
+Note that Sargasso v2.1 has been teseted with Python versions 2.7, 3.5 and 3.8.
 
 Citation
 ========
@@ -37,6 +37,7 @@ If you make use of *Sargasso* please cite [our protocol paper](https://www.natur
 Changelog
 =========
 
+* 2.1 (27/04/2021): Added ``sargasso_parameter_test`` script, and fix for compatibility with Python 3.8.
 * 2.0.2 (19/08/2019): Bugfix release to correctly handle single-end reads with Bowtie2.
 * 2.0.1 (06/06/2019): Bugfix release to correctly handle Bowtie2 mismatch count.
 * 2.0 (16/01/2019): Sargasso now separates reads derived from DNA-based sequencing technologies (for example, ChIP-seq and ATAC-seq), in addition to RNA-seq reads.
