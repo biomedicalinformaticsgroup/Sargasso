@@ -25,7 +25,7 @@ Then install the *Sargasso* package and its Python package dependencies into the
 pip install git+https://github.com/statbio/sargasso.git
 ```
 
-Note that Sargasso v2.1 has been teseted with Python versions 2.7, 3.5 and 3.8.
+Note that Sargasso v2.1 has been tested with Python versions 2.7, 3.5, and 3.8.
 
 Citation
 ========
