@@ -6,7 +6,7 @@ Sargasso
 
 *Sargasso* is a Python tool to disambiguate mixed-species high-throughput sequencing reads according to their species of origin. Given a set of samples containing sequencing data from multiple species, mapped, disambiguated reads are written to per-sample and species-specific output BAM files.
 
-The latest *Sargasso* documentation can be found [here](http://statbio.github.io/Sargasso/).
+The latest *Sargasso* documentation can be found [here](http://biomedicalinformaticsgroup.github.io/Sargasso/).
 
 Installation
 ============
