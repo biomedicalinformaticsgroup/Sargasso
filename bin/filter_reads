@@ -20,6 +20,10 @@ SPECIES=( "${@:11}" )
 NUM_SPECIES=${#SPECIES[@]}
 BLOCK_DIR=${OUTPUT_DIR}/Blocks
 
+FILE_TYPE_FILTERED='filtered'
+FILE_TYPE_AMBIGUOUS='ambiguous'
+FILE_TYPE_REJECT='rejected'
+
 ##### FUNCTIONS
 
 function get_block_file() {
@@ -31,6 +35,16 @@ function get_block_file() {
     echo ${BLOCK_DIR}/"${SAMPLE}${sep}${SPECIES}${sep}"BLOCK"${sep}${INDEX}".bam
 }
 
+function get_per_thread_file() {
+    SAMPLE=$1
+    SPECIES=$2
+    INDEX=$3
+    TYPE=$4
+
+    sep="___"
+    echo "${OUTPUT_DIR}"/"${SAMPLE}${sep}${SPECIES}${sep}${INDEX}"${sep}${TYPE}.bam
+}
+
 function get_per_thread_filtered_file() {
     SAMPLE=$1
     SPECIES=$2
@@ -40,12 +54,22 @@ function get_per_thread_filtered_file() {
     echo "${OUTPUT_DIR}"/"${SAMPLE}${sep}${SPECIES}${sep}${INDEX}"${sep}filtered.bam
 }
 
-function get_output_filtered_file() {
+function get_per_thread_ambiguous_file() {
     SAMPLE=$1
     SPECIES=$2
+    INDEX=$3
 
     sep="___"
-    echo "${OUTPUT_DIR}"/"${SAMPLE}${sep}${SPECIES[index]}"${sep}filtered.bam
+    echo "${OUTPUT_DIR}"/"${SAMPLE}${sep}${SPECIES}${sep}${INDEX}"${sep}ambiguous.bam
+}
+
+function get_output_file() {
+    SAMPLE=$1
+    SPECIES=$2
+    TYPE=$3
+
+    sep="___"
+    echo "${OUTPUT_DIR}"/"${SAMPLE}${sep}${SPECIES[index]}"${sep}${TYPE}.bam
 }
 
 function create_per_thread_input_files() {
@@ -144,16 +168,19 @@ function create_per_thread_input_files() {
     fi
 }
 
-function merge_per_thread_filtered_files() {
+
+
+function merge_per_thread_files() {
     SAMPLE=$1
+    TYPE=$2
 
     if [ "${THREADS}" -eq "1" ]
     then
         index=0
         while [ ${index} -lt ${NUM_SPECIES} ]; do
-            pt_file=$(get_per_thread_filtered_file ${SAMPLE} ${SPECIES[index]} 0)
-            filtered_file=$(get_output_filtered_file ${SAMPLE} ${SPECIES[index]})
-            mv ${pt_file} ${filtered_file}
+            pt_file=$(get_per_thread_file ${SAMPLE} ${SPECIES[index]} 0 ${TYPE})
+            merged_file=$(get_output_file ${SAMPLE} ${SPECIES[index]} ${TYPE})
+            mv ${pt_file} ${merged_file}
             index=$((${index} + 1))
         done
     else
@@ -163,11 +190,11 @@ function merge_per_thread_filtered_files() {
             pt_files=()
             for i in $(seq 0 1 $((${THREADS}-1)));
             do
-                pt_files[${i}]=$(get_per_thread_filtered_file ${SAMPLE} ${SPECIES[index]} ${i})
+                pt_files[${i}]=$(get_per_thread_file ${SAMPLE} ${SPECIES[index]} ${i} ${TYPE})
             done
 
-            filtered_file=$(get_output_filtered_file ${SAMPLE} ${SPECIES[index]})
-            sambamba merge -t ${THREADS} ${filtered_file} ${pt_files[@]}
+            merged_file=$(get_output_file ${SAMPLE} ${SPECIES[index]} ${TYPE})
+            sambamba merge -t ${THREADS} ${merged_file} ${pt_files[@]}
 
             index=$((${index} + 1))
         done
@@ -191,7 +218,9 @@ function cleanup_intermediate_files() {
         then
             index=0
             while [ ${index} -lt ${NUM_SPECIES} ]; do
-                rm $(get_per_thread_filtered_file ${SAMPLE} ${SPECIES[index]} ${one_less})
+                rm $(get_per_thread_file ${SAMPLE} ${SPECIES[index]} ${one_less} ${FILE_TYPE_FILTERED})
+                rm $(get_per_thread_file ${SAMPLE} ${SPECIES[index]} ${one_less} ${FILE_TYPE_AMBIGUOUS})
+                rm $(get_per_thread_file ${SAMPLE} ${SPECIES[index]} ${one_less} ${FILE_TYPE_REJECT})
                 index=$((${index} + 1))
             done
         fi
@@ -242,10 +271,11 @@ first_sample=1
 for sample in ${SAMPLES}; do
     create_per_thread_input_files ${sample}
     filter_control ${DATA_TYPE} --log-level=${LOG_LEVEL} ${BLOCK_DIR} ${OUTPUT_DIR} ${sample} ${MISMATCH_THRESHOLD} ${MINMATCH_THRESHOLD} ${MULTIMAP_THRESHOLD} ${REJECT_MULTIMAPS} ${SPECIES[*]}
-    merge_per_thread_filtered_files ${sample}
+    merge_per_thread_files ${sample} ${FILE_TYPE_FILTERED}
+    merge_per_thread_files ${sample} ${FILE_TYPE_AMBIGUOUS}
+    merge_per_thread_files ${sample} ${FILE_TYPE_REJECT}
     cleanup_intermediate_files ${sample}
     calculate_filtering_summary ${sample} ${first_sample}
-
     if [ ${first_sample} -eq 1 ]
     then
         first_sample=0

@@ -52,9 +52,12 @@ class HitsChecker:
         if assignee == self.REJECTED:
             for hits_manager in hits_managers:
                 hits_manager.add_rejected_hits_to_stats()
+                hits_manager.write_hits_reject()
         elif assignee == self.AMBIGUOUS:
             for hits_manager in hits_managers:
                 hits_manager.add_ambiguous_hits_to_stats()
+                hits_manager.write_hits_ambugious()
+            # hits_managers[0].add_ambiguous_hits_to_file()
         else:
             for i, hits_manager in enumerate(hits_managers):
                 if i == assignee:
